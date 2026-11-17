@@ -16,7 +16,8 @@ admin-portal/
   css/
     tokens.css        colours, type, spacing (captured from the live portal)
     shell.css         header + sidebar, 1:1 copy of the live portal (incl. collapse, hover, dropdowns)
-    components.css    shared redesign components (buttons, table, drawer, switch...)
+    components.css    shared redesign components (buttons, drawer, switch...)
+    table.css         the portal's REUSABLE TABLE + pagination + empty state, 1:1 — every list uses it as-is
     skeleton.css      placeholder blocks for un-redesigned sections
   js/
     shell.js          injects the portal header + sidebar; sidebar lists only redesigned screens (MENU)
@@ -30,8 +31,13 @@ admin-portal/
 - Only the sections asked for get redesigned; everything else stays skeleton.
 - One section = one self-contained block, so a change is one skeleton swapped for one section.
 - Dev notes describe values/rules/conditions, never styling.
+- Lists use the portal's reusable table (`css/table.css`) unchanged — only columns and cell content vary per page.
 - Header and sidebar copy the live portal exactly; the sidebar shows only screens that have been redesigned.
 - Tag each handoff: `git tag <screen>-handoff-<n>`.
+
+## Caching
+
+CSS/JS links carry `?v=N`. Bump N in every page when shared files change, so viewers don't get stale copies.
 
 ## Viewing
 

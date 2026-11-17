@@ -40,38 +40,37 @@
   /* ---------- helpers ---------- */
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const ico = {
-    check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
-    dash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg>',
-    edit: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
-    history: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>',
-    star: '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>',
-  };
-  const flag = v => v ? `<span class="flag on">${ico.check}On</span>` : `<span class="flag off">${ico.dash}Off</span>`;
+  // portal reusable-table cell badges
+  const badge = (cls, text) => `<span class="tbl-badge ${cls}">${text}</span>`;
+  const onOff = v => v ? badge('bg-success', 'Enabled') : badge('bg-danger', 'Disabled');
   const fmtDate = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
     d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const toast = msg => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2400); };
 
   /* ---------- filters + table ---------- */
-  const state = { q: '', currency: '', status: '', sortDir: 1, page: 1, size: 20 };
+  const state = { q: '', currency: '', status: '', page: 1, size: 20 };
   const cur = $('#f-currency'), ecur = $('#e-currency');
   CURRENCIES.forEach(c => { cur.add(new Option(c, c)); ecur.add(new Option(c, c)); });
 
-  function filtered() {
+  const matchesQC = a => {
     const q = state.q.trim().toLowerCase();
-    return apis.filter(a =>
-      (!q || [a.name, a.code, a.ref, a.short].some(v => v.toLowerCase().includes(q))) &&
-      (!state.currency || a.currency === state.currency) &&
-      (!state.status || (state.status === 'active') === a.active)
-    ).sort((x, y) => x.name.localeCompare(y.name) * state.sortDir);
+    return (!q || [a.name, a.code, a.ref, a.short].some(v => v.toLowerCase().includes(q))) && (!state.currency || a.currency === state.currency);
+  };
+  // list order is the API's order (the reusable table has no column sorting)
+  const filtered = () => apis.filter(a => matchesQC(a) && (!state.status || (state.status === 'active') === a.active));
+
+  // page buttons: all when <= 7, otherwise 1 … around-current … last (portal uses .pagination__ellipsis)
+  function pageList(page, pages) {
+    if (pages <= 7) return Array.from({ length: pages }, (_, i) => i + 1);
+    const set = new Set([1, pages, page - 1, page, page + 1].filter(n => n >= 1 && n <= pages));
+    const out = []; let prev = 0;
+    [...set].sort((a, b) => a - b).forEach(n => { if (n - prev > 1) out.push('…'); out.push(n); prev = n; });
+    return out;
   }
 
   function render() {
-    // status counts reflect the other filters
-    const base = apis.filter(a => {
-      const q = state.q.trim().toLowerCase();
-      return (!q || [a.name, a.code, a.ref, a.short].some(v => v.toLowerCase().includes(q))) && (!state.currency || a.currency === state.currency);
-    });
+    // status counts reflect the search + currency filters
+    const base = apis.filter(matchesQC);
     document.querySelectorAll('[data-n]').forEach(n => {
       const k = n.dataset.n;
       n.textContent = k ? base.filter(a => (k === 'active') === a.active).length : base.length;
@@ -83,33 +82,38 @@
     const start = (state.page - 1) * state.size;
     const slice = list.slice(start, start + state.size);
 
-    $('#rows').innerHTML = slice.map(a => `
+    $('#rows').innerHTML = slice.length ? slice.map(a => `
       <tr>
-        <td>
-          <div class="api-name">${esc(a.name)}${a.isDefault ? `<span class="tag">${ico.star}Default</span>` : ''}</div>
-          <span class="code">${esc(a.code)}</span>
+        <td>${esc(a.name)}</td>
+        <td class="text-center">${esc(a.code)}</td>
+        <td class="text-center">${esc(a.ref)}</td>
+        <td class="text-center">${esc(a.currency)}</td>
+        <td class="text-center">${a.isDefault ? badge('bg-info', 'Default') : badge('bg-warning', 'Not Default')}</td>
+        <td class="text-center">${a.active ? badge('bg-success', 'Active') : badge('bg-danger', 'Inactive')}</td>
+        <td class="text-center">${esc(a.short)}</td>
+        <td class="text-center">${onOff(a.b2c)}</td>
+        <td class="text-center">${onOff(a.autoIssue)}</td>
+        <td class="text-center">${onOff(a.hold)}</td>
+        <td class="text-center text-success">
+          <button class="tbl-action" type="button" data-edit="${a.id}" title="Edit" aria-label="Edit ${esc(a.name)}"><i class="fas fa-edit"></i></button> &nbsp;
+          <button class="tbl-action" type="button" data-hist="${a.id}" title="History" aria-label="History for ${esc(a.name)}"><i class="fas fa-clock"></i></button>
         </td>
-        <td><span class="code">${esc(a.ref)}</span></td>
-        <td><span class="code">${esc(a.short)}</span></td>
-        <td><span class="currency">${esc(a.currency)}</span></td>
-        <td>${a.active ? '<span class="pill green">Active</span>' : '<span class="pill gray">Inactive</span>'}</td>
-        <td>${flag(a.b2c)}</td>
-        <td>${flag(a.autoIssue)}</td>
-        <td>${flag(a.hold)}</td>
-        <td class="actions r">
-          <button class="icon-btn" type="button" data-edit="${a.id}" title="Edit" aria-label="Edit ${esc(a.name)}">${ico.edit}</button>
-          <button class="icon-btn" type="button" data-hist="${a.id}" title="Change history" aria-label="Change history for ${esc(a.name)}">${ico.history}</button>
-        </td>
-      </tr>`).join('');
+      </tr>`).join('')
+      : `<tr><td class="empty-cell" colspan="11"><section class="empty-state">
+          <div class="empty-state__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"></circle><path d="m15 15 4 4"></path><path d="M8.5 10.5h4"></path></svg></div>
+          <h3>No hotel APIs found</h3><p>Try adjusting the filters or add a new API.</p></section></td></tr>`;
 
-    $('#empty').hidden = list.length > 0;
-    $('#pg-info').textContent = list.length ? `Showing ${start + 1}–${start + slice.length} of ${list.length}` : 'No results';
-    let pg = `<button class="pg" type="button" data-pg="${state.page - 1}" ${state.page === 1 ? 'disabled' : ''} aria-label="Previous page">‹</button>`;
-    for (let i = 1; i <= pages; i++) pg += `<button class="pg" type="button" data-pg="${i}" ${i === state.page ? 'aria-current="page"' : ''}>${i}</button>`;
-    pg += `<button class="pg" type="button" data-pg="${state.page + 1}" ${state.page === pages ? 'disabled' : ''} aria-label="Next page">›</button>`;
-    $('#pg-pages').innerHTML = pg;
+    // pagination (hidden when there are no rows, like the portal)
+    $('#pager').hidden = !list.length;
+    $('#pg-range').textContent = `${start + 1}–${start + slice.length}`;
+    $('#pg-total').textContent = list.length;
+    $('#pg-mobile').textContent = `Page ${state.page} of ${pages}`;
+    $('#pg-prev').disabled = state.page === 1;
+    $('#pg-next').disabled = state.page === pages;
+    $('#pg-pages').innerHTML = pageList(state.page, pages).map(n => n === '…'
+      ? '<span class="pagination__ellipsis">…</span>'
+      : `<button type="button" class="pagination__page${n === state.page ? ' pagination__page--active' : ''}" data-pg="${n}"${n === state.page ? ' aria-current="page"' : ''} aria-label="Page ${n}${n === state.page ? ', current page' : ''}">${n}</button>`).join('');
     $('#f-clear').hidden = !(state.q || state.currency || state.status);
-    $('#sort-ind').textContent = state.sortDir === 1 ? '↑' : '↓';
   }
 
   $('#f-q').addEventListener('input', e => { state.q = e.target.value; state.page = 1; render(); });
@@ -120,16 +124,15 @@
     $('#f-status').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
     render();
   });
-  const clear = () => {
+  $('#f-clear').addEventListener('click', () => {
     Object.assign(state, { q: '', currency: '', status: '', page: 1 });
     $('#f-q').value = ''; cur.value = '';
     $('#f-status').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === ''));
     render();
-  };
-  $('#f-clear').addEventListener('click', clear);
-  $('#empty-clear').addEventListener('click', clear);
-  $('#sort-name').addEventListener('click', () => { state.sortDir *= -1; render(); });
-  $('#pg-pages').addEventListener('click', e => { const b = e.target.closest('[data-pg]'); if (b && !b.disabled) { state.page = +b.dataset.pg; render(); } });
+  });
+  $('#pg-pages').addEventListener('click', e => { const b = e.target.closest('[data-pg]'); if (b) { state.page = +b.dataset.pg; render(); } });
+  $('#pg-prev').addEventListener('click', () => { state.page--; render(); });
+  $('#pg-next').addEventListener('click', () => { state.page++; render(); });
   $('#pg-size').addEventListener('change', e => { state.size = +e.target.value; state.page = 1; render(); });
 
   /* ---------- drawers ---------- */

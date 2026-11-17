@@ -4,25 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hotel APIs · Admin Redesign</title>
-<link rel="stylesheet" href="css/tokens.css">
-<link rel="stylesheet" href="css/shell.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/skeleton.css">
+<link rel="stylesheet" href="css/tokens.css?v=3">
+<link rel="stylesheet" href="css/shell.css?v=3">
+<link rel="stylesheet" href="css/components.css?v=3">
+<link rel="stylesheet" href="css/skeleton.css?v=3">
+<link rel="stylesheet" href="css/table.css?v=3">
 <style>
   .toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .toolbar .search-input { flex: 1 1 260px; max-width: 340px; }
   .toolbar select.input { width: 160px; }
   .toolbar .spacer { flex: 1; }
-  .api-name { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
-  .api-name + .code { display: block; margin-top: 2px; font-size: var(--fs-xs); color: var(--text-3); }
-  .flag { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-sm); font-weight: 500; }
-  .flag.on { color: var(--green); }
-  .flag.off { color: var(--text-3); }
-  .flag svg { flex: none; }
-  .dt td.actions { white-space: nowrap; width: 1%; }
-  .th-group { text-align: center !important; border-bottom: 0 !important; padding-bottom: 0 !important; color: var(--text-3); }
-  .th-group span { display: block; border-bottom: 1px solid var(--border-strong); padding-bottom: 6px; margin: 0 8px; }
-  .currency { font-weight: 500; font-size: var(--fs-sm); }
+  .page-head { padding: 0 8px; }
+  .tbl-area .table { margin-bottom: 16px; }
+  .tbl-area .pagination { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+  .tbl-area .table-responsive { border-top: 0; }
   /* history */
   .timeline { list-style: none; margin: 0; padding: 0; }
   .timeline li { position: relative; padding: 0 0 22px 26px; }
@@ -73,34 +68,30 @@
       <button class="btn btn-ghost" id="f-clear" type="button" hidden>Clear filters</button>
     </div>
 
-    <div class="table-wrap">
-      <table class="dt">
-        <thead>
-          <tr>
-            <th rowspan="2"><button class="sort" type="button" id="sort-name" aria-label="Sort by API name">API <span id="sort-ind">↑</span></button></th>
-            <th rowspan="2">Ref. code</th>
-            <th rowspan="2">Short code</th>
-            <th rowspan="2">Currency</th>
-            <th rowspan="2">Status</th>
-            <th colspan="3" class="th-group"><span>Booking options</span></th>
-            <th rowspan="2" class="r"><span class="visually-hidden">Actions</span></th>
-          </tr>
-          <tr><th>B2C</th><th>Auto issue</th><th>Hold booking</th></tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
-      <div class="empty" id="empty" hidden>
-        <strong>No hotel APIs match these filters</strong>
-        Try a different search or <button class="btn btn-ghost" type="button" id="empty-clear" style="height:auto;padding:0;color:var(--brand)">clear filters</button>.
+    <!-- Portal reusable table (css/table.css) — format fixed; only columns/cell content are page-specific -->
+    <div class="tbl-area">
+      <div class="table-responsive">
+        <table class="table table-hover table-striped table-bordered f-14 text-nowrap">
+          <thead>
+            <tr class="text-uppercase">
+              <th>Name</th><th>API Code</th><th>Ref. Code</th><th>Currency</th><th>Default</th><th>Status</th>
+              <th>Short Code</th><th>B2C Status</th><th>Auto Issue</th><th>Hold Booking</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
       </div>
-    </div>
-
-    <div class="pager">
-      <span id="pg-info"></span>
-      <div class="pages" id="pg-pages"></div>
-      <label style="display:flex;align-items:center;gap:8px">Rows per page
-        <select class="input" id="pg-size"><option>20</option><option>50</option><option>100</option></select>
-      </label>
+      <nav class="pagination" id="pager" aria-label="Hotel APIs pagination">
+        <p aria-live="polite" class="pagination__summary"><span class="pagination__summary-label">Showing</span><strong class="pagination__range" id="pg-range"></strong><span>of <strong id="pg-total"></strong> results</span></p>
+        <div class="pagination__navigation">
+          <button type="button" aria-label="Go to previous page" class="pagination__direction" id="pg-prev"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 15-5-5 5-5"></path></svg><span>Previous</span></button>
+          <div aria-label="Choose a page" class="pagination__pages" id="pg-pages"></div>
+          <span class="pagination__mobile-position" id="pg-mobile"></span>
+          <button type="button" aria-label="Go to next page" class="pagination__direction" id="pg-next"><span>Next</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 5 5 5-5 5"></path></svg></button>
+        </div>
+        <label class="pagination__page-size"><span class="pagination__page-size-label">Rows per page</span>
+          <select aria-label="Rows per page" id="pg-size"><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></label>
+      </nav>
     </div>
   </section>
 </main>
@@ -179,7 +170,7 @@
 <div class="toast" id="toast" role="status"></div>
 
 <style>.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
-<script src="js/shell.js"></script>
-<script src="js/hotel-apis.js"></script>
+<script src="js/shell.js?v=3"></script>
+<script src="js/hotel-apis.js?v=3"></script>
 </body>
 </html>

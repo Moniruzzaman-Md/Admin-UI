@@ -5,11 +5,13 @@ Scope: whole page redesigned (list, filters, create/edit, history). Header and s
 
 ## List
 
-- Columns: API (name + API code), Ref. code, Short code, Currency, Status, B2C, Auto issue, Hold booking, actions.
-- **Default** is no longer its own column. It shows as a "Default" tag next to the name, only when the API is default.
-- **Hold booking** column is new. The field already exists in the create form but wasn't shown in the list → the list endpoint needs to return it.
-- Status values: Active / Inactive. B2C, Auto issue, Hold booking: On / Off.
-- Default sort: API name A→Z; clicking the API header toggles A→Z / Z→A.
+Uses the portal's **reusable table** unchanged (format, badges, action icons, empty state, pagination). Only the columns differ:
+
+- Columns: NAME | API CODE | REF. CODE | CURRENCY | DEFAULT | STATUS | SHORT CODE | B2C STATUS | AUTO ISSUE | **HOLD BOOKING** | ACTION
+- **Hold Booking** is the only new column (Enabled / Disabled). The field already exists in the create form but wasn't listed → the list endpoint needs to return it.
+- Cell values as today: Default / Not Default, Active / Inactive, Enabled / Disabled. Actions: edit, history.
+- No column sorting (the reusable table has none) — rows keep the API's order.
+- No rows → the table's standard empty state ("No hotel APIs found") and no pagination.
 
 ## Filters
 
@@ -19,11 +21,11 @@ Scope: whole page redesigned (list, filters, create/edit, history). Header and s
 - Filters apply as you type or change them. The separate search button is removed.
 - "Clear filters" appears only when a filter is set, and resets all three.
 - Changing any filter goes back to page 1.
-- No results → empty state with a clear-filters link.
+- No results → the table's standard empty state.
 
 ## Pagination
 
-- "Showing X–Y of Z", previous / page numbers / next, rows per page 20 / 50 / 100 (unchanged options).
+- The reusable table's pagination, unchanged: "Showing X–Y of Z results", Previous / pages / Next, rows per page 20 / 50 / 100.
 
 ## Create / edit (drawer)
 
@@ -54,3 +56,4 @@ Scope: whole page redesigned (list, filters, create/edit, history). Header and s
 ## Changelog
 
 - 2026-11-17 — Whole page redesigned: list, filters, create/edit drawer, history timeline.
+- 2026-11-17 — List switched back to the portal's reusable table format; only change is the added Hold Booking column.

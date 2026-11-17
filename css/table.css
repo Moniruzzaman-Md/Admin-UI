@@ -1,0 +1,135 @@
+/* The portal's REUSABLE TABLE — table, cell badges, action icons, empty state and pagination.
+   Copied 1:1 from the live portal (Bootstrap 5 table + portal overrides), 2026-11-17.
+   Every list page must use this exactly; don't restyle it. Only columns and cell content change per page.
+
+   Markup:
+   <div class="table-responsive">
+     <table class="table table-hover table-striped table-bordered f-14 text-nowrap">
+       <thead><tr class="text-uppercase"><th>Name</th>...</tr></thead>
+       <tbody><tr><td>left-aligned first cell</td><td class="text-center">...</td></tr></tbody>
+     </table>
+   </div>
+   <nav class="pagination">...</nav>   (hidden when there are no rows)
+*/
+
+/* ---------- table ---------- */
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table {
+  --tbl-border: #dee2e6;
+  width: 100%; margin-bottom: 16px; border-collapse: collapse; vertical-align: top;
+  color: #212529; font-size: 14px; line-height: 21px; caption-side: bottom;
+}
+.table.text-nowrap { white-space: nowrap; }
+.table > thead { vertical-align: bottom; }
+.table > tbody { vertical-align: inherit; }
+.table tr { border-color: var(--tbl-border); border-style: solid; border-width: 0 0 1px; }
+.table th, .table td {
+  padding: 8px; border-color: var(--tbl-border); border-style: solid; border-width: 0 1px; /* table-bordered */
+  background-color: #fff; color: #000; box-shadow: inset 0 0 0 9999px transparent;
+}
+.table td { vertical-align: middle; }
+.table thead > tr > th {
+  text-align: center; vertical-align: bottom; font-weight: 700; text-transform: uppercase;
+  background-color: #0100a6 !important; color: #fff !important;  /* --nz-table-head-bg-color / text-color */
+}
+.table-striped > tbody > tr:nth-of-type(odd) > * { box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, .05); }
+.table-hover > tbody > tr:hover > * { box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, .075); }
+.table .text-center { text-align: center !important; }
+.table .text-success { color: #198754 !important; }
+
+/* cell badges (bg-* text-white px-2 rounded-2) */
+.tbl-badge { display: inline; padding: 0 8px; border-radius: 6px; color: #fff; font-size: 14px; line-height: 21px; white-space: nowrap; }
+.tbl-badge.bg-success { background: #198754; }
+.tbl-badge.bg-danger { background: #dc3545; }
+.tbl-badge.bg-warning { background: #ffc107; }
+.tbl-badge.bg-info { background: #0dcaf0; }
+
+/* action icons (FA5 solid, green, separated by a non-breaking space) */
+.tbl-action { cursor: pointer; color: #198754; font-size: 14px; background: none; border: 0; padding: 0; line-height: 21px; }
+.tbl-action:focus-visible { outline: 2px solid #0000aa; outline-offset: 2px; border-radius: 2px; }
+
+/* ---------- empty state (inside a full-width td) ---------- */
+.table td.empty-cell { padding: 0; }
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 46px 20px; text-align: center; white-space: normal;
+  background: radial-gradient(circle at 50% 24%, rgba(217, 45, 32, .067), transparent 150px), linear-gradient(#fff, #fffafa);
+  color: #000;
+}
+.empty-state__icon {
+  display: flex; align-items: center; justify-content: center; width: 54px; height: 54px; margin: 0 0 16px; border-radius: 50%;
+  background: linear-gradient(145deg, #fff, #ffebe9); border: 1px solid #fecdca; color: #d92d20;
+  box-shadow: rgba(254, 228, 226, .55) 0 0 0 7px, rgba(217, 45, 32, .11) 0 10px 24px;
+}
+.empty-state__icon svg { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.empty-state h3 { margin: 0 0 7px; color: #1d2939; font-size: 16px; font-weight: 700; line-height: 22.4px; }
+.empty-state p { margin: 0; color: #667085; font-size: 13px; line-height: 20.15px; }
+
+/* ---------- pagination ---------- */
+.pagination {
+  display: grid; grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr); align-items: center; gap: 20px;
+  width: 100%; padding: 14px 16px; border-top: 1px solid #e4e7ec; background: #fff; color: #344054; font-size: 13px; line-height: 19.5px;
+}
+.pagination__summary {
+  display: flex; width: fit-content; min-height: 38px; align-items: center; gap: 7px; margin: 0; padding: 5px 10px;
+  border: 1px solid #e4e7ec; border-radius: 9px; background: #f9fafb; color: #667085; white-space: nowrap;
+}
+.pagination__summary strong { color: #344054; font-weight: 600; }
+.pagination__summary-label, .pagination__page-size-label { color: #667085; font-weight: 500; }
+.pagination__range { display: inline-flex; min-height: 26px; align-items: center; padding: 0 8px; border-radius: 6px; background: #eeeeff; color: #0000aa !important; }
+.pagination__navigation, .pagination__pages, .pagination__direction, .pagination__page-size { display: flex; align-items: center; }
+.pagination__navigation { justify-content: center; gap: 6px; }
+.pagination__pages { gap: 4px; }
+.pagination__direction, .pagination__page {
+  min-width: 38px; height: 38px; border: 1px solid #d0d5dd; border-radius: 8px; background: #fff; color: #344054;
+  font: inherit; font-weight: 600; line-height: 1; cursor: pointer;
+  transition: border-color .15s, background-color .15s, color .15s, box-shadow .15s;
+}
+.pagination__page { padding: 1px 6px; }
+.pagination__direction { justify-content: center; gap: 6px; padding: 0 11px; }
+.pagination__direction svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.pagination__page:hover:not(:disabled), .pagination__direction:hover:not(:disabled) { border-color: #0000aa; background: #f5f5ff; color: #0000aa; }
+.pagination__page:focus-visible, .pagination__direction:focus-visible, .pagination__page-size select:focus-visible { outline: none; border-color: #0000aa; box-shadow: rgba(0, 0, 170, .14) 0 0 0 3px; }
+.pagination__page--active, .pagination__page--active:hover:not(:disabled) { border-color: #0000aa; background: #0000aa; color: #fff; box-shadow: rgba(0, 0, 170, .22) 0 2px 5px; }
+.pagination__page:disabled, .pagination__direction:disabled, .pagination__page-size select:disabled { cursor: not-allowed; opacity: .48; }
+.pagination__ellipsis { display: inline-flex; min-width: 28px; height: 38px; align-items: center; justify-content: center; color: #98a2b3; font-weight: 600; }
+.pagination__cursor-position, .pagination__mobile-position { min-width: 90px; color: #475467; text-align: center; white-space: nowrap; }
+.pagination__mobile-position { display: none; }
+.pagination__page-size {
+  width: fit-content; justify-content: flex-end; gap: 9px; justify-self: end; min-height: 38px; padding: 5px 6px 5px 11px;
+  border: 1px solid #e4e7ec; border-radius: 9px; background: #f9fafb; color: #667085; white-space: nowrap; cursor: default;
+}
+.pagination__page-size select {
+  min-width: 68px; height: 30px; padding: 0 27px 0 10px; border: 1px solid #d0d5dd; border-radius: 6px; background-color: #fff;
+  color: #344054; font: inherit; font-weight: 600; cursor: pointer;
+}
+
+@media (max-width: 1279.98px) {
+  .pagination { grid-template-columns: 1fr auto; row-gap: 12px; }
+  .pagination__navigation { grid-area: 2 / 1 / auto / -1; width: 100%; }
+}
+@media (max-width: 767.98px) {
+  .pagination { gap: 10px; padding: 12px; font-size: 12px; }
+  .pagination__navigation { gap: 4px; }
+  .pagination__pages { gap: 3px; }
+  .pagination__direction { padding-right: 9px; padding-left: 9px; }
+  .pagination__page { min-width: 36px; height: 36px; }
+  .pagination__ellipsis { min-width: 22px; height: 36px; }
+}
+@media (max-width: 430px) {
+  .pagination { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 8px; padding: 12px 10px; }
+  .pagination__pages, .pagination__cursor-position { display: none; }
+  .pagination__mobile-position { display: inline-block; }
+  .pagination__navigation { width: 100%; justify-content: space-between; gap: 6px; }
+  .pagination__direction { min-width: 88px; height: 40px; }
+  .pagination__page-size { gap: 6px; }
+  .pagination__summary { gap: 5px; padding-right: 8px; padding-left: 8px; }
+  .pagination__summary-label { display: none; }
+}
+@media (max-width: 375px) {
+  .pagination { gap: 9px 6px; padding-right: 8px; padding-left: 8px; }
+  .pagination__summary { gap: 4px; min-width: 0; padding-right: 6px; padding-left: 6px; }
+  .pagination__range { padding-right: 6px; padding-left: 6px; }
+  .pagination__direction { min-width: 84px; padding-right: 7px; padding-left: 7px; }
+  .pagination__page-size { gap: 5px; padding-left: 8px; }
+  .pagination__page-size select { min-width: 64px; padding-right: 24px; padding-left: 8px; }
+}

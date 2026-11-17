@@ -148,7 +148,7 @@ body.sidebar-slim .slim-list { display: block; }
 
 /* ---------- content column ---------- */
 .shell-content { flex: 1; min-width: 0; overflow: auto; background: #f8fafc; }
-.shell-main { padding: 20px 24px 40px; }
+.shell-main { padding: 16px 8px 32px; } /* portal content sits 16px in (m-2 + p-2) */
 
 @media (max-width: 991px) {
   .shell-sidebar, .shell-logo, .sidebar-toggle { display: none; }
