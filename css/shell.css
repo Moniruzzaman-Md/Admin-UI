@@ -1,6 +1,6 @@
 /* Admin frame: header + sidebar, a 1:1 copy of the live portal (measured 2026-11-17 at 1440px).
    Not part of any redesign — don't restyle it. */
-* { box-sizing: border-box; }
+* { box-sizing: border-box; font-family: Poppins, sans-serif; } /* portal: *{font-family:Poppins,sans-serif!important} */
 html, body { margin: 0; height: 100%; }
 body { font-family: 'Poppins', sans-serif; color: #212529; background: #f8fafc; font-size: 16px; line-height: 1.5; overflow: hidden; }
 

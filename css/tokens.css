@@ -1,5 +1,4 @@
 /* Design tokens. Brand values captured from the live admin portal (2026-11-17). */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
   /* brand (from portal) */
@@ -30,9 +29,13 @@
   --gray: #6b7389;   --gray-bg: #eef0f4;
 
   /* type */
-  --font: 'Poppins', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, monospace;
-  --fs-xs: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-base: 14px; --fs-lg: 16px; --fs-xl: 20px;
+  /* Same as the portal: `*{font-family:Poppins,sans-serif}` with NO font file loaded.
+     Poppins shows only where it is installed locally; elsewhere it falls back to the system sans-serif
+     (Arial on Windows) - exactly like the live portal. */
+  --font: Poppins, sans-serif;
+  --mono: Poppins, sans-serif;   /* portal has no monospace font */
+  /* portal content scale: table/filter/body text 14px, page title 14px/500, base 16px */
+  --fs-xs: 12px; --fs-sm: 13px; --fs-md: 14px; --fs-base: 14px; --fs-lg: 16px; --fs-xl: 18px;
 
   /* shape */
   --radius-sm: 6px; --radius: 8px; --radius-lg: 12px;
@@ -42,7 +45,7 @@
 
   /* layout (from portal) */
   --header-h: 64px;
-  --sidebar-w: 296px;
+  --sidebar-w: 304px;
 
   /* skeleton placeholders */
   --sk-bg: #f3f4f8; --sk-border: #d8dce6; --sk-fill: #e6e9f0; --sk-text: #9aa1b4;
