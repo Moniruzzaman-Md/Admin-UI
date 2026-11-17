@@ -15,11 +15,11 @@ admin-portal/
   <screen>.html       one page per admin screen: redesigned sections + skeletons
   css/
     tokens.css        colours, type, spacing (captured from the live portal)
-    shell.css         sidebar + top bar frame
+    shell.css         header + sidebar, 1:1 copy of the live portal
     components.css    shared redesign components (buttons, table, drawer, switch...)
     skeleton.css      placeholder blocks for un-redesigned sections
   js/
-    shell.js          injects the shared sidebar/top bar; register new screens in PAGES
+    shell.js          injects the portal header + sidebar; sidebar lists only redesigned screens (MENU)
     <screen>.js       page prototype logic + dummy data
   notes/<screen>.md   dev notes (behaviour only) + changelog
   source/             captures of the live portal - git-ignored, never published
@@ -30,6 +30,7 @@ admin-portal/
 - Only the sections asked for get redesigned; everything else stays skeleton.
 - One section = one self-contained block, so a change is one skeleton swapped for one section.
 - Dev notes describe values/rules/conditions, never styling.
+- Header and sidebar copy the live portal exactly; the sidebar shows only screens that have been redesigned.
 - Tag each handoff: `git tag <screen>-handoff-<n>`.
 
 ## Viewing
