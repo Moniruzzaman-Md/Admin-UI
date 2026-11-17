@@ -85,7 +85,7 @@
     $('#rows').innerHTML = slice.length ? slice.map((a, i) => `
       <tr${a.temporary ? ' class="tbl-row-warn"' : ''}>
         <td class="tbl-num">${start + i + 1}</td>
-        <td class="tbl-strong">${esc(a.name)}${a.temporary ? ' <span class="visually-hidden">(temporary)</span>' : ''}</td>
+        <td class="tbl-strong">${esc(a.name)}${a.temporary ? ' <span class="tbl-tag warn" title="Temporary supplier"><span aria-hidden="true">Temp</span><span class="visually-hidden">Temporary</span></span>' : ''}</td>
         <td class="text-center"><span class="tbl-code">${esc(a.code)}</span></td>
         <td class="text-center tbl-muted">${esc(a.ref)}</td>
         <td class="text-center">${esc(a.currency)}</td>
