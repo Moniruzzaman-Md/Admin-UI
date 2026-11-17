@@ -67,8 +67,9 @@ Same as the Map-UI screens' Edit History. Title: "Edit History — ‹name› (�
 - Each card: user name + email, date (DD-Mon-YYYY) + time (hh:mm AM/PM), then an **operation** and a **description**.
 - Operations:
   - **Create** — "Hotel API added with these settings", then the starting values as a labelled grid: API name, API code, Short code, Reference code, Currency, Status, Type (Permanent / Temporary), B2C (Enabled / Disabled), Hold booking (Disabled, or Enabled + amount, e.g. "Enabled · 20%" / "Enabled · 50 MYR").
-  - **Status Change** — only Status changed: "Status: Active -> Inactive".
-  - **Edit** — everything else, every changed field in one entry: "Field: old -> new", comma-separated. Making a temporary supplier permanent is an Edit: "Type: Temporary -> Permanent".
+  - **Status Change** — only Status changed. Summary "Status changed", then one row: STATUS  old → new.
+  - **Edit** — everything else. Summary "N fields changed", then one row per changed field: label, old value (struck through) → new value. One save = one entry. Hold booking, amount type and amount show as one "Hold booking" row (e.g. "Enabled · 50 MYR → Enabled · 15%"). Making a temporary supplier permanent is an Edit with one row: TYPE  Temporary → Permanent.
+  - Values in every entry use the list's wording: Active / Inactive, Enabled / Disabled, Permanent / Temporary, codes as code chips.
 - Saving with no changes writes nothing.
 - Needs per entry: operation, the changed fields with old + new values (or the full snapshot for Create), user name, user email, timestamp.
 - Note: in the live portal, STATUS / B2C STATUS come back empty in history rows — that needs fixing for this to work.
@@ -95,3 +96,4 @@ Same as the Map-UI screens' Edit History. Title: "Edit History — ‹name› (�
 - 2026-11-17 — Make permanent only in the edit drawer (row button removed); Temporary tag removed, amber row marker kept.
 - 2026-11-17 — History drawer matches the Map-UI Edit History (entry cards, operation pills, user + email, date + time).
 - 2026-11-17 — History Create entry shows the starting values as a labelled field grid.
+- 2026-11-17 — History Edit / Status Change entries show one old → new row per changed field.
