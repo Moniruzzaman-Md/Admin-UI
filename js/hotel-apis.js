@@ -218,7 +218,8 @@
   /* ---------- history: Map-UI card design ----------
      Each entry: operation pill (Create / Edit / Status Change), a one-line summary, who (name + email) and when.
      Create = the values the API was created with, as a labelled field grid.
-     Edit / Status Change = one row per changed field: old value → new value.
+     Edit = one row per changed field: old value → new value.
+     Status Change (only Status changed) = "Activated" / "Deactivated", old → new status pill, and what it means.
      Values are shown the same way as in the list (code chips, status dots, hold amount with its unit). Newest first. */
   const USERS = { 'Super Admin': 'superadmin@mynztrip.com', 'Ops Team': 'ops@mynztrip.com' };
   const OP_CLASS = { Create: 'success', Edit: 'info', 'Status Change': 'neutral' };
@@ -254,9 +255,14 @@
       h.changes.forEach(([f, o]) => { before[f] = o; });
       const keys = [...new Set(h.changes.map(c => showKey(c[0])))];
       const rows = SHOW.filter(([k]) => keys.includes(k)).map(([, l, f]) => [l, f(before), f(after)]);
+      const nowActive = after.active;
       after = before;
-      const op = keys.length === 1 && keys[0] === 'active' ? 'Status Change' : 'Edit';
-      return { op, summary: op === 'Status Change' ? 'Status changed' : `${rows.length} field${rows.length === 1 ? '' : 's'} changed`, rows, ...h };
+      // only Status changed → its own compact entry: what happened, old → new pill, and what it means
+      if (keys.length === 1 && keys[0] === 'active') return {
+        op: 'Status Change', summary: nowActive ? 'Activated' : 'Deactivated', active: nowActive,
+        note: nowActive ? 'Used for search and booking again.' : 'No longer used for search or booking.', ...h,
+      };
+      return { op: 'Edit', summary: `${rows.length} field${rows.length === 1 ? '' : 's'} changed`, rows, ...h };
     });
   }
 
@@ -277,6 +283,10 @@
             <div class="history-desc">${h.summary}</div></div>
           ${h.fields
             ? `<dl class="history-fields">${h.fields.map(([k, v, wide]) => `<div${wide ? ' class="wide"' : ''}><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`
+            : h.op === 'Status Change'
+            ? `<div class="history-status ${h.active ? 'on' : 'off'}">
+                <span class="hs-pill old">${h.active ? 'Inactive' : 'Active'}</span>${ARROW}<span class="hs-pill new">${h.active ? 'Active' : 'Inactive'}</span>
+                <span class="hs-note">${h.note}</span></div>`
             : `<dl class="history-changes">${h.rows.map(([k, o, n]) => `<div><dt>${k}</dt><dd><span class="hc-old">${o}</span>${ARROW}<span class="hc-new">${n}</span></dd></div>`).join('')}</dl>`}
         </div>
       </div>`).join('')}</div>` : '<p class="history-empty">No history yet</p>';

@@ -17,6 +17,8 @@
      <dl class="history-fields"><div class="wide"><dt>API name</dt><dd>…</dd></div><div><dt>…</dt><dd>…</dd></div>…</dl>
    An Edit / Status Change entry adds one row per changed field:
      <dl class="history-changes"><div><dt>Currency</dt><dd><span class="hc-old">USD</span><svg class="hc-arrow">...</svg><span class="hc-new">EUR</span></dd></div>...</dl>
+   A Status Change entry shows the switch instead:
+     <div class="history-status on|off"><span class="hs-pill old">Inactive</span><svg class="hc-arrow">...</svg><span class="hs-pill new">Active</span><span class="hs-note">…</span></div>
    Operation pill colours: Create = success, Edit = info, Status Change = neutral. */
 
 .history-list { display: flex; flex-direction: column; gap: 22px; }
@@ -82,5 +84,21 @@
 .history-changes .hc-new { color: #1c1c33; font-weight: 600; }
 .history-changes .hc-arrow { flex: none; color: #2b3ed1; }
 .history-changes .hf-code { padding: 1px 7px; border-radius: 5px; background: #ececfa; color: #10108a; font-size: 12px; font-weight: 700; letter-spacing: .4px; }
+
+/* Status Change entry: old → new status pill, then what the change means */
+.history-status {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin: 10px 0 2px; padding: 10px;
+  border: 1px solid #e4e4f0; border-radius: 8px; background: #fbfbfe;
+}
+.hs-pill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 9px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; line-height: 18px; white-space: nowrap;
+}
+.hs-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.hs-pill.old { background: #f1f1f6; color: #8a8aa3; text-decoration: line-through; }
+.history-status.on  .hs-pill.new { background: #e5f5ec; color: #137a42; }
+.history-status.off .hs-pill.new { background: #fdecee; color: #c42f3b; }
+.history-status .hc-arrow { flex: none; color: #2b3ed1; }
+.hs-note { flex-basis: 100%; font-size: 12px; line-height: 18px; color: #6b6b85; }
 
 .history-empty { margin: 0; padding: 28px 0; text-align: center; color: #6b6b85; }
