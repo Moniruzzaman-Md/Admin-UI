@@ -18,9 +18,11 @@ admin-portal/
     shell.css         header + sidebar, 1:1 copy of the live portal (incl. collapse, hover, dropdowns)
     components.css    shared redesign components (buttons, drawer, switch...)
     table.css         the REUSABLE TABLE + pagination + empty state: portal shape, redesigned look — every list uses it as-is
+    select.css        searchable dropdown (every <select>), Map-UI style — needs js/select.js
     skeleton.css      placeholder blocks for un-redesigned sections
   js/
     shell.js          injects the portal header + sidebar; sidebar lists only redesigned screens (MENU)
+    select.js         turns every <select> into the searchable dropdown (css/select.css)
     <screen>.js       page prototype logic + dummy data
   notes/<screen>.md   dev notes (behaviour only) + changelog
   source/             captures of the live portal - git-ignored, never published
@@ -32,6 +34,7 @@ admin-portal/
 - One section = one self-contained block, so a change is one skeleton swapped for one section.
 - Dev notes describe values/rules/conditions, never styling.
 - Lists use the reusable table (`css/table.css`) unchanged — only columns and cell content vary per page. Its shape (markup, bordered grid, navy header, badges, Action column, footer parts) and the Poppins font stay the portal's; its look follows the Map-UI style (city-system.html).
+- Every dropdown is the searchable dropdown (`css/select.css` + `js/select.js`, call `SearchableSelect.init()` after filling options). Write a normal `<select>`; `data-no-search` opts out.
 - Header and sidebar copy the live portal exactly; the sidebar shows only screens that have been redesigned.
 - Tag each handoff: `git tag <screen>-handoff-<n>`.
 

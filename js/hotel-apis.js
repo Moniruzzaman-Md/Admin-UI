@@ -45,9 +45,10 @@
   /* ---------- helpers ---------- */
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // reusable-table cell badges (pills)
-  const badge = (cls, text) => `<span class="tbl-badge ${cls}">${text}</span>`;
-  const onOff = v => v ? badge('bg-success', 'Enabled') : badge('bg-danger', 'Disabled');
+  // reusable-table cells: status pill + on/off flag
+  const status = on => `<span class="tbl-status ${on ? 'on' : 'off'}">${on ? 'Active' : 'Inactive'}</span>`;
+  const flag = (on, sub) => `<span class="tbl-flag ${on ? 'on' : 'off'}">${on ? 'Enabled' : 'Disabled'}${on && sub ? `<span class="tbl-flag-sub">${esc(sub)}</span>` : ''}</span>`;
+  const holdLabel = a => a.hold && a.holdAmount != null ? (a.holdType === 'percent' ? `${a.holdAmount}%` : `${a.holdAmount} ${a.currency}`) : '';
   const fmtDate = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
     d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const toast = msg => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2400); };
@@ -76,9 +77,8 @@
   function render() {
     // status counts reflect the search + currency filters
     const base = apis.filter(matchesQC);
-    document.querySelectorAll('[data-n]').forEach(n => {
-      const k = n.dataset.n;
-      n.textContent = k ? base.filter(a => (k === 'active') === a.active).length : base.length;
+    [...$('#f-status').options].forEach(o => {
+      o.dataset.n = o.value ? base.filter(a => (o.value === 'active') === a.active).length : base.length;
     });
 
     const list = filtered();
@@ -93,23 +93,21 @@
         <td class="text-center"><span class="tbl-code">${esc(a.code)}</span></td>
         <td class="text-center tbl-muted">${esc(a.ref)}</td>
         <td class="text-center">${esc(a.currency)}</td>
-        <td class="text-center">${a.active ? badge('bg-success', 'Active') : badge('bg-danger', 'Inactive')}</td>
+        <td class="text-center">${status(a.active)}</td>
         <td class="text-center"><span class="tbl-code">${esc(a.short)}</span></td>
-        <td class="text-center">${onOff(a.b2c)}</td>
-        <td class="text-center">${onOff(a.autoIssue)}</td>
-        <td class="text-center">${onOff(a.hold)}</td>
+        <td class="text-center">${flag(a.b2c)}</td>
+        <td class="text-center">${flag(a.hold, holdLabel(a))}</td>
         <td class="text-center"><div class="tbl-actions">
           <button class="tbl-action" type="button" data-edit="${a.id}" data-tip="Edit" aria-label="Edit ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
           <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.5V12l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div></td>
       </tr>`).join('')
-      : `<tr><td class="empty-cell" colspan="10"><section class="empty-state">
+      : `<tr><td class="empty-cell" colspan="9"><section class="empty-state">
           <div class="empty-state__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"></circle><path d="m15 15 4 4"></path><path d="M8.5 10.5h4"></path></svg></div>
           <h3>No hotel APIs found</h3><p>Try adjusting the filters or add a new API.</p></section></td></tr>`;
 
-    // pagination (hidden when there are no rows, like the portal)
-    $('#pager').hidden = !list.length;
-    $('#pg-range').textContent = `${start + 1}–${start + slice.length}`;
+    // pagination always visible (0 results → "Showing 0 of 0", buttons disabled)
+    $('#pg-range').textContent = list.length ? `${start + 1}–${start + slice.length}` : '0';
     $('#pg-total').textContent = list.length;
     $('#pg-mobile').textContent = `Page ${state.page} of ${pages}`;
     $('#pg-prev').disabled = state.page === 1;
@@ -122,16 +120,10 @@
 
   $('#f-q').addEventListener('input', e => { state.q = e.target.value; state.page = 1; render(); });
   cur.addEventListener('change', e => { state.currency = e.target.value; state.page = 1; render(); });
-  $('#f-status').addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b) return;
-    state.status = b.dataset.v; state.page = 1;
-    $('#f-status').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
-    render();
-  });
+  $('#f-status').addEventListener('change', e => { state.status = e.target.value; state.page = 1; render(); });
   $('#f-clear').addEventListener('click', () => {
     Object.assign(state, { q: '', currency: '', status: '', page: 1 });
-    $('#f-q').value = ''; cur.value = '';
-    $('#f-status').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === ''));
+    $('#f-q').value = ''; cur.value = ''; $('#f-status').value = '';
     render();
   });
   $('#pg-pages').addEventListener('click', e => { const b = e.target.closest('[data-pg]'); if (b) { state.page = +b.dataset.pg; render(); } });
@@ -208,7 +200,7 @@
     typeF.classList.toggle('invalid', typeBad);
     amtF.classList.toggle('invalid', amtBad);
     if (typeBad || amtBad) ok = false;
-    if (!ok) { (form.querySelector('.invalid .input') || form.querySelector('.invalid input'))?.focus(); return; }
+    if (!ok) { (form.querySelector('.invalid .input:not(.searchable-select-native)') || form.querySelector('.invalid input'))?.focus(); return; }
 
     const data = {};
     ['name', 'code', 'ref', 'short', 'currency'].forEach(k => data[k] = val(k));
@@ -251,4 +243,5 @@
   });
 
   render();
+  SearchableSelect.init();
 })();

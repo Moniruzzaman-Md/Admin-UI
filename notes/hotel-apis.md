@@ -7,18 +7,22 @@ Scope: whole page redesigned (list, filters, create/edit, history). Header and s
 
 Uses the **reusable table** (same component as every list; redesigned look, portal shape). Only the columns differ:
 
-- Columns: NAME | API CODE | REF. CODE | CURRENCY | STATUS | SHORT CODE | B2C STATUS | AUTO ISSUE | **HOLD BOOKING** | ACTION
+- Columns: NAME | API CODE | REF. CODE | CURRENCY | STATUS | SHORT CODE | B2C STATUS | **HOLD BOOKING** | ACTION
 - **Hold Booking** is the only new column (Enabled / Disabled). The field already exists in the create form but wasn't listed → the list endpoint needs to return it.
 - **Default is removed** from the page entirely — no list column, no form switch, not shown in history.
+- **Auto Issue column removed** from the list (still on the edit form).
+- Hold Booking cell: Enabled + the hold amount (`20%` for Percent, `50 MYR` for Fixed — amount + the API's currency); Disabled otherwise.
 - Cell values as today: Active / Inactive, Enabled / Disabled. API code and short code show as code badges. Actions: edit, history (each button names itself on hover).
 - No column sorting (the reusable table has none) — rows keep the API's order.
-- No rows → the table's standard empty state ("No hotel APIs found") and no pagination.
+- No rows → the table's standard empty state ("No hotel APIs found"); pagination stays, showing 0.
+- The list takes the screen's remaining height: rows scroll inside the table, the header row and pagination always stay in view. With few rows the table is only as tall as its rows.
 
 ## Filters
 
 - **Search** replaces the "Select Api" dropdown. It matches API name, API code, reference code and short code (case-insensitive, contains).
 - **Currency**: "All currencies" + currency list.
-- **Status**: All / Active / Inactive. Each shows a count, calculated with the search and currency filters applied.
+- **Status** (dropdown): All statuses / Active / Inactive. Each option shows a count, calculated with the search and currency filters applied.
+- Every dropdown on the page (filters, form currency, rows per page) has a search box to type and narrow the options; arrow keys + Enter pick, Esc closes.
 - Filters apply as you type or change them. The separate search button is removed.
 - "Clear filters" appears only when a filter is set, and resets all three.
 - Changing any filter goes back to page 1.
@@ -67,3 +71,4 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - 2026-11-17 — Page subtitle and breadcrumb removed; header is just the title and New API.
 - 2026-11-17 — Default removed: list column, form switch and history.
 - 2026-11-17 — Hold booking now shows Amount type (Percent / Fixed) and Hold amount when on, as in the portal.
+- 2026-11-17 — Status filter is a dropdown; all dropdowns are searchable (Map-UI style). Auto Issue column removed. Status / B2C / Hold cells restyled; Hold shows its amount. List fits the screen height with pagination always visible.

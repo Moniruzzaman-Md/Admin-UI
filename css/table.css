@@ -15,7 +15,8 @@
        <tbody><tr>
          <td class="tbl-strong">first cell (left)</td>
          <td class="text-center"><span class="tbl-code">CODE</span></td>
-         <td class="text-center"><span class="tbl-badge bg-success">Active</span></td>
+         <td class="text-center"><span class="tbl-status on">Active</span></td>      (or .off)
+         <td class="text-center"><span class="tbl-flag on">Enabled</span></td>       (or .off)
          <td class="text-center"><div class="tbl-actions">
            <button class="tbl-action" data-tip="Edit" aria-label="Edit …"><svg …15×15 line icon…></svg></button>…
          </div></td>
@@ -55,6 +56,7 @@
   background-color: var(--tbl-head) !important; color: #fff !important;
   border-color: rgba(255, 255, 255, .14);
 }
+.table-responsive .table thead > tr > th { position: sticky; top: 0; z-index: 2; }
 .table thead > tr > th:first-child { text-align: left; padding-left: 16px; }
 .table td { padding: 11px 8px; vertical-align: middle; }
 .table td:first-child { padding-left: 16px; }
@@ -84,6 +86,27 @@
 .tbl-badge.bg-warning { background: #a8620a; }
 .tbl-badge.bg-info    { background: #2b3ed1; }
 .tbl-badge.bg-neutral { background: #8a8aa3; }
+
+/* status: soft pill with a dot — for a record's own state (Active / Inactive) */
+.tbl-status {
+  display: inline-flex; align-items: center; gap: 6px; min-width: 84px; justify-content: center; padding: 3px 10px 3px 9px; border-radius: 999px;
+  font-size: 12px; line-height: 18px; font-weight: 600; white-space: nowrap;
+}
+.tbl-status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+.tbl-status.on  { background: #e5f5ec; color: #137a42; }
+.tbl-status.off { background: #fdecee; color: #c42f3b; }
+
+/* flag: on/off option — a check for on, a muted dash for off, so the "on" rows stand out */
+.tbl-flag { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; white-space: nowrap; }
+.tbl-flag::before {
+  content: ''; flex: none; width: 18px; height: 18px; border-radius: 50%;
+  background: center / 12px no-repeat;
+}
+.tbl-flag.on  { color: #137a42; font-weight: 600; }
+.tbl-flag.on::before { background-color: #e5f5ec; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23137a42' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E"); }
+.tbl-flag.off { color: #8a8aa3; }
+.tbl-flag.off::before { background-color: #f1f1f6; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8aa3' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 12h10'/%3E%3C/svg%3E"); }
+.tbl-flag .tbl-flag-sub { margin-left: 2px; padding: 1px 7px; border-radius: 6px; background: #ececfa; color: #10108a; font-size: 12px; font-weight: 700; }
 
 /* action buttons: bordered squares, fill on hover, tooltip from data-tip */
 .tbl-actions { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
@@ -141,7 +164,7 @@
 .pagination__ellipsis { display: inline-flex; min-width: 20px; height: 32px; align-items: center; justify-content: center; color: #6b6b85; }
 .pagination__mobile-position { display: none; min-width: 90px; color: #1c1c33; font-weight: 600; text-align: center; white-space: nowrap; }
 .pagination__page-size { justify-content: flex-end; justify-self: end; gap: 8px; white-space: nowrap; }
-.pagination__page-size select {
+.pagination__page-size select, .pagination__page-size .searchable-select-trigger {
   height: 32px; min-width: 64px; padding: 0 28px 0 10px; border: 1px solid #e4e4f0; border-radius: 6px; color: #1c1c33;
   font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; appearance: none;
   background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b85' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
