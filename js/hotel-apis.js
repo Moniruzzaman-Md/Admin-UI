@@ -25,12 +25,16 @@
   // hold amount for the APIs that allow hold booking: [type, amount]
   const HOLD = { TBOHOL: ['percent', '20'], RATEHAWK: ['fixed', '50'], JUNIPER: ['percent', '10'], MANUAL: ['fixed', '100'] };
   apis.forEach(a => { if (HOLD[a.code]) [a.holdType, a.holdAmount] = HOLD[a.code]; });
+  // temporary suppliers (can be made permanent; one-way)
+  const TEMP = ['JUNIPER', 'TRAVCO', 'BONOTEL'];
+  apis.forEach(a => { a.temporary = TEMP.includes(a.code); });
 
   // dummy history: a created entry + a couple of edits
   const FIELDS = { name: 'API name', code: 'API code', ref: 'Reference code', short: 'Short code', currency: 'Currency',
-    active: 'Status', b2c: 'B2C', hold: 'Hold booking',
+    active: 'Status', b2c: 'B2C', temporary: 'Type', hold: 'Hold booking',
     holdType: 'Hold amount type', holdAmount: 'Hold amount' };
   const fmtVal = (f, v) => v === null || v === '' ? '—'
+    : f === 'temporary' ? (v ? 'Temporary' : 'Permanent')
     : typeof v === 'boolean' ? (f === 'active' ? (v ? 'Active' : 'Inactive') : (v ? 'On' : 'Off'))
     : f === 'holdType' ? (v === 'percent' ? 'Percent' : 'Fixed')
     : v;
@@ -88,8 +92,8 @@
     const slice = list.slice(start, start + state.size);
 
     $('#rows').innerHTML = slice.length ? slice.map(a => `
-      <tr>
-        <td class="tbl-strong">${esc(a.name)}</td>
+      <tr${a.temporary ? ' class="tbl-row-warn"' : ''}>
+        <td class="tbl-strong">${esc(a.name)}${a.temporary ? ' <span class="tbl-tag warn">Temporary</span>' : ''}</td>
         <td class="text-center"><span class="tbl-code">${esc(a.code)}</span></td>
         <td class="text-center tbl-muted">${esc(a.ref)}</td>
         <td class="text-center">${esc(a.currency)}</td>
@@ -99,7 +103,8 @@
         <td class="text-center">${flag(a.hold, holdLabel(a))}</td>
         <td class="text-center"><div class="tbl-actions">
           <button class="tbl-action" type="button" data-edit="${a.id}" data-tip="Edit" aria-label="Edit ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
-          <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.5V12l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.5V12l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>${a.temporary ? `
+          <button class="tbl-action" type="button" data-perm="${a.id}" data-tip="Make permanent" aria-label="Make ${esc(a.name)} permanent"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.8 12.2l2.2 2.2 4.2-4.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : ''}
         </div></td>
       </tr>`).join('')
       : `<tr><td class="empty-cell" colspan="9"><section class="empty-state">
@@ -166,6 +171,7 @@
     form.querySelectorAll('[name=holdType]').forEach(r => r.checked = r.value === v.holdType);
     form.elements.holdAmount.value = v.holdAmount ?? '';
     syncHold();
+    $('#temp-note').hidden = !(api && api.temporary);
     openDrawer($('#edit-drawer'));
   }
 
@@ -235,9 +241,31 @@
     openDrawer($('#hist-drawer'));
   }
 
+  /* ---------- make a temporary supplier permanent (confirm first; can't be undone here) ---------- */
+  const permDlg = $('#perm-dialog');
+  let permApi = null;
+  function askPermanent(api) {
+    permApi = api;
+    $('#perm-title').textContent = `Make ${api.name} permanent?`;
+    permDlg.showModal();
+  }
+  $('#temp-note-btn').addEventListener('click', () => editing && askPermanent(editing));
+  $('#perm-cancel').addEventListener('click', () => permDlg.close());
+  permDlg.addEventListener('click', e => { if (e.target === permDlg) permDlg.close(); });
+  permDlg.addEventListener('keydown', e => e.stopPropagation()); // Esc closes only the dialog, not the drawer
+  $('#perm-ok').addEventListener('click', () => {
+    permApi.temporary = false;
+    permApi.history.unshift({ by: 'Super Admin', at: new Date(), changes: [['temporary', true, false]] });
+    permDlg.close();
+    if (editing === permApi) $('#temp-note').hidden = true;
+    toast(`${permApi.name} is now permanent`);
+    render();
+  });
+
   $('#btn-new').addEventListener('click', () => openEdit(null));
   $('#rows').addEventListener('click', e => {
-    const ed = e.target.closest('[data-edit]'), hi = e.target.closest('[data-hist]');
+    const ed = e.target.closest('[data-edit]'), hi = e.target.closest('[data-hist]'), pe = e.target.closest('[data-perm]');
+    if (pe) askPermanent(apis.find(a => a.id === +pe.dataset.perm));
     if (ed) openEdit(apis.find(a => a.id === +ed.dataset.edit));
     if (hi) openHistory(apis.find(a => a.id === +hi.dataset.hist));
   });

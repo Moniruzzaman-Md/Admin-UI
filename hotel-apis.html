@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hotel APIs · Admin Redesign</title>
-<link rel="stylesheet" href="css/tokens.css?v=10">
-<link rel="stylesheet" href="css/shell.css?v=10">
-<link rel="stylesheet" href="css/components.css?v=10">
-<link rel="stylesheet" href="css/skeleton.css?v=10">
-<link rel="stylesheet" href="css/table.css?v=10">
-<link rel="stylesheet" href="css/select.css?v=10">
+<link rel="stylesheet" href="css/tokens.css?v=11">
+<link rel="stylesheet" href="css/shell.css?v=11">
+<link rel="stylesheet" href="css/components.css?v=11">
+<link rel="stylesheet" href="css/skeleton.css?v=11">
+<link rel="stylesheet" href="css/table.css?v=11">
+<link rel="stylesheet" href="css/select.css?v=11">
 <style>
   .toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .toolbar .search-input { flex: 1 1 260px; max-width: 340px; }
@@ -36,6 +36,19 @@
   .input-affix { position: relative; }
   .input-affix .input { width: 100%; padding-right: 52px; }
   .input-affix .affix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: var(--fs-sm); font-weight: 500; color: var(--text-3); pointer-events: none; }
+  /* rows have 2 or 3 actions: fixed width so Edit/History line up down the column */
+  #rows .tbl-actions { min-width: 108px; justify-content: flex-start; }
+  /* temporary supplier: notice in the edit drawer + confirm dialog */
+  .temp-note { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; padding: 12px 14px; border: 1px solid #f2d9a6; border-radius: var(--radius); background: #fff8e8; color: #8a5300; }
+  .temp-note svg { flex: none; }
+  .temp-note div { flex: 1; display: flex; flex-direction: column; font-size: var(--fs-sm); line-height: 1.4; }
+  .temp-note strong { font-weight: 600; color: #6e4200; }
+  .temp-note .btn { flex: none; }
+  .confirm { width: min(420px, calc(100vw - 32px)); padding: 22px 22px 18px; border: 0; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); color: var(--text); }
+  .confirm::backdrop { background: rgba(13, 13, 60, .35); }
+  .confirm h2 { margin: 0 0 8px; font-size: var(--fs-lg); font-weight: 600; }
+  .confirm p { margin: 0 0 20px; font-size: var(--fs-md); color: var(--text-2); line-height: 1.5; }
+  .confirm-foot { display: flex; justify-content: flex-end; gap: 8px; }
   /* history */
   .timeline { list-style: none; margin: 0; padding: 0; }
   .timeline li { position: relative; padding: 0 0 22px 26px; }
@@ -117,6 +130,11 @@
     <button class="icon-btn" type="button" data-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
   </div>
   <form class="drawer-body" id="edit-form" novalidate>
+    <div class="temp-note" id="temp-note" role="note" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <div><strong>Temporary supplier</strong><span>Make it permanent once it should stay.</span></div>
+      <button class="btn btn-secondary" type="button" id="temp-note-btn">Make permanent</button>
+    </div>
     <div class="form-section">
       <h3>Details</h3>
       <div class="field" style="margin-bottom:14px">
@@ -192,11 +210,21 @@
 </aside>
 <div class="drawer-backdrop" data-close></div>
 
+<!-- Make permanent: confirm -->
+<dialog class="confirm" id="perm-dialog" aria-labelledby="perm-title">
+  <h2 id="perm-title">Make this supplier permanent?</h2>
+  <p>It will no longer be marked Temporary. This can't be changed back here.</p>
+  <div class="confirm-foot">
+    <button class="btn btn-secondary" type="button" id="perm-cancel">Cancel</button>
+    <button class="btn btn-primary" type="button" id="perm-ok">Make permanent</button>
+  </div>
+</dialog>
+
 <div class="toast" id="toast" role="status"></div>
 
 <style>.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
-<script src="js/shell.js?v=10"></script>
-<script src="js/select.js?v=10"></script>
-<script src="js/hotel-apis.js?v=10"></script>
+<script src="js/shell.js?v=11"></script>
+<script src="js/select.js?v=11"></script>
+<script src="js/hotel-apis.js?v=11"></script>
 </body>
 </html>

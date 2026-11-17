@@ -13,6 +13,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - **Auto Issue is removed** from the page entirely — no list column, no form switch, not shown in history.
 - Hold Booking cell: Enabled + the hold amount (`20%` for Percent, `50 MYR` for Fixed — amount + the API's currency); Disabled otherwise.
 - Cell values as today: Active / Inactive, Enabled / Disabled. API code and short code show as code badges. Actions: edit, history (each button names itself on hover).
+- **Temporary suppliers**: the name shows a "Temporary" tag and the row has an amber marker on its left edge. Needs a new field on the API (e.g. `is_temporary`) in the list response.
 - No column sorting (the reusable table has none) — rows keep the API's order.
 - No rows → the table's standard empty state ("No hotel APIs found"); pagination stays, showing 0.
 - The list takes the screen's remaining height: rows scroll inside the table, the header row and pagination always stay in view. With few rows the table is only as tall as its rows.
@@ -50,6 +51,14 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - Success → drawer closes, toast "‹name› created / updated".
 - Esc, Cancel, ✕ or clicking outside closes without saving.
 
+## Make permanent
+
+- Only for temporary suppliers. Two ways in: the **Make permanent** action button in the row (temporary rows only), or the "Temporary supplier" notice at the top of the edit drawer.
+- Asks to confirm first ("Make ‹name› permanent?"). Cancel / Esc / clicking outside does nothing.
+- On confirm: the supplier is permanent right away (no need to save the form), the tag and button disappear, toast "‹name› is now permanent", and history gets "Type: Temporary → Permanent".
+- One-way: a permanent supplier can't be made temporary from this page. *(Assumption.)*
+- New APIs are created permanent; the form has no Temporary option. *(Assumption — how do temporary suppliers get created?)*
+
 ## History (drawer)
 
 - Replaces the snapshot table with a timeline, newest first.
@@ -63,6 +72,8 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 1. Descriptions under each switch are my reading of the field — please confirm wording (especially Hold booking).
 2. Hold amount: the portal pre-fills 0 — is 0 a valid hold amount, or should it be more than 0? Can Fixed go above the booking value? Is the Fixed amount in the API's currency?
 
+3. Temporary suppliers: how are they created, and should an admin also be able to mark one temporary (or back)? Is there anything else that changes for a temporary supplier (e.g. hidden from B2C, expiry date) that the list should show?
+
 ## Changelog
 
 - 2026-11-17 — Whole page redesigned: list, filters, create/edit drawer, history timeline.
@@ -73,3 +84,4 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - 2026-11-17 — Hold booking now shows Amount type (Percent / Fixed) and Hold amount when on, as in the portal.
 - 2026-11-17 — Status filter is a dropdown; all dropdowns are searchable (Map-UI style). Auto Issue column removed. Status / B2C / Hold cells restyled; Hold shows its amount. List fits the screen height with pagination always visible.
 - 2026-11-17 — Auto issue removed from the edit form and history too.
+- 2026-11-17 — Temporary suppliers tagged in the list; Make permanent (row action + edit-drawer notice, with confirm).
