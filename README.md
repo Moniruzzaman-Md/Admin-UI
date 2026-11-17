@@ -1,0 +1,44 @@
+# Admin Portal Redesign
+
+A single project that mirrors the admin portal screen by screen.
+Each page shows the **real redesigned sections**, and everything not yet redesigned
+stays as a **labelled skeleton** in its true position, so the page fills in turn by turn.
+
+## Structure
+
+Published with GitHub Pages as a clickable prototype (same model as Map-UI):
+the repo root is the site root, and every screen is one HTML file sharing the same CSS/JS.
+
+```
+admin-portal/
+  index.html          screen list + progress (site home)
+  <screen>.html       one page per admin screen: redesigned sections + skeletons
+  css/
+    tokens.css        colours, type, spacing (captured from the live portal)
+    shell.css         sidebar + top bar frame
+    skeleton.css      placeholder blocks for un-redesigned sections
+  js/
+    shell.js          injects the shared sidebar/top bar so nav lives in one place
+  notes/<screen>.md   dev notes (behaviour only) + changelog
+  source/             captures of the live portal - git-ignored, never published
+```
+
+## Rules
+
+- Only the sections asked for get redesigned; everything else stays skeleton.
+- One section = one self-contained block, so a change is one skeleton swapped for one section.
+- Dev notes describe values/rules/conditions, never styling.
+- Tag each handoff: `git tag <screen>-handoff-<n>`.
+
+## Viewing
+
+Local: `http://localhost:5500/admin-portal/` (the `designs` server in `.claude/launch.json`).
+Published: GitHub Pages from the `main` branch root.
+
+Use dummy data only in published pages - no real customer names, booking refs, emails or internal URLs.
+
+## Screens
+
+| Screen | Sections redesigned | Status | Last change |
+|---|---|---|---|
+| _none yet_ | | | |
