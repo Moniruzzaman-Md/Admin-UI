@@ -17,7 +17,7 @@ admin-portal/
     tokens.css        colours, type, spacing (captured from the live portal)
     shell.css         header + sidebar, 1:1 copy of the live portal (incl. collapse, hover, dropdowns)
     components.css    shared redesign components (buttons, drawer, switch...)
-    table.css         the portal's REUSABLE TABLE + pagination + empty state, 1:1 — every list uses it as-is
+    table.css         the REUSABLE TABLE + pagination + empty state: portal shape, redesigned look — every list uses it as-is
     skeleton.css      placeholder blocks for un-redesigned sections
   js/
     shell.js          injects the portal header + sidebar; sidebar lists only redesigned screens (MENU)
@@ -31,7 +31,7 @@ admin-portal/
 - Only the sections asked for get redesigned; everything else stays skeleton.
 - One section = one self-contained block, so a change is one skeleton swapped for one section.
 - Dev notes describe values/rules/conditions, never styling.
-- Lists use the portal's reusable table (`css/table.css`) unchanged — only columns and cell content vary per page.
+- Lists use the reusable table (`css/table.css`) unchanged — only columns and cell content vary per page. Its shape (markup, bordered grid, navy header, badges, Action column, footer parts) and the Poppins font stay the portal's; its look follows the Map-UI style (city-system.html).
 - Header and sidebar copy the live portal exactly; the sidebar shows only screens that have been redesigned.
 - Tag each handoff: `git tag <screen>-handoff-<n>`.
 

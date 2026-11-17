@@ -40,7 +40,7 @@
   /* ---------- helpers ---------- */
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // portal reusable-table cell badges
+  // reusable-table cell badges (pills)
   const badge = (cls, text) => `<span class="tbl-badge ${cls}">${text}</span>`;
   const onOff = v => v ? badge('bg-success', 'Enabled') : badge('bg-danger', 'Disabled');
   const fmtDate = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
@@ -84,20 +84,20 @@
 
     $('#rows').innerHTML = slice.length ? slice.map(a => `
       <tr>
-        <td>${esc(a.name)}</td>
-        <td class="text-center">${esc(a.code)}</td>
-        <td class="text-center">${esc(a.ref)}</td>
+        <td class="tbl-strong">${esc(a.name)}</td>
+        <td class="text-center"><span class="tbl-code">${esc(a.code)}</span></td>
+        <td class="text-center tbl-muted">${esc(a.ref)}</td>
         <td class="text-center">${esc(a.currency)}</td>
-        <td class="text-center">${a.isDefault ? badge('bg-info', 'Default') : badge('bg-warning', 'Not Default')}</td>
+        <td class="text-center">${a.isDefault ? badge('bg-info', 'Default') : badge('bg-neutral', 'Not Default')}</td>
         <td class="text-center">${a.active ? badge('bg-success', 'Active') : badge('bg-danger', 'Inactive')}</td>
-        <td class="text-center">${esc(a.short)}</td>
+        <td class="text-center"><span class="tbl-code">${esc(a.short)}</span></td>
         <td class="text-center">${onOff(a.b2c)}</td>
         <td class="text-center">${onOff(a.autoIssue)}</td>
         <td class="text-center">${onOff(a.hold)}</td>
-        <td class="text-center text-success">
-          <button class="tbl-action" type="button" data-edit="${a.id}" title="Edit" aria-label="Edit ${esc(a.name)}"><i class="fas fa-edit"></i></button> &nbsp;
-          <button class="tbl-action" type="button" data-hist="${a.id}" title="History" aria-label="History for ${esc(a.name)}"><i class="fas fa-clock"></i></button>
-        </td>
+        <td class="text-center"><div class="tbl-actions">
+          <button class="tbl-action" type="button" data-edit="${a.id}" data-tip="Edit" aria-label="Edit ${esc(a.name)}"><i class="fas fa-pen"></i></button>
+          <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><i class="fas fa-history"></i></button>
+        </div></td>
       </tr>`).join('')
       : `<tr><td class="empty-cell" colspan="11"><section class="empty-state">
           <div class="empty-state__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"></circle><path d="m15 15 4 4"></path><path d="M8.5 10.5h4"></path></svg></div>

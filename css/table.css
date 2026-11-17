@@ -1,106 +1,149 @@
 /* The portal's REUSABLE TABLE — table, cell badges, action icons, empty state and pagination.
-   Copied 1:1 from the live portal (Bootstrap 5 table + portal overrides), 2026-11-17.
-   Every list page must use this exactly; don't restyle it. Only columns and cell content change per page.
+   The SHAPE is the portal's and must not change: same markup and class names, a bordered grid
+   (row lines + column lines), the navy header row, one column per field, value badges in cells,
+   an Action column, and the footer with summary · Previous/pages/Next · rows per page.
+   Font family is the portal's (Poppins, set by shell.css).
+   The LOOK is the redesign, in the style of the Map-UI screens (city-system.html):
+   roomier cells, rounded status pills, code badges, bordered square action buttons with
+   tooltips, a quieter footer. Every list page uses this file unchanged; only columns and cell
+   content change per page.
 
    Markup:
    <div class="table-responsive">
      <table class="table table-hover table-striped table-bordered f-14 text-nowrap">
-       <thead><tr class="text-uppercase"><th>Name</th>...</tr></thead>
-       <tbody><tr><td>left-aligned first cell</td><td class="text-center">...</td></tr></tbody>
+       <thead><tr class="text-uppercase"><th>Name</th>...<th>Action</th></tr></thead>
+       <tbody><tr>
+         <td class="tbl-strong">first cell (left)</td>
+         <td class="text-center"><span class="tbl-code">CODE</span></td>
+         <td class="text-center"><span class="tbl-badge bg-success">Active</span></td>
+         <td class="text-center"><div class="tbl-actions">
+           <button class="tbl-action" data-tip="Edit" aria-label="Edit …"><i class="fas fa-pen"></i></button>…
+         </div></td>
+       </tr></tbody>
      </table>
    </div>
    <nav class="pagination">...</nav>   (hidden when there are no rows)
 */
 
-/* ---------- table ---------- */
 .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ---------- table ---------- */
 .table {
-  --tbl-border: #dee2e6;
-  width: 100%; margin-bottom: 16px; border-collapse: collapse; vertical-align: top;
-  color: #212529; font-size: 14px; line-height: 21px; caption-side: bottom;
+  --tbl-grid: #dee2e6;        /* portal grid line */
+  --tbl-head: #0100a6;        /* portal header fill */
+  --tbl-text: #1c1c33;
+  --tbl-muted: #6b6b85;
+  --tbl-panel: #ececfa;
+  --tbl-navy: #10108a;
+  --tbl-accent: #2b3ed1;
+  --tbl-line: #e4e4f0;
+  width: 100%; margin: 0; border-collapse: collapse; vertical-align: top;
+  color: var(--tbl-text); font-size: 14px; line-height: 21px; caption-side: bottom; background: #fff;
 }
 .table.text-nowrap { white-space: nowrap; }
 .table > thead { vertical-align: bottom; }
 .table > tbody { vertical-align: inherit; }
-.table tr { border-color: var(--tbl-border); border-style: solid; border-width: 0 0 1px; }
-.table th, .table td {
-  padding: 8px; border-color: var(--tbl-border); border-style: solid; border-width: 0 1px; /* table-bordered */
-  background-color: #fff; color: #000; box-shadow: inset 0 0 0 9999px transparent;
-}
-.table td { vertical-align: middle; }
+.table th, .table td { border: 1px solid var(--tbl-grid); background-color: #fff; color: inherit; }
+.table tr > :first-child { border-left: 0; }
+.table tr > :last-child { border-right: 0; }
+.table thead th { border-top: 0; }
+.table tbody tr:last-child td { border-bottom: 0; }
+
 .table thead > tr > th {
-  text-align: center; vertical-align: bottom; font-weight: 700; text-transform: uppercase;
-  background-color: #0100a6 !important; color: #fff !important;  /* --nz-table-head-bg-color / text-color */
+  padding: 13px 8px; text-align: center; vertical-align: middle;
+  font-size: 12px; line-height: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: .2px;
+  background-color: var(--tbl-head) !important; color: #fff !important;
+  border-color: rgba(255, 255, 255, .14);
 }
-.table-striped > tbody > tr:nth-of-type(odd) > * { box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, .05); }
-.table-hover > tbody > tr:hover > * { box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, .075); }
+.table thead > tr > th:first-child { text-align: left; padding-left: 16px; }
+.table td { padding: 11px 8px; vertical-align: middle; }
+.table td:first-child { padding-left: 16px; }
+
+/* stripes kept, but barely there; hover is the stronger cue */
+.table-striped > tbody > tr:nth-of-type(odd) > * { background-color: #fbfbfe; }
+.table-hover > tbody > tr { transition: background-color .12s; }
+.table-hover > tbody > tr:hover > * { background-color: #f3f3fd; }
+
 .table .text-center { text-align: center !important; }
-.table .text-success { color: #198754 !important; }
+.table .tbl-strong { font-weight: 600; color: var(--tbl-text); }
+.table .tbl-muted { color: var(--tbl-muted); }
 
-/* cell badges (bg-* text-white px-2 rounded-2) */
-.tbl-badge { display: inline; padding: 0 8px; border-radius: 6px; color: #fff; font-size: 14px; line-height: 21px; white-space: nowrap; }
-.tbl-badge.bg-success { background: #198754; }
-.tbl-badge.bg-danger { background: #dc3545; }
-.tbl-badge.bg-warning { background: #ffc107; }
-.tbl-badge.bg-info { background: #0dcaf0; }
+/* code values (API code, short code, ids…) */
+.tbl-code {
+  display: inline-block; padding: 3px 8px; border-radius: 6px; background: var(--tbl-panel); color: var(--tbl-navy);
+  font-size: 12px; line-height: 18px; font-weight: 700; letter-spacing: .5px;
+}
 
-/* action icons (FA5 solid, green, separated by a non-breaking space) */
-.tbl-action { cursor: pointer; color: #198754; font-size: 14px; background: none; border: 0; padding: 0; line-height: 21px; }
-.tbl-action:focus-visible { outline: 2px solid #0000aa; outline-offset: 2px; border-radius: 2px; }
+/* value badges → rounded pills. Deep shades so white 12px text clears 4.5:1. */
+.tbl-badge {
+  display: inline-block; min-width: 70px; padding: 3px 9px; border-radius: 999px; color: #fff; text-align: center;
+  font-size: 12px; line-height: 18px; font-weight: 700; white-space: nowrap;
+}
+.tbl-badge.bg-success { background: #178449; }
+.tbl-badge.bg-danger  { background: #d63643; }
+.tbl-badge.bg-warning { background: #a8620a; }
+.tbl-badge.bg-info    { background: #2b3ed1; }
+.tbl-badge.bg-neutral { background: #8a8aa3; }
+
+/* action buttons: bordered squares, fill on hover, tooltip from data-tip */
+.tbl-actions { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.tbl-action {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;
+  border: 1px solid var(--tbl-line, #e4e4f0); border-radius: 6px; background: #fff; color: #2b3ed1; font-size: 13px; cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+.tbl-action:hover { background: #2b3ed1; border-color: #2b3ed1; color: #fff; }
+.tbl-action:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 2px; }
+.tbl-action[data-tip]:hover::after, .tbl-action[data-tip]:focus-visible::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); z-index: 60;
+  padding: 6px 10px; border-radius: 6px; background: #0d0d5c; color: #fff; font-size: 12px; font-weight: 600; line-height: 1.3;
+  white-space: nowrap; pointer-events: none; box-shadow: 0 1px 2px rgba(16, 16, 90, .06);
+}
 
 /* ---------- empty state (inside a full-width td) ---------- */
 .table td.empty-cell { padding: 0; }
 .empty-state {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 46px 20px; text-align: center; white-space: normal;
-  background: radial-gradient(circle at 50% 24%, rgba(217, 45, 32, .067), transparent 150px), linear-gradient(#fff, #fffafa);
-  color: #000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 20px; text-align: center; white-space: normal;
+  background: radial-gradient(circle at 50% 30%, rgba(43, 62, 209, .06), transparent 160px), #fff;
 }
 .empty-state__icon {
   display: flex; align-items: center; justify-content: center; width: 54px; height: 54px; margin: 0 0 16px; border-radius: 50%;
-  background: linear-gradient(145deg, #fff, #ffebe9); border: 1px solid #fecdca; color: #d92d20;
-  box-shadow: rgba(254, 228, 226, .55) 0 0 0 7px, rgba(217, 45, 32, .11) 0 10px 24px;
+  background: #ececfa; color: #10108a; box-shadow: 0 0 0 7px rgba(236, 236, 250, .6);
 }
 .empty-state__icon svg { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.empty-state h3 { margin: 0 0 7px; color: #1d2939; font-size: 16px; font-weight: 700; line-height: 22.4px; }
-.empty-state p { margin: 0; color: #667085; font-size: 13px; line-height: 20.15px; }
+.empty-state h3 { margin: 0 0 6px; color: #1c1c33; font-size: 16px; font-weight: 700; line-height: 22px; }
+.empty-state p { margin: 0; color: #6b6b85; font-size: 13px; line-height: 20px; }
 
 /* ---------- pagination ---------- */
 .pagination {
-  display: grid; grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr); align-items: center; gap: 20px;
-  width: 100%; padding: 14px 16px; border-top: 1px solid #e4e7ec; background: #fff; color: #344054; font-size: 13px; line-height: 19.5px;
+  display: grid; grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr); align-items: center; gap: 16px;
+  width: 100%; padding: 14px 20px; border-top: 1px solid #e4e4f0; background: #fff; color: #6b6b85; font-size: 13px; line-height: 19.5px;
 }
-.pagination__summary {
-  display: flex; width: fit-content; min-height: 38px; align-items: center; gap: 7px; margin: 0; padding: 5px 10px;
-  border: 1px solid #e4e7ec; border-radius: 9px; background: #f9fafb; color: #667085; white-space: nowrap;
-}
-.pagination__summary strong { color: #344054; font-weight: 600; }
-.pagination__summary-label, .pagination__page-size-label { color: #667085; font-weight: 500; }
-.pagination__range { display: inline-flex; min-height: 26px; align-items: center; padding: 0 8px; border-radius: 6px; background: #eeeeff; color: #0000aa !important; }
+.pagination__summary { display: flex; align-items: center; gap: 5px; margin: 0; white-space: nowrap; }
+.pagination__summary strong { color: #1c1c33; font-weight: 700; }
+.pagination__range { color: #1c1c33 !important; }
 .pagination__navigation, .pagination__pages, .pagination__direction, .pagination__page-size { display: flex; align-items: center; }
 .pagination__navigation { justify-content: center; gap: 6px; }
-.pagination__pages { gap: 4px; }
+.pagination__pages { gap: 6px; }
 .pagination__direction, .pagination__page {
-  min-width: 38px; height: 38px; border: 1px solid #d0d5dd; border-radius: 8px; background: #fff; color: #344054;
-  font: inherit; font-weight: 600; line-height: 1; cursor: pointer;
-  transition: border-color .15s, background-color .15s, color .15s, box-shadow .15s;
+  min-width: 32px; height: 32px; border: 1px solid #e4e4f0; border-radius: 6px; background: #fff; color: #1c1c33;
+  font: inherit; font-size: 13px; font-weight: 600; line-height: 1; cursor: pointer; transition: background-color .15s, border-color .15s, color .15s;
 }
-.pagination__page { padding: 1px 6px; }
-.pagination__direction { justify-content: center; gap: 6px; padding: 0 11px; }
-.pagination__direction svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-.pagination__page:hover:not(:disabled), .pagination__direction:hover:not(:disabled) { border-color: #0000aa; background: #f5f5ff; color: #0000aa; }
-.pagination__page:focus-visible, .pagination__direction:focus-visible, .pagination__page-size select:focus-visible { outline: none; border-color: #0000aa; box-shadow: rgba(0, 0, 170, .14) 0 0 0 3px; }
-.pagination__page--active, .pagination__page--active:hover:not(:disabled) { border-color: #0000aa; background: #0000aa; color: #fff; box-shadow: rgba(0, 0, 170, .22) 0 2px 5px; }
-.pagination__page:disabled, .pagination__direction:disabled, .pagination__page-size select:disabled { cursor: not-allowed; opacity: .48; }
-.pagination__ellipsis { display: inline-flex; min-width: 28px; height: 38px; align-items: center; justify-content: center; color: #98a2b3; font-weight: 600; }
-.pagination__cursor-position, .pagination__mobile-position { min-width: 90px; color: #475467; text-align: center; white-space: nowrap; }
-.pagination__mobile-position { display: none; }
-.pagination__page-size {
-  width: fit-content; justify-content: flex-end; gap: 9px; justify-self: end; min-height: 38px; padding: 5px 6px 5px 11px;
-  border: 1px solid #e4e7ec; border-radius: 9px; background: #f9fafb; color: #667085; white-space: nowrap; cursor: default;
-}
+.pagination__page { padding: 0 10px; }
+.pagination__direction { justify-content: center; gap: 4px; padding: 0 12px; }
+.pagination__direction svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+.pagination__page:hover:not(:disabled):not(.pagination__page--active),
+.pagination__direction:hover:not(:disabled) { background: #ececfa; }
+.pagination__page:focus-visible, .pagination__direction:focus-visible, .pagination__page-size select:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 2px; }
+.pagination__page--active { border-color: #2199e8; background: #2199e8; color: #fff; }
+.pagination__page:disabled, .pagination__direction:disabled, .pagination__page-size select:disabled { cursor: not-allowed; opacity: .4; }
+.pagination__ellipsis { display: inline-flex; min-width: 20px; height: 32px; align-items: center; justify-content: center; color: #6b6b85; }
+.pagination__mobile-position { display: none; min-width: 90px; color: #1c1c33; font-weight: 600; text-align: center; white-space: nowrap; }
+.pagination__page-size { justify-content: flex-end; justify-self: end; gap: 8px; white-space: nowrap; }
 .pagination__page-size select {
-  min-width: 68px; height: 30px; padding: 0 27px 0 10px; border: 1px solid #d0d5dd; border-radius: 6px; background-color: #fff;
-  color: #344054; font: inherit; font-weight: 600; cursor: pointer;
+  height: 32px; min-width: 64px; padding: 0 28px 0 10px; border: 1px solid #e4e4f0; border-radius: 6px; color: #1c1c33;
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; appearance: none;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b85' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
 }
 
 @media (max-width: 1279.98px) {
@@ -111,25 +154,12 @@
   .pagination { gap: 10px; padding: 12px; font-size: 12px; }
   .pagination__navigation { gap: 4px; }
   .pagination__pages { gap: 3px; }
-  .pagination__direction { padding-right: 9px; padding-left: 9px; }
-  .pagination__page { min-width: 36px; height: 36px; }
-  .pagination__ellipsis { min-width: 22px; height: 36px; }
 }
 @media (max-width: 430px) {
   .pagination { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 8px; padding: 12px 10px; }
-  .pagination__pages, .pagination__cursor-position { display: none; }
+  .pagination__pages { display: none; }
   .pagination__mobile-position { display: inline-block; }
-  .pagination__navigation { width: 100%; justify-content: space-between; gap: 6px; }
-  .pagination__direction { min-width: 88px; height: 40px; }
-  .pagination__page-size { gap: 6px; }
-  .pagination__summary { gap: 5px; padding-right: 8px; padding-left: 8px; }
+  .pagination__navigation { width: 100%; justify-content: space-between; }
+  .pagination__direction { min-width: 88px; height: 36px; }
   .pagination__summary-label { display: none; }
-}
-@media (max-width: 375px) {
-  .pagination { gap: 9px 6px; padding-right: 8px; padding-left: 8px; }
-  .pagination__summary { gap: 4px; min-width: 0; padding-right: 6px; padding-left: 6px; }
-  .pagination__range { padding-right: 6px; padding-left: 6px; }
-  .pagination__direction { min-width: 84px; padding-right: 7px; padding-left: 7px; }
-  .pagination__page-size { gap: 5px; padding-left: 8px; }
-  .pagination__page-size select { min-width: 64px; padding-right: 24px; padding-left: 8px; }
 }

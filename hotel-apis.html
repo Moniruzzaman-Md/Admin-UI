@@ -4,19 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hotel APIs · Admin Redesign</title>
-<link rel="stylesheet" href="css/tokens.css?v=3">
-<link rel="stylesheet" href="css/shell.css?v=3">
-<link rel="stylesheet" href="css/components.css?v=3">
-<link rel="stylesheet" href="css/skeleton.css?v=3">
-<link rel="stylesheet" href="css/table.css?v=3">
+<link rel="stylesheet" href="css/tokens.css?v=4">
+<link rel="stylesheet" href="css/shell.css?v=4">
+<link rel="stylesheet" href="css/components.css?v=4">
+<link rel="stylesheet" href="css/skeleton.css?v=4">
+<link rel="stylesheet" href="css/table.css?v=4">
 <style>
   .toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .toolbar .search-input { flex: 1 1 260px; max-width: 340px; }
   .toolbar select.input { width: 160px; }
   .toolbar .spacer { flex: 1; }
   .page-head { padding: 0 8px; }
-  .tbl-area .table { margin-bottom: 16px; }
-  .tbl-area .pagination { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+  .tbl-area { overflow: hidden; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
   .tbl-area .table-responsive { border-top: 0; }
   /* history */
   .timeline { list-style: none; margin: 0; padding: 0; }
@@ -82,14 +81,14 @@
         </table>
       </div>
       <nav class="pagination" id="pager" aria-label="Hotel APIs pagination">
-        <p aria-live="polite" class="pagination__summary"><span class="pagination__summary-label">Showing</span><strong class="pagination__range" id="pg-range"></strong><span>of <strong id="pg-total"></strong> results</span></p>
+        <p aria-live="polite" class="pagination__summary"><span class="pagination__summary-label">Showing</span><strong class="pagination__range" id="pg-range"></strong><span>of</span><strong id="pg-total"></strong></p>
         <div class="pagination__navigation">
           <button type="button" aria-label="Go to previous page" class="pagination__direction" id="pg-prev"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 15-5-5 5-5"></path></svg><span>Previous</span></button>
           <div aria-label="Choose a page" class="pagination__pages" id="pg-pages"></div>
           <span class="pagination__mobile-position" id="pg-mobile"></span>
           <button type="button" aria-label="Go to next page" class="pagination__direction" id="pg-next"><span>Next</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 5 5 5-5 5"></path></svg></button>
         </div>
-        <label class="pagination__page-size"><span class="pagination__page-size-label">Rows per page</span>
+        <label class="pagination__page-size"><span class="pagination__page-size-label">Rows</span>
           <select aria-label="Rows per page" id="pg-size"><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></label>
       </nav>
     </div>
@@ -170,7 +169,7 @@
 <div class="toast" id="toast" role="status"></div>
 
 <style>.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
-<script src="js/shell.js?v=3"></script>
-<script src="js/hotel-apis.js?v=3"></script>
+<script src="js/shell.js?v=4"></script>
+<script src="js/hotel-apis.js?v=4"></script>
 </body>
 </html>

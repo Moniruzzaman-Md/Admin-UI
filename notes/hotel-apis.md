@@ -5,11 +5,11 @@ Scope: whole page redesigned (list, filters, create/edit, history). Header and s
 
 ## List
 
-Uses the portal's **reusable table** unchanged (format, badges, action icons, empty state, pagination). Only the columns differ:
+Uses the **reusable table** (same component as every list; redesigned look, portal shape). Only the columns differ:
 
 - Columns: NAME | API CODE | REF. CODE | CURRENCY | DEFAULT | STATUS | SHORT CODE | B2C STATUS | AUTO ISSUE | **HOLD BOOKING** | ACTION
 - **Hold Booking** is the only new column (Enabled / Disabled). The field already exists in the create form but wasn't listed → the list endpoint needs to return it.
-- Cell values as today: Default / Not Default, Active / Inactive, Enabled / Disabled. Actions: edit, history.
+- Cell values as today: Default / Not Default, Active / Inactive, Enabled / Disabled. API code and short code show as code badges. Actions: edit, history (each button names itself on hover).
 - No column sorting (the reusable table has none) — rows keep the API's order.
 - No rows → the table's standard empty state ("No hotel APIs found") and no pagination.
 
@@ -25,7 +25,7 @@ Uses the portal's **reusable table** unchanged (format, badges, action icons, em
 
 ## Pagination
 
-- The reusable table's pagination, unchanged: "Showing X–Y of Z results", Previous / pages / Next, rows per page 20 / 50 / 100.
+- The reusable table's pagination: "Showing X–Y of Z", Previous / pages / Next, Rows 20 / 50 / 100.
 
 ## Create / edit (drawer)
 
@@ -57,3 +57,4 @@ Uses the portal's **reusable table** unchanged (format, badges, action icons, em
 
 - 2026-11-17 — Whole page redesigned: list, filters, create/edit drawer, history timeline.
 - 2026-11-17 — List switched back to the portal's reusable table format; only change is the added Hold Booking column.
+- 2026-11-17 — Reusable table restyled (same shape and font, new look in the Map-UI style); applies to every list.
