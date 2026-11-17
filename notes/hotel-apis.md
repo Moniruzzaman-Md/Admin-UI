@@ -14,7 +14,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - **Auto Issue is removed** from the page entirely — no list column, no form switch, not shown in history.
 - Hold Booking cell: Enabled + the hold amount (`20%` for Percent, `50 MYR` for Fixed — amount + the API's currency); Disabled otherwise.
 - Cell values as today: Active / Inactive, Enabled / Disabled. API code and short code show as code badges. Actions: edit, history (each button names itself on hover).
-- **Temporary suppliers**: a small amber "Temp" pill after the name (hover: "Temporary supplier"; screen readers hear "Temporary"), and an amber marker on the row's left edge. Needs a new field on the API (e.g. `is_temporary`) in the list response.
+- **Temporary suppliers**: a small amber "Temp" pill after the name (hover: "Temporary supplier"; screen readers hear "Temporary"). Needs a new field on the API (e.g. `is_temporary`) in the list response.
 - No column sorting (the reusable table has none) — rows keep the API's order.
 - No rows → the table's standard empty state ("No hotel APIs found"); pagination stays, showing 0.
 - The list takes the screen's remaining height: rows scroll inside the table, the header row and pagination always stay in view. With few rows the table is only as tall as its rows.
@@ -56,7 +56,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 
 - Only for temporary suppliers, from the edit drawer: a "Temporary supplier" notice at the top with a **Make permanent** button. (No row action.)
 - Asks to confirm first ("Make ‹name› permanent?"). Cancel / Esc / clicking outside does nothing.
-- On confirm: the supplier is permanent right away (no need to save the form), the amber marker and the notice disappear, toast "‹name› is now permanent", and history gets "Type: Temporary → Permanent".
+- On confirm: the supplier is permanent right away (no need to save the form), the Temp pill and the notice disappear, toast "‹name› is now permanent", and history gets "Type: Temporary → Permanent".
 - One-way: a permanent supplier can't be made temporary from this page. *(Assumption.)*
 - New APIs are created permanent; the form has no Temporary option. *(Assumption — how do temporary suppliers get created?)*
 
@@ -101,3 +101,4 @@ Same as the Map-UI screens' Edit History. Title: "Edit History — ‹name› (�
 - 2026-11-17 — History Status Change entries say Activated / Deactivated with old → new status and what it means.
 - 2026-11-17 — Serial number (#) column added.
 - 2026-11-17 — Small "Temp" pill after a temporary supplier's name.
+- 2026-11-17 — Amber row stripe for temporary suppliers removed; the Temp pill is the only marker.

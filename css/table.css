@@ -114,14 +114,12 @@
 .tbl-flag.off::before { background-color: #f1f1f6; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8aa3' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 12h10'/%3E%3C/svg%3E"); }
 .tbl-flag .tbl-flag-sub { margin-left: 2px; padding: 1px 7px; border-radius: 6px; background: #ececfa; color: #10108a; font-size: 12px; font-weight: 700; }
 
-/* tag next to a value (e.g. "Temporary" after a name) + a matching row marker */
+/* small tag next to a value (e.g. "Temp" after a name) */
 .tbl-tag {
   display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; vertical-align: 1px;
   font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: .2px;
 }
 .tbl-tag.warn { background: #fff1d6; color: #8a5300; box-shadow: inset 0 0 0 1px #f2d9a6; }
-.table tr.tbl-row-warn > td:first-child { box-shadow: inset 3px 0 0 #e09a1f; }
-
 /* action buttons: bordered squares, fill on hover, tooltip from data-tip */
 .tbl-actions { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .tbl-action {
