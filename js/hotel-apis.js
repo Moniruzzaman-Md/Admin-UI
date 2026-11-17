@@ -93,7 +93,7 @@
 
     $('#rows').innerHTML = slice.length ? slice.map(a => `
       <tr${a.temporary ? ' class="tbl-row-warn"' : ''}>
-        <td class="tbl-strong">${esc(a.name)}${a.temporary ? ' <span class="tbl-tag warn">Temporary</span>' : ''}</td>
+        <td class="tbl-strong">${esc(a.name)}${a.temporary ? ' <span class="visually-hidden">(temporary)</span>' : ''}</td>
         <td class="text-center"><span class="tbl-code">${esc(a.code)}</span></td>
         <td class="text-center tbl-muted">${esc(a.ref)}</td>
         <td class="text-center">${esc(a.currency)}</td>
@@ -103,8 +103,7 @@
         <td class="text-center">${flag(a.hold, holdLabel(a))}</td>
         <td class="text-center"><div class="tbl-actions">
           <button class="tbl-action" type="button" data-edit="${a.id}" data-tip="Edit" aria-label="Edit ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
-          <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.5V12l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>${a.temporary ? `
-          <button class="tbl-action" type="button" data-perm="${a.id}" data-tip="Make permanent" aria-label="Make ${esc(a.name)} permanent"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.8 12.2l2.2 2.2 4.2-4.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : ''}
+          <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.5V12l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div></td>
       </tr>`).join('')
       : `<tr><td class="empty-cell" colspan="9"><section class="empty-state">
@@ -264,8 +263,7 @@
 
   $('#btn-new').addEventListener('click', () => openEdit(null));
   $('#rows').addEventListener('click', e => {
-    const ed = e.target.closest('[data-edit]'), hi = e.target.closest('[data-hist]'), pe = e.target.closest('[data-perm]');
-    if (pe) askPermanent(apis.find(a => a.id === +pe.dataset.perm));
+    const ed = e.target.closest('[data-edit]'), hi = e.target.closest('[data-hist]');
     if (ed) openEdit(apis.find(a => a.id === +ed.dataset.edit));
     if (hi) openHistory(apis.find(a => a.id === +hi.dataset.hist));
   });
