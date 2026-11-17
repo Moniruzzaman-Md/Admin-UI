@@ -13,6 +13,8 @@
        </div>
      </div>
    </div>
+   A Create entry adds a field grid after the pill line:
+     <dl class="history-fields"><div class="wide"><dt>API name</dt><dd>…</dd></div><div><dt>…</dt><dd>…</dd></div>…</dl>
    Operation pill colours: Create = success, Edit = info, Status Change = neutral. */
 
 .history-list { display: flex; flex-direction: column; gap: 22px; }
@@ -47,5 +49,21 @@
 .pill.operation-pill.info    { background: #2b3ed1; }
 .pill.operation-pill.neutral { background: #6b6b85; }
 .pill.operation-pill.danger  { background: #d63643; }
+
+/* Create entry: the starting values as a labelled 2-column grid under the pill line */
+.history-fields {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin: 10px 0 2px; overflow: hidden;
+  background: #e4e4f0; border: 1px solid #e4e4f0; border-radius: 8px;
+}
+.history-fields > div { min-width: 0; padding: 7px 10px; background: #fbfbfe; }
+.history-fields > div.wide { grid-column: 1 / -1; }
+.history-fields dt { margin: 0 0 1px; font-size: 11px; font-weight: 600; line-height: 16px; letter-spacing: .3px; text-transform: uppercase; color: #6b6b85; }
+.history-fields dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; line-height: 20px; color: #1c1c33; }
+.history-fields .hf-code { padding: 1px 7px; border-radius: 5px; background: #ececfa; color: #10108a; font-size: 12px; font-weight: 700; letter-spacing: .4px; }
+.hf-dot { display: inline-flex; align-items: center; gap: 6px; }
+.hf-dot::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.hf-dot.on { color: #137a42; }
+.hf-dot.off { color: #c42f3b; }
+.hf-dot.warn { color: #a8620a; }
 
 .history-empty { margin: 0; padding: 28px 0; text-align: center; color: #6b6b85; }

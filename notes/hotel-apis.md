@@ -66,7 +66,7 @@ Same as the Map-UI screens' Edit History. Title: "Edit History — ‹name› (�
 - One card per entry, newest first, each labelled "Entry N of M".
 - Each card: user name + email, date (DD-Mon-YYYY) + time (hh:mm AM/PM), then an **operation** and a **description**.
 - Operations:
-  - **Create** — description lists the values the API was created with, one per line (API name, API code, Reference code, Short code, Currency, Status, B2C, Hold booking, Hold amount type + Hold amount when hold is on, Type).
+  - **Create** — "Hotel API added with these settings", then the starting values as a labelled grid: API name, API code, Short code, Reference code, Currency, Status, Type (Permanent / Temporary), B2C (Enabled / Disabled), Hold booking (Disabled, or Enabled + amount, e.g. "Enabled · 20%" / "Enabled · 50 MYR").
   - **Status Change** — only Status changed: "Status: Active -> Inactive".
   - **Edit** — everything else, every changed field in one entry: "Field: old -> new", comma-separated. Making a temporary supplier permanent is an Edit: "Type: Temporary -> Permanent".
 - Saving with no changes writes nothing.
@@ -94,3 +94,4 @@ Same as the Map-UI screens' Edit History. Title: "Edit History — ‹name› (�
 - 2026-11-17 — Temporary suppliers tagged in the list; Make permanent (row action + edit-drawer notice, with confirm).
 - 2026-11-17 — Make permanent only in the edit drawer (row button removed); Temporary tag removed, amber row marker kept.
 - 2026-11-17 — History drawer matches the Map-UI Edit History (entry cards, operation pills, user + email, date + time).
+- 2026-11-17 — History Create entry shows the starting values as a labelled field grid.

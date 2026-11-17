@@ -226,7 +226,7 @@
   /* ---------- history: Map-UI card design ----------
      Each entry: operation pill (Create / Edit / Status Change), description, who (name + email) and when.
      Edit description = "Field: old -> new" for every changed field, comma-separated.
-     Create description = the values the API was created with, one per line. Newest first. */
+     Create = the values the API was created with, laid out as a labelled field grid. Newest first. */
   const USERS = { 'Super Admin': 'superadmin@mynztrip.com', 'Ops Team': 'ops@mynztrip.com' };
   const OP_CLASS = { Create: 'success', Edit: 'info', 'Status Change': 'neutral' };
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -240,12 +240,28 @@
     api.history.forEach(h => (h.changes || []).forEach(([f, o]) => { snap[f] = o; }));
     return api.history.map(h => {
       if (h.created) {
-        const lines = SNAPSHOT.filter(k => !(k.startsWith('hold') && k !== 'hold' && !snap.hold)).map(k => `${FIELDS[k]}: ${fmtVal(k, snap[k])}`);
-        return { op: 'Create', lines, ...h };
+        return { op: 'Create', fields: createFields(snap), ...h };
       }
       const op = h.changes.every(c => c[0] === 'active') ? 'Status Change' : 'Edit';
       return { op, lines: [h.changes.map(([f, o, n]) => `${FIELDS[f]}: ${fmtVal(f, o)} -> ${fmtVal(f, n)}`).join(', ')], ...h };
     });
+  }
+
+  // Create entry: [label, value html, wide?] — same wording/values as the list
+  const dot = (cls, text) => `<span class="hf-dot ${cls}">${text}</span>`;
+  function createFields(v) {
+    const hold = v.hold ? `Enabled${v.holdAmount != null ? ` · ${v.holdType === 'percent' ? `${esc(v.holdAmount)}%` : `${esc(v.holdAmount)} ${esc(v.currency)}`}` : ''}` : 'Disabled';
+    return [
+      ['API name', esc(v.name), true],
+      ['API code', `<span class="hf-code">${esc(v.code)}</span>`],
+      ['Short code', `<span class="hf-code">${esc(v.short)}</span>`],
+      ['Reference code', esc(v.ref)],
+      ['Currency', esc(v.currency)],
+      ['Status', v.active ? dot('on', 'Active') : dot('off', 'Inactive')],
+      ['Type', v.temporary ? dot('warn', 'Temporary') : 'Permanent'],
+      ['B2C', v.b2c ? 'Enabled' : 'Disabled'],
+      ['Hold booking', hold],
+    ];
   }
 
   function openHistory(api) {
@@ -259,8 +275,12 @@
             <span class="history-user" title="${esc(h.by)}">${esc(h.by)}</span><span class="history-date">${dateOnly(h.at)}</span>
             <span class="history-email" title="${esc(USERS[h.by] || '')}">${esc(USERS[h.by] || '')}</span><span class="history-time">${timeOnly(h.at)}</span>
           </div>
+          ${h.fields ? `
           <div class="history-op-line"><span class="pill operation-pill ${OP_CLASS[h.op]}">${h.op}</span>
-            <div class="history-desc">${h.lines.map(l => `<div>${esc(l)}</div>`).join('')}</div></div>
+            <div class="history-desc">Hotel API added with these settings</div></div>
+          <dl class="history-fields">${h.fields.map(([k, v, wide]) => `<div${wide ? ' class="wide"' : ''}><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>` : `
+          <div class="history-op-line"><span class="pill operation-pill ${OP_CLASS[h.op]}">${h.op}</span>
+            <div class="history-desc">${h.lines.map(l => `<div>${esc(l)}</div>`).join('')}</div></div>`}
         </div>
       </div>`).join('')}</div>` : '<p class="history-empty">No history yet</p>';
     openDrawer($('#hist-drawer'));
