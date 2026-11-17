@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hotel APIs · Admin Redesign</title>
-<link rel="stylesheet" href="css/tokens.css?v=7">
-<link rel="stylesheet" href="css/shell.css?v=7">
-<link rel="stylesheet" href="css/components.css?v=7">
-<link rel="stylesheet" href="css/skeleton.css?v=7">
-<link rel="stylesheet" href="css/table.css?v=7">
+<link rel="stylesheet" href="css/tokens.css?v=8">
+<link rel="stylesheet" href="css/shell.css?v=8">
+<link rel="stylesheet" href="css/components.css?v=8">
+<link rel="stylesheet" href="css/skeleton.css?v=8">
+<link rel="stylesheet" href="css/table.css?v=8">
 <style>
   .toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .toolbar .search-input { flex: 1 1 260px; max-width: 340px; }
@@ -17,6 +17,20 @@
   .page-head { padding: 0 8px; }
   .tbl-area { overflow: hidden; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
   .tbl-area .table-responsive { border-top: 0; }
+  /* hold booking options (shown when Hold booking is on) */
+  .hold-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 12px 14px 14px; border-top: 1px dashed var(--border); background: var(--surface-2); border-radius: 0 0 var(--radius) var(--radius); }
+  .hold-opts[hidden] { display: none; }
+  .field .lbl { font-size: var(--fs-sm); font-weight: 500; color: var(--text-2); }
+  .field .lbl .req { color: var(--red); margin-left: 2px; }
+  .seg-radio { display: flex; }
+  .seg-radio label { flex: 1; display: flex; align-items: center; justify-content: center; height: 34px; padding: 0 12px; border-radius: calc(var(--radius-sm) - 2px); font-size: var(--fs-sm); font-weight: 500; color: var(--text-2); cursor: pointer; }
+  .seg-radio input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg-radio label:has(input:checked) { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+  .seg-radio label:has(input:focus-visible) { outline: 2px solid var(--brand-accent); outline-offset: 1px; }
+  .field.invalid .seg-radio { box-shadow: 0 0 0 1px var(--red); }
+  .input-affix { position: relative; }
+  .input-affix .input { width: 100%; padding-right: 52px; }
+  .input-affix .affix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: var(--fs-sm); font-weight: 500; color: var(--text-3); pointer-events: none; }
   /* history */
   .timeline { list-style: none; margin: 0; padding: 0; }
   .timeline li { position: relative; padding: 0 0 22px 26px; }
@@ -142,6 +156,21 @@
           <span class="switch"><input type="checkbox" name="autoIssue"><span></span></span></label>
         <label class="toggle-row"><div><div class="t">Hold booking</div><div class="d">Allow bookings to be placed on hold.</div></div>
           <span class="switch"><input type="checkbox" name="hold"><span></span></span></label>
+        <div class="hold-opts" id="hold-opts" hidden>
+          <div class="field">
+            <span class="lbl" id="e-htype-l">Amount type<span class="req">*</span></span>
+            <div class="seg seg-radio" role="radiogroup" aria-labelledby="e-htype-l">
+              <label><input type="radio" name="holdType" value="percent">Percent</label>
+              <label><input type="radio" name="holdType" value="fixed">Fixed</label>
+            </div>
+            <span class="err">Choose an amount type.</span>
+          </div>
+          <div class="field">
+            <label for="e-hamount">Hold amount<span class="req">*</span></label>
+            <div class="input-affix"><input class="input" id="e-hamount" name="holdAmount" inputmode="decimal" placeholder="0"><span class="affix" id="e-hamount-unit">%</span></div>
+            <span class="err" data-msg>Enter a hold amount.</span>
+          </div>
+        </div>
       </div>
     </div>
   </form>
@@ -165,7 +194,7 @@
 <div class="toast" id="toast" role="status"></div>
 
 <style>.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
-<script src="js/shell.js?v=7"></script>
-<script src="js/hotel-apis.js?v=7"></script>
+<script src="js/shell.js?v=8"></script>
+<script src="js/hotel-apis.js?v=8"></script>
 </body>
 </html>

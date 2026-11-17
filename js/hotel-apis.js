@@ -20,14 +20,19 @@
   let nextId = 1;
   const apis = SEED.map(r => ({
     id: nextId++, name: r[0], code: r[1], ref: r[2], short: r[3], currency: r[4],
-    active: !!r[5], b2c: !!r[7], autoIssue: !!r[8], hold: !!r[9], history: [],
+    active: !!r[5], b2c: !!r[7], autoIssue: !!r[8], hold: !!r[9], holdType: null, holdAmount: null, history: [],
   }));
+  // hold amount for the APIs that allow hold booking: [type, amount]
+  const HOLD = { TBOHOL: ['percent', '20'], RATEHAWK: ['fixed', '50'], JUNIPER: ['percent', '10'], MANUAL: ['fixed', '100'] };
+  apis.forEach(a => { if (HOLD[a.code]) [a.holdType, a.holdAmount] = HOLD[a.code]; });
 
   // dummy history: a created entry + a couple of edits
   const FIELDS = { name: 'API name', code: 'API code', ref: 'Reference code', short: 'Short code', currency: 'Currency',
-    active: 'Status', b2c: 'B2C', autoIssue: 'Auto issue', hold: 'Hold booking' };
-  const fmtVal = (f, v) => typeof v === 'boolean'
-    ? (f === 'active' ? (v ? 'Active' : 'Inactive') : (v ? 'On' : 'Off'))
+    active: 'Status', b2c: 'B2C', autoIssue: 'Auto issue', hold: 'Hold booking',
+    holdType: 'Hold amount type', holdAmount: 'Hold amount' };
+  const fmtVal = (f, v) => v === null || v === '' ? '—'
+    : typeof v === 'boolean' ? (f === 'active' ? (v ? 'Active' : 'Inactive') : (v ? 'On' : 'Off'))
+    : f === 'holdType' ? (v === 'percent' ? 'Percent' : 'Fixed')
     : v;
   const editors = ['Super Admin', 'Ops Team', 'Super Admin'];
   apis.forEach((a, i) => {
@@ -143,6 +148,19 @@
 
   const form = $('#edit-form');
   let editing = null;
+
+  // Hold booking on → show Amount type + Hold amount; unit follows the type (% or the API's currency)
+  const holdOpts = $('#hold-opts');
+  const holdType = () => form.querySelector('[name=holdType]:checked')?.value || '';
+  function syncHold() {
+    holdOpts.hidden = !form.elements.hold.checked;
+    $('#e-hamount-unit').textContent = holdType() === 'fixed' ? (form.elements.currency.value || '') : '%';
+  }
+  form.elements.hold.addEventListener('change', () => {
+    if (form.elements.hold.checked && !holdType()) form.querySelector('[name=holdType][value=percent]').checked = true;
+    syncHold();
+  });
+  form.addEventListener('change', e => { if (e.target.name === 'holdType' || e.target.name === 'currency') syncHold(); });
   function openEdit(api) {
     editing = api || null;
     form.reset();
@@ -153,6 +171,9 @@
     const v = api || { name: '', code: '', ref: '', short: '', currency: '', active: true, b2c: false, autoIssue: false, hold: false };
     ['name', 'code', 'ref', 'short', 'currency'].forEach(k => form.elements[k].value = v[k]);
     ['active', 'b2c', 'autoIssue', 'hold'].forEach(k => form.elements[k].checked = v[k]);
+    form.querySelectorAll('[name=holdType]').forEach(r => r.checked = r.value === v.holdType);
+    form.elements.holdAmount.value = v.holdAmount ?? '';
+    syncHold();
     openDrawer($('#edit-drawer'));
   }
 
@@ -172,11 +193,28 @@
       f.classList.toggle('invalid', bad);
       if (bad) ok = false;
     });
-    if (!ok) { form.querySelector('.invalid .input')?.focus(); return; }
+    // hold options are required only while Hold booking is on
+    const hold = form.elements.hold.checked;
+    const typeF = form.querySelector('[name=holdType]').closest('.field');
+    const amtF = form.elements.holdAmount.closest('.field'), amtMsg = amtF.querySelector('[data-msg]');
+    let typeBad = false, amtBad = false;
+    if (hold) {
+      typeBad = !holdType();
+      const raw = val('holdAmount'), n = Number(raw);
+      if (!raw) { amtBad = true; amtMsg.textContent = 'Enter a hold amount.'; }
+      else if (!/^\d+(\.\d{1,2})?$/.test(raw)) { amtBad = true; amtMsg.textContent = 'Enter a number, up to 2 decimals.'; }
+      else if (holdType() === 'percent' && n > 100) { amtBad = true; amtMsg.textContent = 'A percent can’t be more than 100.'; }
+    }
+    typeF.classList.toggle('invalid', typeBad);
+    amtF.classList.toggle('invalid', amtBad);
+    if (typeBad || amtBad) ok = false;
+    if (!ok) { (form.querySelector('.invalid .input') || form.querySelector('.invalid input'))?.focus(); return; }
 
     const data = {};
     ['name', 'code', 'ref', 'short', 'currency'].forEach(k => data[k] = val(k));
     ['active', 'b2c', 'autoIssue', 'hold'].forEach(k => data[k] = form.elements[k].checked);
+    data.holdType = data.hold ? holdType() : null;
+    data.holdAmount = data.hold ? String(Number(val('holdAmount'))) : null;
     if (editing) {
       const changes = Object.keys(data).filter(k => data[k] !== editing[k]).map(k => [k, editing[k], data[k]]);
       if (changes.length) editing.history.unshift({ by: 'Super Admin', at: new Date(), changes });
