@@ -17,7 +17,7 @@
          <td class="text-center"><span class="tbl-code">CODE</span></td>
          <td class="text-center"><span class="tbl-badge bg-success">Active</span></td>
          <td class="text-center"><div class="tbl-actions">
-           <button class="tbl-action" data-tip="Edit" aria-label="Edit …"><i class="fas fa-pen"></i></button>…
+           <button class="tbl-action" data-tip="Edit" aria-label="Edit …"><svg …15×15 line icon…></svg></button>…
          </div></td>
        </tr></tbody>
      </table>
@@ -92,6 +92,7 @@
   border: 1px solid var(--tbl-line, #e4e4f0); border-radius: 6px; background: #fff; color: #2b3ed1; font-size: 13px; cursor: pointer;
   transition: background-color .15s, border-color .15s, color .15s;
 }
+.tbl-action svg { display: block; flex: none; pointer-events: none; }
 .tbl-action:hover { background: #2b3ed1; border-color: #2b3ed1; color: #fff; }
 .tbl-action:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 2px; }
 .tbl-action[data-tip]:hover::after, .tbl-action[data-tip]:focus-visible::after {
