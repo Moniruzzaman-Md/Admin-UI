@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hotel APIs · Admin Redesign</title>
-<link rel="stylesheet" href="css/tokens.css?v=12">
-<link rel="stylesheet" href="css/shell.css?v=12">
-<link rel="stylesheet" href="css/components.css?v=12">
-<link rel="stylesheet" href="css/skeleton.css?v=12">
-<link rel="stylesheet" href="css/table.css?v=12">
-<link rel="stylesheet" href="css/select.css?v=12">
+<link rel="stylesheet" href="css/tokens.css?v=13">
+<link rel="stylesheet" href="css/shell.css?v=13">
+<link rel="stylesheet" href="css/components.css?v=13">
+<link rel="stylesheet" href="css/skeleton.css?v=13">
+<link rel="stylesheet" href="css/table.css?v=13">
+<link rel="stylesheet" href="css/select.css?v=13">
+<link rel="stylesheet" href="css/history.css?v=13">
 <style>
   .toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .toolbar .search-input { flex: 1 1 260px; max-width: 340px; }
@@ -47,23 +48,8 @@
   .confirm h2 { margin: 0 0 8px; font-size: var(--fs-lg); font-weight: 600; }
   .confirm p { margin: 0 0 20px; font-size: var(--fs-md); color: var(--text-2); line-height: 1.5; }
   .confirm-foot { display: flex; justify-content: flex-end; gap: 8px; }
-  /* history */
-  .timeline { list-style: none; margin: 0; padding: 0; }
-  .timeline li { position: relative; padding: 0 0 22px 26px; }
-  .timeline li::before { content: ''; position: absolute; left: 5px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--brand); }
-  .timeline li::after { content: ''; position: absolute; left: 10px; top: 20px; bottom: 0; width: 2px; background: var(--border); }
-  .timeline li:last-child::after { display: none; }
-  .timeline li.created::before { background: var(--brand); }
-  .tl-meta { font-size: var(--fs-sm); color: var(--text-3); }
-  .tl-meta strong { color: var(--text); font-weight: 600; }
-  .changes { margin-top: 8px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .change { display: grid; grid-template-columns: 120px 1fr; gap: 12px; padding: 8px 12px; font-size: var(--fs-sm); }
-  .change + .change { border-top: 1px solid var(--border); }
-  .change .f { color: var(--text-3); }
-  .change .v { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .change .old { color: var(--text-3); text-decoration: line-through; }
-  .change .new { color: var(--text); font-weight: 500; }
-  .hist-summary { display: flex; gap: 8px; align-items: center; margin-bottom: 18px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); }
+  /* history drawer header: name after the title, muted (Map-UI) */
+  .hist-name { color: #6b6b85; font-weight: 600; }
 </style>
 </head>
 <body data-page="hotel-apis">
@@ -201,7 +187,7 @@
 <!-- History drawer -->
 <aside class="drawer" id="hist-drawer" role="dialog" aria-modal="true" aria-labelledby="hist-title">
   <div class="drawer-head">
-    <div><h2 id="hist-title">Change history</h2><p id="hist-sub"></p></div>
+    <h2 id="hist-title">Edit History <span class="hist-name" id="hist-name"></span></h2>
     <button class="icon-btn" type="button" data-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
   </div>
   <div class="drawer-body" id="hist-body"></div>
@@ -221,8 +207,8 @@
 <div class="toast" id="toast" role="status"></div>
 
 <style>.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
-<script src="js/shell.js?v=12"></script>
-<script src="js/select.js?v=12"></script>
-<script src="js/hotel-apis.js?v=12"></script>
+<script src="js/shell.js?v=13"></script>
+<script src="js/select.js?v=13"></script>
+<script src="js/hotel-apis.js?v=13"></script>
 </body>
 </html>

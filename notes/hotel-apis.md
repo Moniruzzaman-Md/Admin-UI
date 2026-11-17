@@ -61,11 +61,18 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 
 ## History (drawer)
 
-- Replaces the snapshot table with a timeline, newest first.
-- Each edit shows who, when, and **only the fields that changed**: old value → new value.
-- First entry is "Created" with who/when.
-- Needs: either the old values stored per edit, or consecutive snapshots so the frontend can diff them.
-- Note: in the live portal, STATUS / B2C STATUS come back empty in history rows — that needs fixing for the diff to work.
+Same as the Map-UI screens' Edit History. Title: "Edit History — ‹name› (‹API code›)".
+
+- One card per entry, newest first, each labelled "Entry N of M".
+- Each card: user name + email, date (DD-Mon-YYYY) + time (hh:mm AM/PM), then an **operation** and a **description**.
+- Operations:
+  - **Create** — description lists the values the API was created with, one per line (API name, API code, Reference code, Short code, Currency, Status, B2C, Hold booking, Hold amount type + Hold amount when hold is on, Type).
+  - **Status Change** — only Status changed: "Status: Active -> Inactive".
+  - **Edit** — everything else, every changed field in one entry: "Field: old -> new", comma-separated. Making a temporary supplier permanent is an Edit: "Type: Temporary -> Permanent".
+- Saving with no changes writes nothing.
+- Needs per entry: operation, the changed fields with old + new values (or the full snapshot for Create), user name, user email, timestamp.
+- Note: in the live portal, STATUS / B2C STATUS come back empty in history rows — that needs fixing for this to work.
+- No history → "No history yet".
 
 ## Open questions
 
@@ -86,3 +93,4 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - 2026-11-17 — Auto issue removed from the edit form and history too.
 - 2026-11-17 — Temporary suppliers tagged in the list; Make permanent (row action + edit-drawer notice, with confirm).
 - 2026-11-17 — Make permanent only in the edit drawer (row button removed); Temporary tag removed, amber row marker kept.
+- 2026-11-17 — History drawer matches the Map-UI Edit History (entry cards, operation pills, user + email, date + time).

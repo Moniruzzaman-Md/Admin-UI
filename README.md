@@ -19,6 +19,7 @@ admin-portal/
     components.css    shared redesign components (buttons, drawer, switch...)
     table.css         the REUSABLE TABLE + pagination + empty state: portal shape, redesigned look — every list uses it as-is
     select.css        searchable dropdown (every <select>), Map-UI style — needs js/select.js
+    history.css       Edit History cards (Map-UI design) — every History drawer uses it
     skeleton.css      placeholder blocks for un-redesigned sections
   js/
     shell.js          injects the portal header + sidebar; sidebar lists only redesigned screens (MENU)

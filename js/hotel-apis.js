@@ -42,7 +42,7 @@
   apis.forEach((a, i) => {
     const d = new Date(2026, 9, 2 + i, 10, 15);
     a.history.push({ by: 'Super Admin', at: d, created: true });
-    if (i % 3 !== 2) a.history.unshift({ by: editors[i % 3], at: new Date(2026, 10, 3 + i, 14, 4), changes: [['currency', 'USD', a.currency === 'USD' ? 'EUR' : a.currency]].filter(c => c[1] !== c[2]).concat([['b2c', !a.b2c, a.b2c]]) });
+    if (i % 3 !== 2) a.history.unshift({ by: editors[i % 3], at: new Date(2026, 10, 3 + i, 14, 4), changes: [['currency', a.currency === 'USD' ? 'EUR' : 'USD', a.currency]].concat([['b2c', !a.b2c, a.b2c]]) });
     if (i % 2 === 0) a.history.unshift({ by: 'Super Admin', at: new Date(2026, 10, 12, 14, 38), changes: [['active', !a.active, a.active]] });
   });
 
@@ -53,8 +53,6 @@
   const status = on => `<span class="tbl-status ${on ? 'on' : 'off'}">${on ? 'Active' : 'Inactive'}</span>`;
   const flag = (on, sub) => `<span class="tbl-flag ${on ? 'on' : 'off'}">${on ? 'Enabled' : 'Disabled'}${on && sub ? `<span class="tbl-flag-sub">${esc(sub)}</span>` : ''}</span>`;
   const holdLabel = a => a.hold && a.holdAmount != null ? (a.holdType === 'percent' ? `${a.holdAmount}%` : `${a.holdAmount} ${a.currency}`) : '';
-  const fmtDate = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
-    d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const toast = msg => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2400); };
 
   /* ---------- filters + table ---------- */
@@ -225,18 +223,46 @@
     render();
   });
 
+  /* ---------- history: Map-UI card design ----------
+     Each entry: operation pill (Create / Edit / Status Change), description, who (name + email) and when.
+     Edit description = "Field: old -> new" for every changed field, comma-separated.
+     Create description = the values the API was created with, one per line. Newest first. */
+  const USERS = { 'Super Admin': 'superadmin@mynztrip.com', 'Ops Team': 'ops@mynztrip.com' };
+  const OP_CLASS = { Create: 'success', Edit: 'info', 'Status Change': 'neutral' };
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dateOnly = d => `${String(d.getDate()).padStart(2, '0')}-${MONTHS[d.getMonth()]}-${d.getFullYear()}`;
+  const timeOnly = d => `${String(d.getHours() % 12 || 12).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} ${d.getHours() >= 12 ? 'PM' : 'AM'}`;
+  const SNAPSHOT = ['name', 'code', 'ref', 'short', 'currency', 'active', 'b2c', 'hold', 'holdType', 'holdAmount', 'temporary'];
+
+  function historyEntries(api) {
+    // values at creation = current values with every later edit undone (newest → oldest)
+    const snap = {}; SNAPSHOT.forEach(k => snap[k] = api[k]);
+    api.history.forEach(h => (h.changes || []).forEach(([f, o]) => { snap[f] = o; }));
+    return api.history.map(h => {
+      if (h.created) {
+        const lines = SNAPSHOT.filter(k => !(k.startsWith('hold') && k !== 'hold' && !snap.hold)).map(k => `${FIELDS[k]}: ${fmtVal(k, snap[k])}`);
+        return { op: 'Create', lines, ...h };
+      }
+      const op = h.changes.every(c => c[0] === 'active') ? 'Status Change' : 'Edit';
+      return { op, lines: [h.changes.map(([f, o, n]) => `${FIELDS[f]}: ${fmtVal(f, o)} -> ${fmtVal(f, n)}`).join(', ')], ...h };
+    });
+  }
+
   function openHistory(api) {
-    $('#hist-sub').textContent = `${api.name} · ${api.code}`;
-    $('#hist-body').innerHTML = `
-      <div class="hist-summary">${api.active ? '<span class="pill green">Active</span>' : '<span class="pill gray">Inactive</span>'}
-        <span class="tl-meta">${api.history.length} event${api.history.length === 1 ? '' : 's'} · last change ${fmtDate(api.history[0].at)}</span></div>
-      <ol class="timeline">${api.history.map(h => `
-        <li class="${h.created ? 'created' : ''}">
-          <div class="tl-meta"><strong>${h.created ? 'Created' : `${h.changes.length} field${h.changes.length === 1 ? '' : 's'} changed`}</strong> · ${esc(h.by)} · ${fmtDate(h.at)}</div>
-          ${h.changes ? `<div class="changes">${h.changes.map(([f, o, n]) => `
-            <div class="change"><span class="f">${FIELDS[f]}</span>
-              <span class="v"><span class="old">${esc(fmtVal(f, o))}</span>→<span class="new">${esc(fmtVal(f, n))}</span></span></div>`).join('')}</div>` : ''}
-        </li>`).join('')}</ol>`;
+    $('#hist-name').textContent = `— ${api.name} (${api.code})`;
+    const list = historyEntries(api);
+    $('#hist-body').innerHTML = list.length ? `<div class="history-list">${list.map((h, i) => `
+      <div class="history-entry">
+        <div class="history-entry-label">Entry ${i + 1} of ${list.length}</div>
+        <div class="history-card">
+          <div class="history-who">
+            <span class="history-user" title="${esc(h.by)}">${esc(h.by)}</span><span class="history-date">${dateOnly(h.at)}</span>
+            <span class="history-email" title="${esc(USERS[h.by] || '')}">${esc(USERS[h.by] || '')}</span><span class="history-time">${timeOnly(h.at)}</span>
+          </div>
+          <div class="history-op-line"><span class="pill operation-pill ${OP_CLASS[h.op]}">${h.op}</span>
+            <div class="history-desc">${h.lines.map(l => `<div>${esc(l)}</div>`).join('')}</div></div>
+        </div>
+      </div>`).join('')}</div>` : '<p class="history-empty">No history yet</p>';
     openDrawer($('#hist-drawer'));
   }
 

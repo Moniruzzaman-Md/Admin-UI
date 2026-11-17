@@ -1,0 +1,51 @@
+/* History — card per entry, the Map-UI design (city-system.html "Edit History").
+   Markup:
+   <div class="history-list">
+     <div class="history-entry">
+       <div class="history-entry-label">Entry 1 of 3</div>
+       <div class="history-card">
+         <div class="history-who">
+           <span class="history-user">Name</span><span class="history-date">12-Nov-2026</span>
+           <span class="history-email">email</span><span class="history-time">02:38 PM</span>
+         </div>
+         <div class="history-op-line"><span class="pill operation-pill info">Edit</span>
+           <div class="history-desc"><div>Field: old -> new</div></div></div>
+       </div>
+     </div>
+   </div>
+   Operation pill colours: Create = success, Edit = info, Status Change = neutral. */
+
+.history-list { display: flex; flex-direction: column; gap: 22px; }
+.history-entry-label { margin-bottom: 6px; text-align: right; font-size: 11px; font-weight: 500; color: #6b6b85; }
+.history-card {
+  padding: 10px 12px; background: #fff; border: 1px solid #e4e4f0; border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(16, 16, 90, .06);
+}
+
+/* who + when: name/date on one line, email/time under it, then a divider */
+.history-who {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px;
+  padding: 5px 0 4px; border-bottom: 1px solid #e4e4f0;
+}
+.history-user, .history-email { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.history-date, .history-time { text-align: right; white-space: nowrap; }
+.history-user, .history-date { padding-bottom: 1px; font-size: 14px; font-weight: 600; color: #1c1c33; }
+.history-email, .history-time { font-size: 12px; font-weight: 400; color: #6b6b85; }
+
+/* operation pill + description */
+.history-op-line {
+  display: flex; align-items: flex-start; gap: 8px; padding-top: 8px;
+  font-size: 14px; line-height: 1.6; color: #1c1c33; word-break: break-word;
+}
+.history-desc { min-width: 0; }
+.pill.operation-pill {
+  display: inline-block; flex-shrink: 0; height: auto; padding: 4px 12px; border-radius: 6px;
+  font-size: 12px; font-weight: 700; line-height: 1.3; color: #fff; white-space: nowrap;
+}
+.pill.operation-pill::before { content: none; }
+.pill.operation-pill.success { background: #178449; }
+.pill.operation-pill.info    { background: #2b3ed1; }
+.pill.operation-pill.neutral { background: #6b6b85; }
+.pill.operation-pill.danger  { background: #d63643; }
+
+.history-empty { margin: 0; padding: 28px 0; text-align: center; color: #6b6b85; }
