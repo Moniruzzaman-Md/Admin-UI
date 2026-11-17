@@ -51,10 +51,10 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 
 1. Descriptions under each switch are my reading of the field — please confirm wording (especially Default and Hold booking).
 2. Can more than one API be Default? The live data has several, so the design allows it.
-3. Breadcrumb says "API Settings" but the page sits under Hotel Management in the menu — which should it be?
 
 ## Changelog
 
 - 2026-11-17 — Whole page redesigned: list, filters, create/edit drawer, history timeline.
 - 2026-11-17 — List switched back to the portal's reusable table format; only change is the added Hold Booking column.
 - 2026-11-17 — Reusable table restyled (same shape and font, new look in the Map-UI style); applies to every list.
+- 2026-11-17 — Page subtitle and breadcrumb removed; header is just the title and New API.
