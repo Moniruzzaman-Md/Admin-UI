@@ -2,7 +2,7 @@
 (function () {
   const CURRENCIES = ['ALL', 'AED', 'BDT', 'EUR', 'GBP', 'MYR', 'SGD', 'THB', 'USD'];
 
-  // name, code, ref, short, currency, active, (unused: was Default), b2c, autoIssue, hold
+  // name, code, ref, short, currency, active, (unused: was Default), b2c, (unused: was Auto issue), hold
   const SEED = [
     ['TBO Holidays', 'TBOHOL', '4', 'TBO', 'USD', 1, 0, 0, 0, 1],
     ['Dida', 'DIDA', '3', 'DID', 'MYR', 1, 1, 1, 0, 0],
@@ -20,7 +20,7 @@
   let nextId = 1;
   const apis = SEED.map(r => ({
     id: nextId++, name: r[0], code: r[1], ref: r[2], short: r[3], currency: r[4],
-    active: !!r[5], b2c: !!r[7], autoIssue: !!r[8], hold: !!r[9], holdType: null, holdAmount: null, history: [],
+    active: !!r[5], b2c: !!r[7], hold: !!r[9], holdType: null, holdAmount: null, history: [],
   }));
   // hold amount for the APIs that allow hold booking: [type, amount]
   const HOLD = { TBOHOL: ['percent', '20'], RATEHAWK: ['fixed', '50'], JUNIPER: ['percent', '10'], MANUAL: ['fixed', '100'] };
@@ -28,7 +28,7 @@
 
   // dummy history: a created entry + a couple of edits
   const FIELDS = { name: 'API name', code: 'API code', ref: 'Reference code', short: 'Short code', currency: 'Currency',
-    active: 'Status', b2c: 'B2C', autoIssue: 'Auto issue', hold: 'Hold booking',
+    active: 'Status', b2c: 'B2C', hold: 'Hold booking',
     holdType: 'Hold amount type', holdAmount: 'Hold amount' };
   const fmtVal = (f, v) => v === null || v === '' ? '—'
     : typeof v === 'boolean' ? (f === 'active' ? (v ? 'Active' : 'Inactive') : (v ? 'On' : 'Off'))
@@ -160,9 +160,9 @@
     $('#edit-title').textContent = api ? 'Edit hotel API' : 'New hotel API';
     $('#edit-sub').textContent = api ? `${api.name} · ${api.code}` : 'Add a supplier connection.';
     $('#edit-submit').textContent = api ? 'Save changes' : 'Create API';
-    const v = api || { name: '', code: '', ref: '', short: '', currency: '', active: true, b2c: false, autoIssue: false, hold: false };
+    const v = api || { name: '', code: '', ref: '', short: '', currency: '', active: true, b2c: false, hold: false };
     ['name', 'code', 'ref', 'short', 'currency'].forEach(k => form.elements[k].value = v[k]);
-    ['active', 'b2c', 'autoIssue', 'hold'].forEach(k => form.elements[k].checked = v[k]);
+    ['active', 'b2c', 'hold'].forEach(k => form.elements[k].checked = v[k]);
     form.querySelectorAll('[name=holdType]').forEach(r => r.checked = r.value === v.holdType);
     form.elements.holdAmount.value = v.holdAmount ?? '';
     syncHold();
@@ -204,7 +204,7 @@
 
     const data = {};
     ['name', 'code', 'ref', 'short', 'currency'].forEach(k => data[k] = val(k));
-    ['active', 'b2c', 'autoIssue', 'hold'].forEach(k => data[k] = form.elements[k].checked);
+    ['active', 'b2c', 'hold'].forEach(k => data[k] = form.elements[k].checked);
     data.holdType = data.hold ? holdType() : null;
     data.holdAmount = data.hold ? String(Number(val('holdAmount'))) : null;
     if (editing) {

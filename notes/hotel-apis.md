@@ -10,7 +10,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - Columns: NAME | API CODE | REF. CODE | CURRENCY | STATUS | SHORT CODE | B2C STATUS | **HOLD BOOKING** | ACTION
 - **Hold Booking** is the only new column (Enabled / Disabled). The field already exists in the create form but wasn't listed → the list endpoint needs to return it.
 - **Default is removed** from the page entirely — no list column, no form switch, not shown in history.
-- **Auto Issue column removed** from the list (still on the edit form).
+- **Auto Issue is removed** from the page entirely — no list column, no form switch, not shown in history.
 - Hold Booking cell: Enabled + the hold amount (`20%` for Percent, `50 MYR` for Fixed — amount + the API's currency); Disabled otherwise.
 - Cell values as today: Active / Inactive, Enabled / Disabled. API code and short code show as code badges. Actions: edit, history (each button names itself on hover).
 - No column sorting (the reusable table has none) — rows keep the API's order.
@@ -35,7 +35,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 ## Create / edit (drawer)
 
 - Same fields as before: API name, API code, Reference code, Short code, Currency — all required.
-- The radio pairs become switches: Active, Allow B2C, Auto issue, Hold booking. (Default is no longer on the form.)
+- The radio pairs become switches: Active, Allow B2C, Hold booking. (Default and Auto issue are no longer on the form.)
 - **Hold booking on → two more fields appear** under it (as in the portal, `hold_amount_type` + `hold_amount`); hidden while it's off:
   - **Amount type** — Percent / Fixed. Required. Turning Hold booking on picks Percent if nothing is set.
   - **Hold amount** — required, a number ≥ 0 with up to 2 decimals. Unit shown next to it: `%` for Percent, the API's currency for Fixed.
@@ -72,3 +72,4 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - 2026-11-17 — Default removed: list column, form switch and history.
 - 2026-11-17 — Hold booking now shows Amount type (Percent / Fixed) and Hold amount when on, as in the portal.
 - 2026-11-17 — Status filter is a dropdown; all dropdowns are searchable (Map-UI style). Auto Issue column removed. Status / B2C / Hold cells restyled; Hold shows its amount. List fits the screen height with pagination always visible.
+- 2026-11-17 — Auto issue removed from the edit form and history too.
