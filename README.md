@@ -15,7 +15,7 @@ admin-portal/
   <screen>.html       one page per admin screen: redesigned sections + skeletons
   css/
     tokens.css        colours, type, spacing (captured from the live portal)
-    shell.css         header + sidebar, 1:1 copy of the live portal
+    shell.css         header + sidebar, 1:1 copy of the live portal (incl. collapse, hover, dropdowns)
     components.css    shared redesign components (buttons, table, drawer, switch...)
     skeleton.css      placeholder blocks for un-redesigned sections
   js/
