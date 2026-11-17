@@ -11,9 +11,10 @@
    Markup:
    <div class="table-responsive">
      <table class="table table-hover table-striped table-bordered f-14 text-nowrap">
-       <thead><tr class="text-uppercase"><th>Name</th>...<th>Action</th></tr></thead>
+       <thead><tr class="text-uppercase"><th class="tbl-num">#</th><th class="text-start">Name</th>...<th>Action</th></tr></thead>
        <tbody><tr>
-         <td class="tbl-strong">first cell (left)</td>
+         <td class="tbl-num">1</td>                       (position in the whole result, not the page)
+         <td class="tbl-strong">name (left)</td>
          <td class="text-center"><span class="tbl-code">CODE</span></td>
          <td class="text-center"><span class="tbl-status on">Active</span></td>      (or .off)
          <td class="text-center"><span class="tbl-flag on">Enabled</span></td>       (or .off)
@@ -67,6 +68,11 @@
 .table-hover > tbody > tr:hover > * { background-color: #f3f3fd; }
 
 .table .text-center { text-align: center !important; }
+.table .text-start { text-align: left !important; }
+
+/* serial number column (#): first column, narrow, muted; numbers count across pages */
+.table .tbl-num { width: 1%; padding-left: 16px; padding-right: 12px; text-align: left; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.table td.tbl-num { color: var(--tbl-muted); font-weight: 600; }
 .table .tbl-strong { font-weight: 600; color: var(--tbl-text); }
 .table .tbl-muted { color: var(--tbl-muted); }
 

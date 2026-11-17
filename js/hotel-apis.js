@@ -81,8 +81,10 @@
     const start = (state.page - 1) * state.size;
     const slice = list.slice(start, start + state.size);
 
-    $('#rows').innerHTML = slice.length ? slice.map(a => `
+    // # = position in the whole filtered result, not the page (row 21 on page 2 reads 21)
+    $('#rows').innerHTML = slice.length ? slice.map((a, i) => `
       <tr${a.temporary ? ' class="tbl-row-warn"' : ''}>
+        <td class="tbl-num">${start + i + 1}</td>
         <td class="tbl-strong">${esc(a.name)}${a.temporary ? ' <span class="visually-hidden">(temporary)</span>' : ''}</td>
         <td class="text-center"><span class="tbl-code">${esc(a.code)}</span></td>
         <td class="text-center tbl-muted">${esc(a.ref)}</td>
@@ -96,7 +98,7 @@
           <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.5V12l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div></td>
       </tr>`).join('')
-      : `<tr><td class="empty-cell" colspan="9"><section class="empty-state">
+      : `<tr><td class="empty-cell" colspan="10"><section class="empty-state">
           <div class="empty-state__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"></circle><path d="m15 15 4 4"></path><path d="M8.5 10.5h4"></path></svg></div>
           <h3>No hotel APIs found</h3><p>Try adjusting the filters or add a new API.</p></section></td></tr>`;
 

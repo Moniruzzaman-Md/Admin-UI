@@ -7,9 +7,10 @@ Scope: whole page redesigned (list, filters, create/edit, history). Header and s
 
 Uses the **reusable table** (same component as every list; redesigned look, portal shape). Only the columns differ:
 
-- Columns: NAME | API CODE | REF. CODE | CURRENCY | STATUS | SHORT CODE | B2C STATUS | **HOLD BOOKING** | ACTION
+- Columns: **#** | NAME | API CODE | REF. CODE | CURRENCY | STATUS | SHORT CODE | B2C STATUS | **HOLD BOOKING** | ACTION
 - **Hold Booking** is the only new column (Enabled / Disabled). The field already exists in the create form but wasn't listed → the list endpoint needs to return it.
 - **Default is removed** from the page entirely — no list column, no form switch, not shown in history.
+- **#** is the row's position in the whole filtered result, not within the page (first row on page 2 at 20 per page is 21). It follows the filters and is not an ID.
 - **Auto Issue is removed** from the page entirely — no list column, no form switch, not shown in history.
 - Hold Booking cell: Enabled + the hold amount (`20%` for Percent, `50 MYR` for Fixed — amount + the API's currency); Disabled otherwise.
 - Cell values as today: Active / Inactive, Enabled / Disabled. API code and short code show as code badges. Actions: edit, history (each button names itself on hover).
@@ -98,3 +99,4 @@ Same as the Map-UI screens' Edit History. Title: "Edit History — ‹name› (�
 - 2026-11-17 — History Create entry shows the starting values as a labelled field grid.
 - 2026-11-17 — History Edit / Status Change entries show one old → new row per changed field.
 - 2026-11-17 — History Status Change entries say Activated / Deactivated with old → new status and what it means.
+- 2026-11-17 — Serial number (#) column added.
