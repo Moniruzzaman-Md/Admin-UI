@@ -7,9 +7,10 @@ Scope: whole page redesigned (list, filters, create/edit, history). Header and s
 
 Uses the **reusable table** (same component as every list; redesigned look, portal shape). Only the columns differ:
 
-- Columns: NAME | API CODE | REF. CODE | CURRENCY | DEFAULT | STATUS | SHORT CODE | B2C STATUS | AUTO ISSUE | **HOLD BOOKING** | ACTION
+- Columns: NAME | API CODE | REF. CODE | CURRENCY | STATUS | SHORT CODE | B2C STATUS | AUTO ISSUE | **HOLD BOOKING** | ACTION
 - **Hold Booking** is the only new column (Enabled / Disabled). The field already exists in the create form but wasn't listed → the list endpoint needs to return it.
-- Cell values as today: Default / Not Default, Active / Inactive, Enabled / Disabled. API code and short code show as code badges. Actions: edit, history (each button names itself on hover).
+- The Default column is removed from the list (Default is still set in the create/edit form).
+- Cell values as today: Active / Inactive, Enabled / Disabled. API code and short code show as code badges. Actions: edit, history (each button names itself on hover).
 - No column sorting (the reusable table has none) — rows keep the API's order.
 - No rows → the table's standard empty state ("No hotel APIs found") and no pagination.
 
@@ -58,3 +59,4 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - 2026-11-17 — List switched back to the portal's reusable table format; only change is the added Hold Booking column.
 - 2026-11-17 — Reusable table restyled (same shape and font, new look in the Map-UI style); applies to every list.
 - 2026-11-17 — Page subtitle and breadcrumb removed; header is just the title and New API.
+- 2026-11-17 — Default column removed from the list.

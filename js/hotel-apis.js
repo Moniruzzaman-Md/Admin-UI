@@ -88,7 +88,6 @@
         <td class="text-center"><span class="tbl-code">${esc(a.code)}</span></td>
         <td class="text-center tbl-muted">${esc(a.ref)}</td>
         <td class="text-center">${esc(a.currency)}</td>
-        <td class="text-center">${a.isDefault ? badge('bg-info', 'Default') : badge('bg-neutral', 'Not Default')}</td>
         <td class="text-center">${a.active ? badge('bg-success', 'Active') : badge('bg-danger', 'Inactive')}</td>
         <td class="text-center"><span class="tbl-code">${esc(a.short)}</span></td>
         <td class="text-center">${onOff(a.b2c)}</td>
@@ -99,7 +98,7 @@
           <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><i class="fas fa-history"></i></button>
         </div></td>
       </tr>`).join('')
-      : `<tr><td class="empty-cell" colspan="11"><section class="empty-state">
+      : `<tr><td class="empty-cell" colspan="10"><section class="empty-state">
           <div class="empty-state__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"></circle><path d="m15 15 4 4"></path><path d="M8.5 10.5h4"></path></svg></div>
           <h3>No hotel APIs found</h3><p>Try adjusting the filters or add a new API.</p></section></td></tr>`;
 
