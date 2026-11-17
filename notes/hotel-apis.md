@@ -102,3 +102,4 @@ Same as the Map-UI screens' Edit History. Title: "Edit History — ‹name› (�
 - 2026-11-17 — Serial number (#) column added.
 - 2026-11-17 — Small "Temp" pill after a temporary supplier's name.
 - 2026-11-17 — Amber row stripe for temporary suppliers removed; the Temp pill is the only marker.
+- 2026-11-17 — History drawer: Temp pill after the supplier name in the title (while temporary), and as the Type value (Temporary) in Create and Edit entries.

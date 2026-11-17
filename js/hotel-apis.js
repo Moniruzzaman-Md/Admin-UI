@@ -28,6 +28,8 @@
   // temporary suppliers (can be made permanent; one-way)
   const TEMP = ['JUNIPER', 'TRAVCO', 'BONOTEL'];
   apis.forEach(a => { a.temporary = TEMP.includes(a.code); });
+  // small "Temp" pill shown after a temporary supplier's name (list, history)
+  const TEMP_TAG = '<span class="tbl-tag warn" title="Temporary supplier"><span aria-hidden="true">Temp</span><span class="visually-hidden">Temporary</span></span>';
 
   // dummy history: a created entry + a couple of edits (changes: [field, old, new])
   const editors = ['Super Admin', 'Ops Team', 'Super Admin'];
@@ -85,7 +87,7 @@
     $('#rows').innerHTML = slice.length ? slice.map((a, i) => `
       <tr>
         <td class="tbl-num">${start + i + 1}</td>
-        <td class="tbl-strong">${esc(a.name)}${a.temporary ? ' <span class="tbl-tag warn" title="Temporary supplier"><span aria-hidden="true">Temp</span><span class="visually-hidden">Temporary</span></span>' : ''}</td>
+        <td class="tbl-strong">${esc(a.name)}${a.temporary ? ' ' + TEMP_TAG : ''}</td>
         <td class="text-center"><span class="tbl-code">${esc(a.code)}</span></td>
         <td class="text-center tbl-muted">${esc(a.ref)}</td>
         <td class="text-center">${esc(a.currency)}</td>
@@ -242,7 +244,7 @@
     ['ref', 'Reference code', v => esc(v.ref)],
     ['currency', 'Currency', v => esc(v.currency)],
     ['active', 'Status', v => v.active ? dot('on', 'Active') : dot('off', 'Inactive')],
-    ['temporary', 'Type', v => v.temporary ? dot('warn', 'Temporary') : 'Permanent'],
+    ['temporary', 'Type', v => v.temporary ? TEMP_TAG : 'Permanent'],
     ['b2c', 'B2C', v => v.b2c ? 'Enabled' : 'Disabled'],
     ['hold', 'Hold booking', holdText],
   ];
@@ -271,7 +273,7 @@
   const ARROW = '<svg class="hc-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" role="img" aria-label="changed to"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   function openHistory(api) {
-    $('#hist-name').textContent = `— ${api.name} (${api.code})`;
+    $('#hist-name').innerHTML = `— ${esc(api.name)} (${esc(api.code)})${api.temporary ? ' ' + TEMP_TAG : ''}`;
     const list = historyEntries(api);
     $('#hist-body').innerHTML = list.length ? `<div class="history-list">${list.map((h, i) => `
       <div class="history-entry">

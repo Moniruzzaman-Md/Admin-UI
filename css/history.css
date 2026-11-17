@@ -102,3 +102,6 @@
 .hs-note { flex-basis: 100%; font-size: 12px; line-height: 18px; color: #6b6b85; }
 
 .history-empty { margin: 0; padding: 28px 0; text-align: center; color: #6b6b85; }
+
+/* Temp pill as a field value sits flush, not offset like after a name */
+.history-fields .tbl-tag, .history-changes .tbl-tag { margin-left: 0; }
