@@ -1,0 +1,49 @@
+/* Design tokens. Brand values captured from the live admin portal (2026-11-17). */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* brand (from portal) */
+  --brand: #0000aa;              /* --nz-color */
+  --brand-hover: #000090;
+  --brand-deep: #000088;         /* --admin-bg-main */
+  --brand-darker: #000055;       /* --admin-bg-dark */
+  --brand-accent: #1a3fd1;       /* --admin-accent */
+  --brand-soft: #eef0ff;
+  --brand-softer: #f6f7ff;
+  --shell-text: #f0f4ff;         /* --admin-text */
+  --shell-muted: #a3b0d1;        /* --admin-muted */
+
+  /* neutrals */
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --surface-2: #f9fafc;
+  --border: #e4e7ef;
+  --border-strong: #d3d8e4;
+  --text: #141a2e;
+  --text-2: #4a5268;
+  --text-3: #7c849a;
+
+  /* status */
+  --green: #0f8a55;  --green-bg: #e7f6ee;
+  --red: #c62f3a;    --red-bg: #fdecee;
+  --amber: #b26a00;  --amber-bg: #fff4de;
+  --gray: #6b7389;   --gray-bg: #eef0f4;
+
+  /* type */
+  --font: 'Poppins', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --fs-xs: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-base: 14px; --fs-lg: 16px; --fs-xl: 20px;
+
+  /* shape */
+  --radius-sm: 6px; --radius: 8px; --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 64, .06);
+  --shadow: 0 1px 3px rgba(16, 24, 64, .08), 0 4px 12px rgba(16, 24, 64, .04);
+  --shadow-lg: 0 12px 40px rgba(16, 24, 64, .18);
+
+  /* layout (from portal) */
+  --header-h: 64px;
+  --sidebar-w: 296px;
+
+  /* skeleton placeholders */
+  --sk-bg: #f3f4f8; --sk-border: #d8dce6; --sk-fill: #e6e9f0; --sk-text: #9aa1b4;
+}

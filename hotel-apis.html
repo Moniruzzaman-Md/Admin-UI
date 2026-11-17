@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hotel APIs · Admin Redesign</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/skeleton.css">
+<style>
+  .toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .toolbar .search-input { flex: 1 1 260px; max-width: 340px; }
+  .toolbar select.input { width: 160px; }
+  .toolbar .spacer { flex: 1; }
+  .api-name { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .api-name + .code { display: block; margin-top: 2px; font-size: var(--fs-xs); color: var(--text-3); }
+  .flag { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-sm); font-weight: 500; }
+  .flag.on { color: var(--green); }
+  .flag.off { color: var(--text-3); }
+  .flag svg { flex: none; }
+  .dt td.actions { white-space: nowrap; width: 1%; }
+  .th-group { text-align: center !important; border-bottom: 0 !important; padding-bottom: 0 !important; color: var(--text-3); }
+  .th-group span { display: block; border-bottom: 1px solid var(--border-strong); padding-bottom: 6px; margin: 0 8px; }
+  .currency { font-weight: 500; font-size: var(--fs-sm); }
+  /* history */
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .timeline li { position: relative; padding: 0 0 22px 26px; }
+  .timeline li::before { content: ''; position: absolute; left: 5px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--brand); }
+  .timeline li::after { content: ''; position: absolute; left: 10px; top: 20px; bottom: 0; width: 2px; background: var(--border); }
+  .timeline li:last-child::after { display: none; }
+  .timeline li.created::before { background: var(--brand); }
+  .tl-meta { font-size: var(--fs-sm); color: var(--text-3); }
+  .tl-meta strong { color: var(--text); font-weight: 600; }
+  .changes { margin-top: 8px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .change { display: grid; grid-template-columns: 120px 1fr; gap: 12px; padding: 8px 12px; font-size: var(--fs-sm); }
+  .change + .change { border-top: 1px solid var(--border); }
+  .change .f { color: var(--text-3); }
+  .change .v { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .change .old { color: var(--text-3); text-decoration: line-through; }
+  .change .new { color: var(--text); font-weight: 500; }
+  .hist-summary { display: flex; gap: 8px; align-items: center; margin-bottom: 18px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); }
+</style>
+</head>
+<body data-page="hotel-apis">
+
+<main class="shell-main">
+  <div class="page-head">
+    <div>
+      <div class="crumbs"><a href="index.html">API Settings</a><span class="sep">›</span>Hotel API List</div>
+      <h1 class="page-title">Hotel APIs</h1>
+      <p class="page-sub">Supplier connections used for hotel search and booking.</p>
+    </div>
+    <button class="btn btn-primary" id="btn-new" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      New API
+    </button>
+  </div>
+
+  <section class="card" aria-label="Hotel API list">
+    <div class="toolbar">
+      <div class="search-input">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input class="input" id="f-q" type="search" placeholder="Search name or code" aria-label="Search by API name or code">
+      </div>
+      <select class="input" id="f-currency" aria-label="Currency"><option value="">All currencies</option></select>
+      <div class="seg" role="group" aria-label="Status" id="f-status">
+        <button type="button" data-v="" aria-pressed="true">All <span class="n" data-n=""></span></button>
+        <button type="button" data-v="active" aria-pressed="false">Active <span class="n" data-n="active"></span></button>
+        <button type="button" data-v="inactive" aria-pressed="false">Inactive <span class="n" data-n="inactive"></span></button>
+      </div>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" id="f-clear" type="button" hidden>Clear filters</button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th rowspan="2"><button class="sort" type="button" id="sort-name" aria-label="Sort by API name">API <span id="sort-ind">↑</span></button></th>
+            <th rowspan="2">Ref. code</th>
+            <th rowspan="2">Short code</th>
+            <th rowspan="2">Currency</th>
+            <th rowspan="2">Status</th>
+            <th colspan="3" class="th-group"><span>Booking options</span></th>
+            <th rowspan="2" class="r"><span class="visually-hidden">Actions</span></th>
+          </tr>
+          <tr><th>B2C</th><th>Auto issue</th><th>Hold booking</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty" id="empty" hidden>
+        <strong>No hotel APIs match these filters</strong>
+        Try a different search or <button class="btn btn-ghost" type="button" id="empty-clear" style="height:auto;padding:0;color:var(--brand)">clear filters</button>.
+      </div>
+    </div>
+
+    <div class="pager">
+      <span id="pg-info"></span>
+      <div class="pages" id="pg-pages"></div>
+      <label style="display:flex;align-items:center;gap:8px">Rows per page
+        <select class="input" id="pg-size"><option>20</option><option>50</option><option>100</option></select>
+      </label>
+    </div>
+  </section>
+</main>
+
+<!-- Create / edit drawer -->
+<aside class="drawer" id="edit-drawer" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+  <div class="drawer-head">
+    <div><h2 id="edit-title">New hotel API</h2><p id="edit-sub">Add a supplier connection.</p></div>
+    <button class="icon-btn" type="button" data-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <form class="drawer-body" id="edit-form" novalidate>
+    <div class="form-section">
+      <h3>Details</h3>
+      <div class="field" style="margin-bottom:14px">
+        <label for="e-name">API name<span class="req">*</span></label>
+        <input class="input" id="e-name" name="name" required placeholder="e.g. Hotelbeds">
+        <span class="err">Enter an API name.</span>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="e-code">API code<span class="req">*</span></label>
+          <input class="input mono" id="e-code" name="code" required placeholder="HBEDS">
+          <span class="err" data-msg>Enter an API code.</span>
+        </div>
+        <div class="field">
+          <label for="e-ref">Reference code<span class="req">*</span></label>
+          <input class="input mono" id="e-ref" name="ref" required placeholder="5">
+          <span class="err">Enter a reference code.</span>
+        </div>
+        <div class="field">
+          <label for="e-short">Short code<span class="req">*</span></label>
+          <input class="input mono" id="e-short" name="short" required placeholder="HB">
+          <span class="err" data-msg>Enter a short code.</span>
+        </div>
+        <div class="field">
+          <label for="e-currency">Currency<span class="req">*</span></label>
+          <select class="input" id="e-currency" name="currency" required><option value="">Select currency</option></select>
+          <span class="err">Select a currency.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Status &amp; booking options</h3>
+      <div class="toggle-list">
+        <label class="toggle-row"><div><div class="t">Active</div><div class="d">Inactive APIs are not used for search or booking.</div></div>
+          <span class="switch"><input type="checkbox" name="active"><span></span></span></label>
+        <label class="toggle-row"><div><div class="t">Default</div><div class="d">Mark as a default hotel API.</div></div>
+          <span class="switch"><input type="checkbox" name="isDefault"><span></span></span></label>
+        <label class="toggle-row"><div><div class="t">Allow B2C</div><div class="d">Make this API available to B2C customers.</div></div>
+          <span class="switch"><input type="checkbox" name="b2c"><span></span></span></label>
+        <label class="toggle-row"><div><div class="t">Auto issue</div><div class="d">Issue bookings automatically.</div></div>
+          <span class="switch"><input type="checkbox" name="autoIssue"><span></span></span></label>
+        <label class="toggle-row"><div><div class="t">Hold booking</div><div class="d">Allow bookings to be placed on hold.</div></div>
+          <span class="switch"><input type="checkbox" name="hold"><span></span></span></label>
+      </div>
+    </div>
+  </form>
+  <div class="drawer-foot">
+    <button class="btn btn-secondary" type="button" data-close>Cancel</button>
+    <button class="btn btn-primary" type="submit" form="edit-form" id="edit-submit">Create API</button>
+  </div>
+</aside>
+<div class="drawer-backdrop" data-close></div>
+
+<!-- History drawer -->
+<aside class="drawer" id="hist-drawer" role="dialog" aria-modal="true" aria-labelledby="hist-title">
+  <div class="drawer-head">
+    <div><h2 id="hist-title">Change history</h2><p id="hist-sub"></p></div>
+    <button class="icon-btn" type="button" data-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="drawer-body" id="hist-body"></div>
+</aside>
+<div class="drawer-backdrop" data-close></div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<style>.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
+<script src="js/shell.js"></script>
+<script src="js/hotel-apis.js"></script>
+</body>
+</html>

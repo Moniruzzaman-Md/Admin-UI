@@ -16,9 +16,11 @@ admin-portal/
   css/
     tokens.css        colours, type, spacing (captured from the live portal)
     shell.css         sidebar + top bar frame
+    components.css    shared redesign components (buttons, table, drawer, switch...)
     skeleton.css      placeholder blocks for un-redesigned sections
   js/
-    shell.js          injects the shared sidebar/top bar so nav lives in one place
+    shell.js          injects the shared sidebar/top bar; register new screens in PAGES
+    <screen>.js       page prototype logic + dummy data
   notes/<screen>.md   dev notes (behaviour only) + changelog
   source/             captures of the live portal - git-ignored, never published
 ```
@@ -41,4 +43,4 @@ Use dummy data only in published pages - no real customer names, booking refs, e
 
 | Screen | Sections redesigned | Status | Last change |
 |---|---|---|---|
-| _none yet_ | | | |
+| [Hotel APIs](hotel-apis.html) | Whole page (list, filters, create/edit, history) | Draft | 2026-11-17 |
