@@ -2,7 +2,7 @@
 (function () {
   const CURRENCIES = ['ALL', 'AED', 'BDT', 'EUR', 'GBP', 'MYR', 'SGD', 'THB', 'USD'];
 
-  // name, code, ref, short, currency, active, isDefault, b2c, autoIssue, hold
+  // name, code, ref, short, currency, active, (unused: was Default), b2c, autoIssue, hold
   const SEED = [
     ['TBO Holidays', 'TBOHOL', '4', 'TBO', 'USD', 1, 0, 0, 0, 1],
     ['Dida', 'DIDA', '3', 'DID', 'MYR', 1, 1, 1, 0, 0],
@@ -20,14 +20,14 @@
   let nextId = 1;
   const apis = SEED.map(r => ({
     id: nextId++, name: r[0], code: r[1], ref: r[2], short: r[3], currency: r[4],
-    active: !!r[5], isDefault: !!r[6], b2c: !!r[7], autoIssue: !!r[8], hold: !!r[9], history: [],
+    active: !!r[5], b2c: !!r[7], autoIssue: !!r[8], hold: !!r[9], history: [],
   }));
 
   // dummy history: a created entry + a couple of edits
   const FIELDS = { name: 'API name', code: 'API code', ref: 'Reference code', short: 'Short code', currency: 'Currency',
-    active: 'Status', isDefault: 'Default', b2c: 'B2C', autoIssue: 'Auto issue', hold: 'Hold booking' };
+    active: 'Status', b2c: 'B2C', autoIssue: 'Auto issue', hold: 'Hold booking' };
   const fmtVal = (f, v) => typeof v === 'boolean'
-    ? (f === 'active' ? (v ? 'Active' : 'Inactive') : f === 'isDefault' ? (v ? 'Default' : 'Not default') : (v ? 'On' : 'Off'))
+    ? (f === 'active' ? (v ? 'Active' : 'Inactive') : (v ? 'On' : 'Off'))
     : v;
   const editors = ['Super Admin', 'Ops Team', 'Super Admin'];
   apis.forEach((a, i) => {
@@ -150,9 +150,9 @@
     $('#edit-title').textContent = api ? 'Edit hotel API' : 'New hotel API';
     $('#edit-sub').textContent = api ? `${api.name} · ${api.code}` : 'Add a supplier connection.';
     $('#edit-submit').textContent = api ? 'Save changes' : 'Create API';
-    const v = api || { name: '', code: '', ref: '', short: '', currency: '', active: true, isDefault: false, b2c: false, autoIssue: false, hold: false };
+    const v = api || { name: '', code: '', ref: '', short: '', currency: '', active: true, b2c: false, autoIssue: false, hold: false };
     ['name', 'code', 'ref', 'short', 'currency'].forEach(k => form.elements[k].value = v[k]);
-    ['active', 'isDefault', 'b2c', 'autoIssue', 'hold'].forEach(k => form.elements[k].checked = v[k]);
+    ['active', 'b2c', 'autoIssue', 'hold'].forEach(k => form.elements[k].checked = v[k]);
     openDrawer($('#edit-drawer'));
   }
 
@@ -176,7 +176,7 @@
 
     const data = {};
     ['name', 'code', 'ref', 'short', 'currency'].forEach(k => data[k] = val(k));
-    ['active', 'isDefault', 'b2c', 'autoIssue', 'hold'].forEach(k => data[k] = form.elements[k].checked);
+    ['active', 'b2c', 'autoIssue', 'hold'].forEach(k => data[k] = form.elements[k].checked);
     if (editing) {
       const changes = Object.keys(data).filter(k => data[k] !== editing[k]).map(k => [k, editing[k], data[k]]);
       if (changes.length) editing.history.unshift({ by: 'Super Admin', at: new Date(), changes });

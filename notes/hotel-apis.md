@@ -9,7 +9,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 
 - Columns: NAME | API CODE | REF. CODE | CURRENCY | STATUS | SHORT CODE | B2C STATUS | AUTO ISSUE | **HOLD BOOKING** | ACTION
 - **Hold Booking** is the only new column (Enabled / Disabled). The field already exists in the create form but wasn't listed → the list endpoint needs to return it.
-- The Default column is removed from the list (Default is still set in the create/edit form).
+- **Default is removed** from the page entirely — no list column, no form switch, not shown in history.
 - Cell values as today: Active / Inactive, Enabled / Disabled. API code and short code show as code badges. Actions: edit, history (each button names itself on hover).
 - No column sorting (the reusable table has none) — rows keep the API's order.
 - No rows → the table's standard empty state ("No hotel APIs found") and no pagination.
@@ -31,7 +31,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 ## Create / edit (drawer)
 
 - Same fields as before: API name, API code, Reference code, Short code, Currency — all required.
-- The five radio pairs become switches: Active, Default, Allow B2C, Auto issue, Hold booking.
+- The radio pairs become switches: Active, Allow B2C, Auto issue, Hold booking. (Default is no longer on the form.)
 - New API defaults: Active on, everything else off. *(Assumption — confirm the current form's defaults.)*
 - Edit pre-fills every field. Title shows "Edit hotel API" + name and code; button says "Save changes" (create: "Create API").
 - Validation on submit: each required field shows its own message.
@@ -46,12 +46,11 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - Each edit shows who, when, and **only the fields that changed**: old value → new value.
 - First entry is "Created" with who/when.
 - Needs: either the old values stored per edit, or consecutive snapshots so the frontend can diff them.
-- Note: in the live portal, DEFAULT / STATUS / B2C STATUS come back empty in history rows — that needs fixing for the diff to work.
+- Note: in the live portal, STATUS / B2C STATUS come back empty in history rows — that needs fixing for the diff to work.
 
 ## Open questions
 
-1. Descriptions under each switch are my reading of the field — please confirm wording (especially Default and Hold booking).
-2. Can more than one API be Default? The live data has several, so the design allows it.
+1. Descriptions under each switch are my reading of the field — please confirm wording (especially Hold booking).
 
 ## Changelog
 
@@ -59,4 +58,4 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - 2026-11-17 — List switched back to the portal's reusable table format; only change is the added Hold Booking column.
 - 2026-11-17 — Reusable table restyled (same shape and font, new look in the Map-UI style); applies to every list.
 - 2026-11-17 — Page subtitle and breadcrumb removed; header is just the title and New API.
-- 2026-11-17 — Default column removed from the list.
+- 2026-11-17 — Default removed: list column, form switch and history.
