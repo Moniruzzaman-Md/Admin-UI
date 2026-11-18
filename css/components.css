@@ -20,6 +20,8 @@
 .btn-primary:hover { background: var(--brand-hover); }
 .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
 .btn-secondary:hover { background: var(--surface-2); }
+.btn-danger { background: #c42f3b; color: #fff; }
+.btn-danger:hover { background: #a8242f; }
 .btn-ghost { background: none; color: var(--text-2); }
 .btn-ghost:hover { background: var(--gray-bg); color: var(--text); }
 .btn:focus-visible, .icon-btn:focus-visible, .seg button:focus-visible, .switch input:focus-visible + span { outline: 2px solid var(--brand-accent); outline-offset: 2px; }
@@ -134,3 +136,22 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* a button that can't be used yet (e.g. Save while the form has a blocking problem) */
+.btn:disabled, .btn[disabled] { opacity: .5; cursor: not-allowed; box-shadow: none; }
+/* a field warning: something to know, not an error — saving is still allowed */
+.field .field-warn { display: flex; align-items: flex-start; gap: 6px; margin-top: 2px; padding: 6px 8px; border-radius: 6px; background: #fff6e5; color: #8a5300; font-size: var(--fs-xs); line-height: 1.45; }
+.field .field-warn[hidden] { display: none; }
+/* tones: danger (red, e.g. won't apply), warn (amber, default), info (blue, e.g. this one takes priority) */
+.field .field-warn.danger { background: #fdecee; color: #b3261e; }
+.field .field-warn.info { background: #e8f1fd; color: #1d5fb8; }
+/* several field messages stacked */
+.field .field-msgs { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.field .field-msgs[hidden] { display: none; }
+.field .field-msgs .field-warn { margin-top: 0; }
+.field .field-warn svg { flex: none; width: 12px; height: 12px; margin-top: 2px; }
+/* shared tooltip (js/tooltip.js): dark box with an arrow, shows instantly */
+.tooltip { position: fixed; z-index: 2000; max-width: 300px; white-space: pre-line; padding: 6px 9px; border-radius: 6px; background: #1c1c33; color: #fff; font-size: 12px; line-height: 1.4; font-weight: 500; box-shadow: 0 6px 18px rgba(16, 16, 60, .22); pointer-events: none; }
+.tooltip[hidden] { display: none; }
+.tooltip::after { content: ''; position: absolute; left: var(--arrow-x, 50%); top: 100%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1c1c33; }
+.tooltip.below::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: #1c1c33; }

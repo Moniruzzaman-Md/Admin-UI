@@ -69,6 +69,7 @@
 
 .table .text-center { text-align: center !important; }
 .table .text-start { text-align: left !important; }
+.table .text-end { text-align: right !important; }
 
 /* serial number column (#): first column, narrow, muted; numbers count across pages */
 .table .tbl-num { width: 1%; padding-left: 16px; padding-right: 12px; text-align: left; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -199,3 +200,46 @@
   .pagination__direction { min-width: 88px; height: 36px; }
   .pagination__summary-label { display: none; }
 }
+
+/* list of short values in one cell (e.g. markets): soft chips, wraps; "+N" opens nothing, it names the rest on hover */
+.tbl-chips { display: flex; flex-wrap: wrap; gap: 4px; max-width: 340px; white-space: normal; }
+.tbl-chip { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #f1f1f6; color: #1c1c33; font-size: 12px; line-height: 18px; font-weight: 600; white-space: nowrap; }
+.tbl-chip.more { background: #ececfa; color: #10108a; cursor: default; }
+/* list cell: every value as "Name CUR | Name CUR" with thin dividers; the divider at the start of each line is clipped away */
+.tbl-list { white-space: normal; text-align: left; }
+/* a column that only needs its content's width (badges, amounts, status): the free width goes to the list columns */
+.table th.tbl-fit, .table td.tbl-fit { width: 1%; white-space: nowrap; }
+.tbl-list-clip { overflow: hidden; }
+.tbl-list-row { display: flex; flex-wrap: wrap; row-gap: 6px; margin-left: -21px; }
+.tbl-item { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding-left: 10px; border-left: 1px solid #dfe1ec; font-size: 13px; line-height: 20px; font-weight: 500; color: #1c1c33; white-space: nowrap; }
+.tbl-pill { padding: 0 6px; border-radius: 999px; background: #eef0fb; color: #3d3f9e; font-size: 10px; line-height: 16px; font-weight: 700; letter-spacing: .4px; }
+/* "all" chip: a scope that covers every value (All markets, All suppliers) — outlined with an icon */
+.tbl-chip.all { display: inline-flex; align-items: center; gap: 5px; background: #fff; color: #10108a; box-shadow: inset 0 0 0 1px #c9c9ee; }
+.tbl-chip.all i { font-size: 10px; color: #5a5ad0; }
+.tbl-tag.neutral { background: #f1f1f6; color: #4a4a66; }
+/* destructive row action (Delete): red instead of blue */
+.tbl-action.danger { color: #c42f3b; }
+.tbl-action.danger:hover { background: #c42f3b; border-color: #c42f3b; color: #fff; }
+.tbl-action.danger:focus-visible { outline-color: #c42f3b; }
+/* amount + its kind (e.g. 5.00% Percent / 1,000.00 Fixed): numbers right-aligned so rows line up */
+/* amount cell, two lines: the amount on top, its type (Percent / Fixed) under it; right-aligned so numbers line up */
+.tbl-amount { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+.tbl-amount-value { font-size: 14px; line-height: 20px; font-weight: 700; color: #1c1c33; font-variant-numeric: tabular-nums; }
+.tbl-amount-type { font-size: 12px; line-height: 16px; font-weight: 500; color: #7a7f95; }
+
+/* Action column: always last and right-aligned (header + buttons) — standing rule for every list */
+.table thead > tr > th.tbl-action-col, .table td.tbl-action-col { width: 1%; padding-left: 16px; padding-right: 16px; text-align: right !important; white-space: nowrap; }
+.table td.tbl-action-col .tbl-actions { justify-content: flex-end; }
+/* group › item cell: a small grey group label (e.g. the portal) then the item's code, with the item's name under the code, left edges aligned */
+.tbl-group { display: grid; grid-template-columns: minmax(38px, auto) 1fr; column-gap: 8px; row-gap: 4px; align-items: center; justify-items: start; }
+.tbl-eyebrow { font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: #7a7f95; white-space: nowrap; }
+.tbl-eyebrow .sep { margin-left: 6px; font-weight: 400; }
+.tbl-group-name { grid-column: 2; display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.tbl-group-name .tbl-tag { margin-left: 0; }
+/* status cell with a small warning pill under the status pill */
+.tbl-status-cell { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+.tbl-warn { display: inline-flex; align-items: center; gap: 3px; padding: 0 6px; border-radius: 999px; background: #fff1d6; color: #8a5300; box-shadow: inset 0 0 0 1px #f2d9a6; font-size: 11px; line-height: 16px; font-weight: 600; white-space: nowrap; cursor: help; }
+.tbl-warn svg { width: 9px; height: 9px; }
+.tbl-warn.danger { background: #fdecee; color: #b3261e; box-shadow: inset 0 0 0 1px #f5c2c7; }
+/* info pill under the status (e.g. this rule overrides an older one): blue, same shape as the warning pill */
+.tbl-note { display: inline-flex; align-items: center; padding: 0 6px; border-radius: 999px; background: #e8f1fd; color: #1d5fb8; box-shadow: inset 0 0 0 1px #c7dcf7; font-size: 11px; line-height: 16px; font-weight: 600; white-space: nowrap; cursor: help; }

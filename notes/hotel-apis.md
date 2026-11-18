@@ -23,7 +23,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 
 - **Search** replaces the "Select Api" dropdown. It matches API name, API code, reference code and short code (case-insensitive, contains).
 - **Currency**: "All currencies" + currency list.
-- **Status** (dropdown): All statuses / Active / Inactive. Each option shows a count, calculated with the search and currency filters applied.
+- **Status** (dropdown): All statuses / Active / Inactive (no counts).
 - Every dropdown on the page (filters, form currency, rows per page) has a search box to type and narrow the options; arrow keys + Enter pick, Esc closes.
 - Filters apply as you type or change them. The separate search button is removed.
 - "Clear filters" appears only when a filter is set, and resets all three.
@@ -45,7 +45,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
   - Turning Hold booking off clears both values on save (sent as empty).
   - Both show in history like any other field (e.g. Hold amount 50 → 15).
 - New API defaults: Active on, everything else off. *(Assumption — confirm the current form's defaults.)*
-- Edit pre-fills every field. Title shows "Edit hotel API" + name and code; button says "Save changes" (create: "Create API").
+- Edit pre-fills every field. Title: "Edit hotel API · ‹name›", no subtitle; button says "Save changes" (create: "Create API").
 - Validation on submit: each required field shows its own message.
 - **API code and Short code must be unique** (case-insensitive) — the message names the API already using it. *(Assumption — confirm the backend enforces this.)*
 - Saving with no changes doesn't write a history entry.
@@ -62,7 +62,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 
 ## History (drawer)
 
-Same as the Map-UI screens' Edit History. Title: "Edit History — ‹name› (‹API code›)".
+Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 
 - One card per entry, newest first, each labelled "Entry N of M".
 - Each card: user name + email, date (DD-Mon-YYYY) + time (hh:mm AM/PM), then an **operation** and a **description**.
@@ -103,3 +103,7 @@ Same as the Map-UI screens' Edit History. Title: "Edit History — ‹name› (�
 - 2026-11-17 — Small "Temp" pill after a temporary supplier's name.
 - 2026-11-17 — Amber row stripe for temporary suppliers removed; the Temp pill is the only marker.
 - 2026-11-17 — History drawer: Temp pill after the supplier name in the title (while temporary), and as the Type value (Temporary) in Create and Edit entries.
+- 2026-11-18 — Drawer subtitle removed; the API name moved into the title.
+- 2026-11-18 — History drawer title is "History — ‹name›" (matches Markup Commission).
+- 2026-11-18 — Status filter counts removed.
+- 2026-11-18 — "Make permanent" confirm uses the shared modal (API name + code, "can't be changed back here" note).

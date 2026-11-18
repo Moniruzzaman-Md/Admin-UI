@@ -71,11 +71,6 @@
   }
 
   function render() {
-    // status counts reflect the search + currency filters
-    const base = apis.filter(matchesQC);
-    [...$('#f-status').options].forEach(o => {
-      o.dataset.n = o.value ? base.filter(a => (o.value === 'active') === a.active).length : base.length;
-    });
 
     const list = filtered();
     const pages = Math.max(1, Math.ceil(list.length / state.size));
@@ -95,7 +90,7 @@
         <td class="text-center"><span class="tbl-code">${esc(a.short)}</span></td>
         <td class="text-center">${flag(a.b2c)}</td>
         <td class="text-center">${flag(a.hold, holdLabel(a))}</td>
-        <td class="text-center"><div class="tbl-actions">
+        <td class="tbl-action-col"><div class="tbl-actions">
           <button class="tbl-action" type="button" data-edit="${a.id}" data-tip="Edit" aria-label="Edit ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
           <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.5V12l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div></td>
@@ -155,8 +150,8 @@
     editing = api || null;
     form.reset();
     form.querySelectorAll('.field').forEach(f => f.classList.remove('invalid'));
-    $('#edit-title').textContent = api ? 'Edit hotel API' : 'New hotel API';
-    $('#edit-sub').textContent = api ? `${api.name} · ${api.code}` : 'Add a supplier connection.';
+    // no subtitle (same drawer header as every page): the API's name goes in the title
+    $('#edit-title').textContent = api ? `Edit hotel API · ${api.name}` : 'New hotel API';
     $('#edit-submit').textContent = api ? 'Save changes' : 'Create API';
     const v = api || { name: '', code: '', ref: '', short: '', currency: '', active: true, b2c: false, hold: false };
     ['name', 'code', 'ref', 'short', 'currency'].forEach(k => form.elements[k].value = v[k]);
@@ -273,15 +268,15 @@
   const ARROW = '<svg class="hc-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" role="img" aria-label="changed to"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   function openHistory(api) {
-    $('#hist-name').innerHTML = `— ${esc(api.name)} (${esc(api.code)})${api.temporary ? ' ' + TEMP_TAG : ''}`;
+    $('#hist-name').innerHTML = `— ${esc(api.name)}${api.temporary ? ' ' + TEMP_TAG : ''}`;
     const list = historyEntries(api);
     $('#hist-body').innerHTML = list.length ? `<div class="history-list">${list.map((h, i) => `
       <div class="history-entry">
         <div class="history-entry-label">Entry ${i + 1} of ${list.length}</div>
         <div class="history-card">
           <div class="history-who">
-            <span class="history-user" title="${esc(h.by)}">${esc(h.by)}</span><span class="history-date">${dateOnly(h.at)}</span>
-            <span class="history-email" title="${esc(USERS[h.by] || '')}">${esc(USERS[h.by] || '')}</span><span class="history-time">${timeOnly(h.at)}</span>
+            <span class="history-user" data-tooltip="${esc(h.by)}">${esc(h.by)}</span><span class="history-date">${dateOnly(h.at)}</span>
+            <span class="history-email" data-tooltip="${esc(USERS[h.by] || '')}">${esc(USERS[h.by] || '')}</span><span class="history-time">${timeOnly(h.at)}</span>
           </div>
           <div class="history-op-line"><span class="pill operation-pill ${OP_CLASS[h.op]}">${h.op}</span>
             <div class="history-desc">${h.summary}</div></div>
@@ -297,26 +292,24 @@
     openDrawer($('#hist-drawer'));
   }
 
-  /* ---------- make a temporary supplier permanent (confirm first; can't be undone here) ---------- */
-  const permDlg = $('#perm-dialog');
-  let permApi = null;
-  function askPermanent(api) {
-    permApi = api;
-    $('#perm-title').textContent = `Make ${api.name} permanent?`;
-    permDlg.showModal();
+  /* ---------- make a temporary supplier permanent (confirm first, shared modal: js/modal.js) ---------- */
+  async function askPermanent(api) {
+    const ok = await Modal.open({
+      tone: 'warning',
+      title: `Make ${api.name} permanent?`,
+      message: 'It will no longer be marked Temporary.',
+      details: [['API name', esc(api.name)], ['API code', `<span class="hf-code">${esc(api.code)}</span>`]],
+      note: 'This can’t be changed back here.',
+      confirm: 'Make permanent',
+    });
+    if (!ok) return;
+    api.temporary = false;
+    api.history.unshift({ by: 'Super Admin', at: new Date(), changes: [['temporary', true, false]] });
+    if (editing === api) $('#temp-note').hidden = true;
+    toast(`${api.name} is now permanent`);
+    render();
   }
   $('#temp-note-btn').addEventListener('click', () => editing && askPermanent(editing));
-  $('#perm-cancel').addEventListener('click', () => permDlg.close());
-  permDlg.addEventListener('click', e => { if (e.target === permDlg) permDlg.close(); });
-  permDlg.addEventListener('keydown', e => e.stopPropagation()); // Esc closes only the dialog, not the drawer
-  $('#perm-ok').addEventListener('click', () => {
-    permApi.temporary = false;
-    permApi.history.unshift({ by: 'Super Admin', at: new Date(), changes: [['temporary', true, false]] });
-    permDlg.close();
-    if (editing === permApi) $('#temp-note').hidden = true;
-    toast(`${permApi.name} is now permanent`);
-    render();
-  });
 
   $('#btn-new').addEventListener('click', () => openEdit(null));
   $('#rows').addEventListener('click', e => {

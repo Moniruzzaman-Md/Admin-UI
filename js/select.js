@@ -3,7 +3,10 @@
    search box. Page code keeps using the select: .value / .disabled / "change" all work.
    - <select data-no-search> opts out.
    - <option data-n="7"> shows a count on the right of that option.
-   - After changing option text, call select._searchableRefresh(). */
+   - After changing option text, call select._searchableRefresh().
+   - <select multiple>: options toggle (the panel stays open), the trigger shows "N selected" and the
+     chosen options show as removable chips under it. Set option.selected from page code, then call
+     select._searchableRefresh(). "change" fires on every toggle. data-unit="market" → "3 markets". */
 (function () {
   const VALUE = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
   const DISABLED = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'disabled');
@@ -42,10 +45,37 @@
     let visible = [], hi = -1;
     const options = () => Array.from(select.options).filter(o => !o.disabled);
 
+    const multi = select.multiple;
+    let chips = null;
+    if (multi) {
+      wrapper.classList.add('multi'); panel.classList.add('multi');
+      chips = document.createElement('div');
+      chips.className = 'searchable-select-chips';
+      wrapper.appendChild(chips);
+      chips.addEventListener('click', e => {
+        const b = e.target.closest('[data-rm]'); if (!b) return;
+        select.options[+b.dataset.rm].selected = false; syncLabel();
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        (chips.querySelector('[data-rm]') || trigger).focus();
+      });
+    }
+    const isSel = o => multi ? o.selected : o.value === select.value;
+
     function syncLabel() {
+      if (multi) {
+        const sel = Array.from(select.selectedOptions);
+        const unit = select.dataset.unit;
+        label.textContent = sel.length === 1 ? sel[0].textContent
+          : sel.length ? `${sel.length} ${unit ? unit + 's' : ''} selected`.replace('  ', ' ') : (select.getAttribute('placeholder') || 'Select');
+        trigger.classList.toggle('placeholder', !sel.length);
+        chips.innerHTML = sel.map(o => `<span class="ss-chip">${esc(o.textContent)}<button type="button" data-rm="${o.index}" aria-label="Remove ${esc(o.textContent)}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button></span>`).join('');
+        chips.hidden = !sel.length;
+        return;
+      }
       const o = select.options[select.selectedIndex];
       label.textContent = o ? o.textContent : '';
-      trigger.classList.toggle('placeholder', !o || (!o.value && /^select/i.test(o.textContent)));
+      // grey when nothing is chosen: a "Select …" option, or an empty option marked data-placeholder (e.g. a filter named after its field)
+      trigger.classList.toggle('placeholder', !o || (!o.value && (/^select/i.test(o.textContent) || 'placeholder' in o.dataset)));
     }
     const syncDisabled = () => { trigger.disabled = select.disabled; };
 
@@ -53,14 +83,20 @@
       q = q.trim().toLowerCase();
       visible = q ? options().filter(o => o.textContent.toLowerCase().includes(q)) : options();
       list.innerHTML = visible.length
-        ? visible.map((o, i) => `<div class="searchable-select-option${o.value === select.value ? ' selected' : ''}" role="option" aria-selected="${o.value === select.value}" data-index="${i}"><span>${esc(o.textContent)}</span>${o.dataset.n != null ? `<span class="opt-n">${esc(o.dataset.n)}</span>` : ''}</div>`).join('')
+        ? visible.map((o, i) => `<div class="searchable-select-option${isSel(o) ? ' selected' : ''}" role="option" aria-selected="${isSel(o)}" data-index="${i}">${multi ? '<span class="ss-check" aria-hidden="true"></span>' : ''}<span class="ss-text">${esc(o.textContent)}</span>${o.dataset.n != null ? `<span class="opt-n">${esc(o.dataset.n)}</span>` : ''}</div>`).join('')
         : '<div class="searchable-select-empty">No matches found</div>';
-      hi = visible.findIndex(o => o.value === select.value);
+      if (multi) list.setAttribute('aria-multiselectable', 'true');
+      hi = multi ? Math.min(Math.max(hi, 0), visible.length - 1) : visible.findIndex(o => o.value === select.value);
       highlight();
     }
     function highlight() {
       list.querySelectorAll('.searchable-select-option').forEach((el, i) => el.classList.toggle('highlighted', i === hi));
-      list.children[hi]?.scrollIntoView({ block: 'nearest' });
+      // scroll only the option list (scrollIntoView would also scroll the page / drawer behind the panel)
+      const el = list.children[hi];
+      if (el) {
+        if (el.offsetTop < list.scrollTop) list.scrollTop = el.offsetTop;
+        else if (el.offsetTop + el.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = el.offsetTop + el.offsetHeight - list.clientHeight;
+      }
     }
     function position() {
       const r = trigger.getBoundingClientRect();
@@ -75,11 +111,16 @@
       if (select.disabled) return;
       document.querySelectorAll('.searchable-select-panel.open').forEach(p => p !== panel && p._close());
       panel.classList.add('open'); wrapper.classList.add('open'); trigger.setAttribute('aria-expanded', 'true');
-      search.value = ''; render(''); position(); search.focus();
+      search.value = ''; hi = 0; render(''); position(); search.focus();
     }
     function close() { panel.classList.remove('open'); wrapper.classList.remove('open'); trigger.setAttribute('aria-expanded', 'false'); }
     panel._close = close;
     function choose(o) {
+      if (multi) {
+        o.selected = !o.selected; hi = visible.indexOf(o); syncLabel(); render(search.value); position();
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+      }
       select.value = o.value; close(); trigger.focus();
       select.dispatchEvent(new Event('change', { bubbles: true }));
     }
@@ -95,15 +136,22 @@
       else if (e.key === 'Tab') close();
     });
     list.addEventListener('click', e => { const el = e.target.closest('.searchable-select-option'); if (el) choose(visible[+el.dataset.index]); });
-    document.addEventListener('click', e => { if (isOpen() && !wrapper.contains(e.target) && !panel.contains(e.target)) close(); });
-    addEventListener('scroll', e => { if (isOpen() && !panel.contains(e.target)) close(); }, true);
+    // composedPath: a multi-select re-renders its options on click, so e.target may already be detached
+    document.addEventListener('click', e => { const path = e.composedPath(); if (isOpen() && !path.includes(wrapper) && !path.includes(panel)) close(); });
+    // page / drawer scroll: the panel follows its trigger (stays open, so multi-select picking isn't interrupted);
+    // it closes only once the trigger has scrolled out of view
+    addEventListener('scroll', e => {
+      if (!isOpen() || panel.contains(e.target)) return;
+      const r = trigger.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > innerHeight) close(); else position();
+    }, true);
     addEventListener('resize', () => isOpen() && close());
 
     // keep the trigger in sync when page code sets .value / .disabled directly (form reset, prefill)
     Object.defineProperty(select, 'value', { configurable: true, get() { return VALUE.get.call(select); }, set(v) { VALUE.set.call(select, v); syncLabel(); } });
     Object.defineProperty(select, 'disabled', { configurable: true, get() { return DISABLED.get.call(select); }, set(v) { DISABLED.set.call(select, v); syncDisabled(); } });
     select.form?.addEventListener('reset', () => setTimeout(syncLabel));
-    select._searchableRefresh = () => { syncLabel(); syncDisabled(); };
+    select._searchableRefresh = () => { syncLabel(); syncDisabled(); if (isOpen()) render(search.value); };
     syncLabel(); syncDisabled();
   }
 

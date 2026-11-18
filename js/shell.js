@@ -15,6 +15,7 @@
   const MENU = [
     { label: 'Hotel Management', icon: 'users', items: [
       { label: 'Api List', icon: 'list-alt', page: 'hotel-apis', href: 'hotel-apis.html' },
+      { label: 'Markup', icon: 'sliders-h', page: 'markup-commission', href: 'markup-commission.html' },
     ] },
   ];
 

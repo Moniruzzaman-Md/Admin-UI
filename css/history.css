@@ -71,11 +71,13 @@
 .hf-dot.warn { color: #a8620a; }
 
 /* Edit / Status Change entry: one row per changed field - label, then old -> new */
+/* the label column is as wide as the longest label in this card (no fixed width, so no empty gap after short labels);
+   rows share it through subgrid so the values still line up */
 .history-changes {
-  display: flex; flex-direction: column; margin: 10px 0 2px; overflow: hidden;
+  display: grid; grid-template-columns: max-content minmax(0, 1fr); margin: 10px 0 2px; overflow: hidden;
   border: 1px solid #e4e4f0; border-radius: 8px; background: #fbfbfe;
 }
-.history-changes > div { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 10px; }
+.history-changes > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; column-gap: 16px; padding: 8px 10px; }
 .history-changes > div + div { border-top: 1px solid #e4e4f0; }
 .history-changes dt { font-size: 11px; font-weight: 600; line-height: 16px; letter-spacing: .3px; text-transform: uppercase; color: #6b6b85; }
 .history-changes dd { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; margin: 0; font-size: 13px; line-height: 20px; }
@@ -105,3 +107,17 @@
 
 /* Temp pill as a field value sits flush, not offset like after a name */
 .history-fields .tbl-tag, .history-changes .tbl-tag { margin-left: 0; }
+/* long values (lists of markets, suppliers…) wrap instead of being cut off */
+.history-fields dd.wrap, .history-changes dd.wrap { white-space: normal; }
+/* a value with its code (market + currency) stays on one line; the comma sits right after it */
+.hist-item { white-space: nowrap; }
+.hist-sep { margin-left: 1px; }
+/* list field edit (markets, suppliers): only what changed — a "Removed" line and an "Added" line */
+.hc-list { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.hc-line { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: baseline; column-gap: 8px; }
+.hc-tag { padding: 0 6px; border-radius: 4px; font-size: 10px; line-height: 16px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
+.hc-tag.rm { background: #fdecee; color: #b3261e; }
+.hc-tag.add { background: #e6f4ec; color: #137a42; }
+.hc-items { line-height: 20px; }
+.hc-items.rm { color: #8a8aa3; font-weight: 500; }
+.hc-items.add { color: #1c1c33; font-weight: 600; }
