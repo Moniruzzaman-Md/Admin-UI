@@ -308,6 +308,10 @@ button.tbl-code:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 2px;
 
 /* ROW LINK — a row that opens its record when clicked (tr.row-link); the last opened one stays marked (tr.is-last-opened) */
 .table tbody tr.row-link { cursor: pointer; }
+/* the operation name opens the file (the whole row does too); the button is the keyboard / screen-reader way in */
+button.tbl-open { all: unset; cursor: pointer; font-weight: 600; color: var(--tbl-text); width: fit-content; border-radius: 4px; }
+tr.row-link:hover button.tbl-open, button.tbl-open:hover { text-decoration: underline; text-underline-offset: 3px; }
+button.tbl-open:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 /* transaction ID badge + its timeline button (Hotel API Logs list and viewer) */
 .txn-line { display: inline-flex; align-items: center; gap: 4px; }
 .txn-tl-btn { display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 1px solid #d6daf7; border-radius: 6px; background: #fff; color: #2b3ed1; cursor: pointer; }

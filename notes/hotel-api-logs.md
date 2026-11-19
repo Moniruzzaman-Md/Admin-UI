@@ -24,7 +24,7 @@ Shared filter bar (`js/filters.js`, same as Map-UI hotel-system): a row with the
 
 ## List
 
-Reusable table. Columns: **#** | DATE & TIME | TRANSACTION ID | OPERATION | SUPPLIER | ACTION. Newest first (API order).
+Reusable table. Columns: **#** | DATE & TIME | TRANSACTION ID | OPERATION | SUPPLIER. No Action column. Newest first (API order).
 
 - **#** = position in the whole filtered result (row 21 on page 2).
 - **Date & Time**: `createdOn` in local time — date line `20-Nov-2026`, time line `06:15:11 PM` (seconds kept: calls of one transaction are seconds apart).
@@ -35,8 +35,8 @@ Reusable table. Columns: **#** | DATE & TIME | TRANSACTION ID | OPERATION | SUPP
 - **Operation**: `operationName` as is, with `fileName` under it in small text, fitted to the column: the column takes the table's free width; the file name shows whole when it fits, otherwise its start is cut with `…` and the last 12 characters always show. Full name on hover. The Request / Response / Trace ending is coloured (Request blue, Response green, Trace orange; the visible part of `Request[-n]` / `Response[-n]` / `Trace`).
 - **Supplier**: name for `supplierId` (0 = "Common").
 - **File name column is removed** — the full file name shows under the operation name instead.
-- Action: View only (icon button, name on hover). Download is in the viewer.
-- **Clicking anywhere on a row** opens the file in the viewer (same as View), except the transaction badge. Selecting text in a row doesn't open it.
+- **Opening a file**: the operation name is a button (opens the file; keyboard: Tab to it, Enter; read out as "Open Book response"). Download is in the viewer.
+- **Clicking anywhere on a row** opens the file in the viewer (same as the operation name), except the transaction badge, the timeline button and the copy buttons. Selecting text in a row doesn't open it.
 - The **last opened file's row stays marked** (soft blue + left bar) after the viewer closes, so you keep your place; it moves as you step through files, and stays marked when the list is reloaded if that file is still on the page.
 - Empty: "No hotel API logs found".
 - Pagination as today (`per_page` 20 / 50 / 100, `page`), total from `totalRecord`.
@@ -133,4 +133,5 @@ Search in the live logs (checked 2026-11-20): `Common-Search-…-Request` first,
 - 2026-11-20 — Show in list keeps the user's rows per page (20 by default); per_page 100 only for the timeline's requests.
 - 2026-11-20 — list: copy buttons for transaction ID and file name; timeline button moved next to the portal.
 - 2026-11-20 — viewer: skeleton while `download` loads, bar disabled meanwhile, error state with Try again; files kept once loaded; only the latest request shows.
+- 2026-11-20 — list: Action column (View) removed; the operation name opens the file (the row click still does).
 - 2026-11-20 — sidebar: moved from Hotel Management to its live parent, Logs › Hotel Api.

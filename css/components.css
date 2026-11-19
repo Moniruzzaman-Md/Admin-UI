@@ -181,7 +181,7 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
 .cv-skel-line .skeleton-bar { display: block; height: 9px; border-radius: 999px; background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }
 .cv-state.is-error { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 24px; text-align: center; color: var(--text-2); }
 .cv-state.is-error svg { color: #c2410c; margin-bottom: 4px; }
-.cv-state.is-error b { color: var(--text-1); font-size: var(--fs-md, 15px); }
+.cv-state.is-error b { color: var(--text); font-size: var(--fs-md, 15px); }
 .cv-state.is-error span { font-size: var(--fs-sm); color: var(--text-3); }
 .cv-state.is-error .btn { margin-top: 10px; height: 32px; }
 .code-view-bar .meta .skeleton-bar { display: inline-block; vertical-align: middle; width: 44px; height: 9px; border-radius: 999px; background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }

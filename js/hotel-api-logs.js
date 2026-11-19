@@ -192,7 +192,6 @@
   const ICON_COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg>';
   const copyBtn = (text, label) => `<button type="button" class="tbl-copy" data-copy="${esc(text)}" data-tooltip="${label}" aria-label="${label}">${ICON_COPY}</button>`;
   const ICON_TL = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><path d="M5 8v8M10 6h10M10 12h7M10 18h10"/></svg>';
-  const ICON_VIEW = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>';
 
   let pageRows = [];
   function render() {
@@ -210,13 +209,10 @@
           <span class="txn-line"><button type="button" class="tbl-code" data-txn="${l.id}" data-tooltip="Transaction timeline">${l.id}</button>${copyBtn(l.id, 'Copy transaction ID')}</span>
           <span class="txn-line"><small>${esc(l.ctx.portal)}</small><button type="button" class="txn-tl-btn" data-txn="${l.id}" data-tooltip="Transaction timeline" aria-label="Transaction timeline for ${l.id}">${ICON_TL}</button></span>
         </span></td>
-        <td><span class="tbl-stack fill"><span class="tbl-strong">${esc(l.operationName)}</span><span class="file-line"><small class="tbl-mid" tabindex="0" data-tooltip="${esc(l.fileName)}">${fileLabel(l)}</small>${copyBtn(l.fileName, 'Copy file name')}</span></span></td>
+        <td><span class="tbl-stack fill"><button type="button" class="tbl-strong tbl-open" aria-label="Open ${esc(l.operationName)} ${l.kind.toLowerCase()}">${esc(l.operationName)}</button><span class="file-line"><small class="tbl-mid" tabindex="0" data-tooltip="${esc(l.fileName)}">${fileLabel(l)}</small>${copyBtn(l.fileName, 'Copy file name')}</span></span></td>
         <td class="text-center">${esc(API_NAME[l.supplierId] || `Supplier ${l.supplierId}`)}</td>
-        <td class="tbl-action-col"><div class="tbl-actions">
-          <button class="tbl-action" type="button" data-view="${i}" data-tip="View" aria-label="View ${esc(l.operationName)} ${l.kind.toLowerCase()}">${ICON_VIEW}</button>
-        </div></td>
       </tr>`).join('')
-      : EmptyState.row(6);
+      : EmptyState.row(5);
 
     $('#pg-range').textContent = list.length ? `${start + 1}–${start + pageRows.length}` : '0';
     $('#pg-total').textContent = list.length.toLocaleString('en-US');
@@ -261,7 +257,7 @@
     onSearch: applyFilters,
     onReset: () => { setFields(DEFAULTS()); applyFilters(); },
   });
-  // row click (or View) opens the file; the transaction badge opens the transaction timeline
+  // row click (or the operation name, the keyboard way in) opens the file; the transaction badge opens the transaction timeline
   $('#rows').addEventListener('click', e => {
     const cp = e.target.closest('[data-copy]');
     if (cp) return copy(cp.dataset.copy, cp.dataset.tooltip === 'Copy file name' ? 'File name copied' : 'Transaction ID copied');
