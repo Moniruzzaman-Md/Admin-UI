@@ -110,12 +110,20 @@ In this order: **ID · Portal · Client · Market · Supplier · Status**.
 Same Edit History as Hotel APIs (same layout and rules). Title: "History — #‹ID›".
 
 - One card per entry, newest first, "Entry N of M". User name + email, date (DD-Mon-YYYY) + time (hh:mm AM/PM).
-- **Create** — "Markup added with these settings" + Portal (All / B2B), Client (code + name, or All clients), Markets (each with its currency, "Bangladesh BDT"), Suppliers (or All suppliers), Markup (amount · type), Status.
-- **Status Change** — only Status changed: "Activated" / "Deactivated", old → new status, and "Added to hotel prices again." / "No longer added to hotel prices."
-- **Edit** — "N fields changed", one row per changed field, **old value → new value**. **Markets** and **Suppliers** show only what changed: a "Removed" line (the markets / suppliers taken out) and an "Added" line (the ones put in), each only when it has something. Switching to or from All markets / All suppliers shows old → new instead (nothing to add or remove). Markup type + amount are one "Markup" row.
+- **Create** — no summary text, just the values: Portal (All / B2B), Client (code + name, or All clients), Markets (each with its currency, "Bangladesh BDT"), Suppliers (or All suppliers), Markup (amount · type), Status.
+- **Status Change** — only Status changed, no summary text: old → new status, and "Added to hotel prices again." / "No longer added to hotel prices."
+- **Edit** — no summary text, one row per changed field, **old value → new value**. **Markets** and **Suppliers** show only what changed: a "Removed" line (the markets / suppliers taken out) and an "Added" line (the ones put in), each only when it has something. Switching to or from All markets / All suppliers shows old → new instead (nothing to add or remove). Markup type + amount are one "Markup" row.
 - The live history's **Commission** column is dropped: it only ever shows "%". The live API NAME is empty in history rows and needs fixing.
 - Needs per entry: operation, changed fields with old + new values (full snapshot for Create), user name, user email, timestamp.
 - No history → "No history yet".
+- **Legacy history** (saves made in the old system) continues the same timeline, after the current entries, in the same cards — no tabs, no separate look. "Entry N of M" counts both; old-system entries have "Old system · " before it.
+  - The old log (`get-log`) stores one row per save with the **full record as it was after that save** (not a diff), who (name + email) and when (UTC). Creates were never logged.
+  - Each old row is compared with the one before it: what differs becomes a normal **Edit** (old → new rows) or **Status Change** (only Status differed) entry, using the same field labels and wording as today.
+  - The **oldest** old row: what it changed isn't known (no earlier row, no create row), so it shows as an Edit card with all its values as a field grid (no summary text).
+  - An old save that changed no field shown here (e.g. only a removed field) gets no entry — same rule as today.
+  - A field missing from an old row (added to the log later) is not compared.
+  - Records created after the switch have a Create entry and no legacy rows; records from before it have no Create entry.
+  - Old fields used: market_list (ids; null = All markets), hotel_api_info_id (one supplier, shown by name), markup_type (1 = Percent, 2 = Fixed) + markup_amount (one Markup row), is_active. Portal shows All and Client All clients (old rules were all-portal). Ignored: commission_type, commission_amount, market_name_list (stale names — use market_list). The old modal's blank API NAME was a display bug — the id is there.
 
 ## Open questions
 
@@ -184,3 +192,7 @@ Still open (backend, doesn't change the screen): whether the pricing service can
 - 2026-11-18 — Check overlaps saves the result on each rule (stays until the next check); summary bar removed.
 - 2026-11-18 — Save with "Check for overlaps" ticked also saves the result on that rule.
 - 2026-11-18 — Save with "Check for overlaps" also updates the overlapped rules (now and before the edit).
+- 2026-11-19 — Legacy history (old system's log) shown in the same timeline and cards: each old save as an Edit / Status Change, the oldest as an Edit card with all its values.
+- 2026-11-19 — Create entry: summary text removed. Old-system entries marked "Old system · Entry N of M".
+- 2026-11-19 — Status Change ("Activated" / "Deactivated") and Edit ("N fields changed") summary text removed.
+- 2026-11-19 — "Earliest recorded settings" removed too: no summary text on any history entry.

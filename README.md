@@ -25,6 +25,7 @@ admin-portal/
     shell.js          injects the portal header + sidebar; sidebar lists only redesigned screens (MENU)
     select.js         turns every <select> into the searchable dropdown (css/select.css)
     tooltip.js        shared instant tooltip for any data-tooltip="…" (styles in css/components.css)
+    history-legacy.js turns old-system history rows (full record per save) into normal history entries: HistoryLegacy.toEntries(rows, keys)
     modal.js          shared confirm / info modal: Modal.open({tone, title, message, details, note, confirm}) → Promise<boolean> (css/modal.css)
     <screen>.js       page prototype logic + dummy data
   notes/<screen>.md   dev notes (behaviour only) + changelog

@@ -67,14 +67,22 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 - One card per entry, newest first, each labelled "Entry N of M".
 - Each card: user name + email, date (DD-Mon-YYYY) + time (hh:mm AM/PM), then an **operation** and a **description**.
 - Operations:
-  - **Create** — "Hotel API added with these settings", then the starting values as a labelled grid: API name, API code, Short code, Reference code, Currency, Status, Type (Permanent / Temporary), B2C (Enabled / Disabled), Hold booking (Disabled, or Enabled + amount, e.g. "Enabled · 20%" / "Enabled · 50 MYR").
-  - **Status Change** — only Status changed. Summary "Activated" or "Deactivated", then old → new status pill, then what it means: "Used for search and booking again." / "No longer used for search or booking." (If Status changes together with other fields in one save, it is an Edit row instead.)
-  - **Edit** — everything else. Summary "N fields changed", then one row per changed field: label, old value (struck through) → new value. One save = one entry. Hold booking, amount type and amount show as one "Hold booking" row (e.g. "Enabled · 50 MYR → Enabled · 15%"). Making a temporary supplier permanent is an Edit with one row: TYPE  Temporary → Permanent.
+  - **Create** — no summary text, just the starting values as a labelled grid: API name, API code, Short code, Reference code, Currency, Status, Type (Permanent / Temporary), B2C (Enabled / Disabled), Hold booking (Disabled, or Enabled + amount, e.g. "Enabled · 20%" / "Enabled · 50 MYR").
+  - **Status Change** — only Status changed. No summary text: old → new status pill, then what it means: "Used for search and booking again." / "No longer used for search or booking." (If Status changes together with other fields in one save, it is an Edit row instead.)
+  - **Edit** — everything else. No summary text: one row per changed field: label, old value (struck through) → new value. One save = one entry. Hold booking, amount type and amount show as one "Hold booking" row (e.g. "Enabled · 50 MYR → Enabled · 15%"). Making a temporary supplier permanent is an Edit with one row: TYPE  Temporary → Permanent.
   - Values in every entry use the list's wording: Active / Inactive, Enabled / Disabled, Permanent / Temporary, codes as code chips.
 - Saving with no changes writes nothing.
 - Needs per entry: operation, the changed fields with old + new values (or the full snapshot for Create), user name, user email, timestamp.
 - Note: in the live portal, STATUS / B2C STATUS come back empty in history rows — that needs fixing for this to work.
 - No history → "No history yet".
+- **Legacy history** (saves made in the old system) continues the same timeline, after the current entries, in the same cards — no tabs, no separate look. "Entry N of M" counts both; old-system entries have "Old system · " before it.
+  - The old log (`get-log`) stores one row per save with the **full record as it was after that save** (not a diff), who (name + email) and when (UTC). Creates were never logged.
+  - Each old row is compared with the one before it: what differs becomes a normal **Edit** (old → new rows) or **Status Change** (only Status differed) entry, using the same field labels and wording as today.
+  - The **oldest** old row: what it changed isn't known (no earlier row, no create row), so it shows as an Edit card with all its values as a field grid (no summary text).
+  - An old save that changed no field shown here (e.g. only a removed field) gets no entry — same rule as today.
+  - A field missing from an old row (added to the log later) is not compared.
+  - Records created after the switch have a Create entry and no legacy rows; records from before it have no Create entry.
+  - Old fields used: api_name, api_code, short_code, api_reference_code, currency_code, is_active, is_temporary, is_allowed_for_b2c, is_allowed_for_book_and_hold + hold_amount_type + hold_amount (one Hold booking row). Ignored: is_default, is_auto_ticket_allow, color_code (removed from the page). The old modal's blank STATUS / B2C STATUS were a display bug — the data has them.
 
 ## Open questions
 
@@ -107,3 +115,7 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 - 2026-11-18 — History drawer title is "History — ‹name›" (matches Markup Commission).
 - 2026-11-18 — Status filter counts removed.
 - 2026-11-18 — "Make permanent" confirm uses the shared modal (API name + code, "can't be changed back here" note).
+- 2026-11-19 — Legacy history (old system's log) shown in the same timeline and cards: each old save as an Edit / Status Change, the oldest as an Edit card with all its values.
+- 2026-11-19 — Create entry: summary text removed. Old-system entries marked "Old system · Entry N of M".
+- 2026-11-19 — Status Change ("Activated" / "Deactivated") and Edit ("N fields changed") summary text removed.
+- 2026-11-19 — "Earliest recorded settings" removed too: no summary text on any history entry.

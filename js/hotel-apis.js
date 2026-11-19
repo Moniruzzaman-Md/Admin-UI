@@ -35,9 +35,39 @@
   const editors = ['Super Admin', 'Ops Team', 'Super Admin'];
   apis.forEach((a, i) => {
     const d = new Date(2026, 9, 2 + i, 10, 15);
-    a.history.push({ by: 'Super Admin', at: d, created: true });
+    // APIs created before the new history have old-system rows instead of a Create entry (added below)
+    a.legacy = i % 4 !== 3;
+    if (!a.legacy) a.history.push({ by: 'Super Admin', at: d, created: true });
     if (i % 3 !== 2) a.history.unshift({ by: editors[i % 3], at: new Date(2026, 10, 3 + i, 14, 4), changes: [['currency', a.currency === 'USD' ? 'EUR' : 'USD', a.currency]].concat([['b2c', !a.b2c, a.b2c]]) });
     if (i % 2 === 0) a.history.unshift({ by: 'Super Admin', at: new Date(2026, 10, 12, 14, 38), changes: [['active', !a.active, a.active]] });
+  });
+
+  /* dummy legacy history (old system): one row per save = the full record AFTER that save, newest first, no create row.
+     It ends at the state before the API's first current entry; HistoryLegacy.toEntries (js/history-legacy.js) turns it
+     into normal Edit / Status Change entries that continue the timeline. "def" stands for the removed Default field:
+     a save that only changed it shows nothing. */
+  const LEGACY_KEYS = ['name', 'code', 'ref', 'short', 'currency', 'active', 'b2c', 'hold', 'holdType', 'holdAmount', 'temporary'];
+  const LEGACY_BY = ['Super Admin', 'Ops Team', 'Rahim Uddin'];
+  apis.forEach(a => {
+    if (!a.legacy) return;
+    const v = { def: false }; LEGACY_KEYS.forEach(k => v[k] = a[k]);
+    a.history.forEach(h => (h.changes || []).forEach(([f, o]) => { v[f] = o; })); // state before the current entries
+    const steps = [ // each step = what the save before changed (walking back in time)
+      s => { s.active = !s.active; },
+      s => { s.def = !s.def; },                                       // only the removed Default field → no entry
+      s => { s.currency = s.currency === 'USD' ? 'MYR' : 'USD'; },
+      s => { s.code = s.code + '-TEST'; s.b2c = !s.b2c; },
+      s => { s.active = !s.active; },
+    ];
+    const n = 3 + (a.id % 3), rows = [];
+    let s = { ...v };
+    for (let k = 0; k < n; k++) {
+      const values = { ...s };
+      if (k === n - 1) delete values.temporary; // older old-system rows don't have it
+      rows.push({ by: LEGACY_BY[(a.id + k) % 3], at: new Date(2026, 8 - k, 26 - (a.id + k * 3) % 20, 9 + k, 10 + a.id * 3, 52 - k * 7), values });
+      s = { ...s }; steps[(a.id + k) % steps.length](s);
+    }
+    a.history.push(...HistoryLegacy.toEntries(rows, LEGACY_KEYS));
   });
 
   /* ---------- helpers ---------- */
@@ -220,7 +250,7 @@
      Edit = one row per changed field: old value → new value.
      Status Change (only Status changed) = "Activated" / "Deactivated", old → new status pill, and what it means.
      Values are shown the same way as in the list (code chips, status dots, hold amount with its unit). Newest first. */
-  const USERS = { 'Super Admin': 'superadmin@mynztrip.com', 'Ops Team': 'ops@mynztrip.com' };
+  const USERS = { 'Super Admin': 'superadmin@mynztrip.com', 'Ops Team': 'ops@mynztrip.com', 'Rahim Uddin': 'rahim@mynztrip.com' };
   const OP_CLASS = { Create: 'success', Edit: 'info', 'Status Change': 'neutral' };
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dateOnly = d => `${String(d.getDate()).padStart(2, '0')}-${MONTHS[d.getMonth()]}-${d.getFullYear()}`;
@@ -249,7 +279,9 @@
     // walk newest → oldest: "after" is the state right after an entry; undoing its changes gives "before"
     let after = {}; SNAPSHOT.forEach(k => after[k] = api[k]);
     return api.history.map(h => {
-      if (h.created) return { op: 'Create', summary: 'Hotel API added with these settings', fields: SHOW.map(([, l, f, wide]) => [l, f(after), wide]), ...h };
+      if (h.created) return { op: 'Create', summary: '', fields: SHOW.map(([, l, f, wide]) => [l, f(after), wide]), ...h };
+      // oldest old-system row: it holds the settings after that save, but not what they were before
+      if (h.first) return { op: 'Edit', summary: '', fields: SHOW.map(([, l, f, wide]) => [l, f(after), wide]), ...h };
       const before = { ...after };
       h.changes.forEach(([f, o]) => { before[f] = o; });
       const keys = [...new Set(h.changes.map(c => showKey(c[0])))];
@@ -258,10 +290,10 @@
       after = before;
       // only Status changed → its own compact entry: what happened, old → new pill, and what it means
       if (keys.length === 1 && keys[0] === 'active') return {
-        op: 'Status Change', summary: nowActive ? 'Activated' : 'Deactivated', active: nowActive,
+        op: 'Status Change', summary: '', active: nowActive,
         note: nowActive ? 'Used for search and booking again.' : 'No longer used for search or booking.', ...h,
       };
-      return { op: 'Edit', summary: `${rows.length} field${rows.length === 1 ? '' : 's'} changed`, rows, ...h };
+      return { op: 'Edit', summary: '', rows, ...h };
     });
   }
 
@@ -272,14 +304,14 @@
     const list = historyEntries(api);
     $('#hist-body').innerHTML = list.length ? `<div class="history-list">${list.map((h, i) => `
       <div class="history-entry">
-        <div class="history-entry-label">Entry ${i + 1} of ${list.length}</div>
+        <div class="history-entry-label">${h.legacy ? 'Old system · ' : ''}Entry ${i + 1} of ${list.length}</div>
         <div class="history-card">
           <div class="history-who">
             <span class="history-user" data-tooltip="${esc(h.by)}">${esc(h.by)}</span><span class="history-date">${dateOnly(h.at)}</span>
-            <span class="history-email" data-tooltip="${esc(USERS[h.by] || '')}">${esc(USERS[h.by] || '')}</span><span class="history-time">${timeOnly(h.at)}</span>
+            <span class="history-email" data-tooltip="${esc(h.email || USERS[h.by] || '')}">${esc(h.email || USERS[h.by] || '')}</span><span class="history-time">${timeOnly(h.at)}</span>
           </div>
           <div class="history-op-line"><span class="pill operation-pill ${OP_CLASS[h.op]}">${h.op}</span>
-            <div class="history-desc">${h.summary}</div></div>
+            ${h.summary ? `<div class="history-desc">${h.summary}</div>` : ''}</div>
           ${h.fields
             ? `<dl class="history-fields">${h.fields.map(([k, v, wide]) => `<div${wide ? ' class="wide"' : ''}><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`
             : h.op === 'Status Change'

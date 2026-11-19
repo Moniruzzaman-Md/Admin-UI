@@ -74,7 +74,7 @@ CREATE TABLE markup_rule_supplier (
 CREATE TABLE markup_rule_history (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   rule_id     BIGINT UNSIGNED NOT NULL,                   -- no FK
-  op          ENUM('create','edit','status','delete') NOT NULL,
+  op          ENUM('create','edit','status','delete','recorded') NOT NULL,  -- recorded: oldest old-system row (section 8)
   snapshot    JSON NULL,                                  -- create: all fields
   changes     JSON NULL,                                  -- edit / status: [{"field","old","new"}]
   user_id     BIGINT UNSIGNED NOT NULL,
@@ -279,6 +279,7 @@ ORDER BY h.created_at DESC;
 | `edit` | edit with changes | `changes`: only changed fields, old → new |
 | `status` | Active ↔ Inactive | `changes`: `is_active` old → new |
 | `delete` | delete | nothing extra |
+| `recorded` | only from moving the old log (section 8) | `snapshot`: every field of the oldest old row — shown as an Edit card with all its values |
 
 ---
 
@@ -320,3 +321,15 @@ Searches run this for every result, so keep the active rules **in memory** and r
 4. Drop the Commission column. Keep percents over 100.
 5. Set `AUTO_INCREMENT` above the highest copied ID.
 6. Run the full overlap check (section 5) once.
+7. **History** — move the old log into `markup_rule_history`, so it shows in the same timeline:
+   - Source: the old log rows with `type = 'hotel-default'` for each rule (what `POST /api/admin/get-log` returns). Each row's
+     `difference` is the **full rule after that save** (every field in a 1-item array), not a diff. Creates were never logged.
+   - Per rule, oldest → newest. Read: `market_list` ("2,1", NULL = All markets), `hotel_api_info_id`, `markup_type` (1 = percent,
+     2 = fixed), `markup_amount`, `is_active`. Ignore `commission_*` and `market_name_list` (names are stale).
+   - Oldest row → `op = 'recorded'`, `snapshot` = its values.
+   - Every later row: compare with the row before it. Only `is_active` differs → `op = 'status'`; other fields differ →
+     `op = 'edit'`; `changes` = `[{"field","old","new"}]` for the fields that differ. Nothing differs (e.g. only commission) → no row.
+   - `user_id` = the user whose email is `done_by_email` (if none matches, a placeholder "Old system" user);
+     `created_at` = `updated_at` (UTC, keep it UTC).
+   - Check: each rule's newest old row should equal the rule as copied in step 1. Log the ones that don't.
+   - Keep the old log table read-only until the result has been checked.

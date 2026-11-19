@@ -64,10 +64,38 @@
 
   // dummy history: created + a couple of edits (changes: [field, old, new])
   rules.forEach((r, i) => {
-    r.history.push({ by: 'Super Admin', at: new Date(2026, 7, 10 + i, 11, 20), created: true });
+    // all-portal rules created before the new history have old-system rows instead of a Create entry (added below)
+    r.legacy = !r.portal && r.api.length === 1 && i % 5 !== 2;
+    if (!r.legacy) r.history.push({ by: 'Super Admin', at: new Date(2026, 7, 10 + i, 11, 20), created: true });
     if (i % 3 === 0) r.history.unshift({ by: 'Ops Team', at: new Date(2026, 9, 3 + i, 15, 6), changes: [['amount', String(+r.amount + 2), r.amount]] });
     if (i % 4 === 1) r.history.unshift({ by: 'Super Admin', at: new Date(2026, 10, 2 + i, 10, 41), changes: [['active', !r.active, r.active]] });
     if (i === 9) r.history.unshift({ by: 'Ops Team', at: new Date(2026, 10, 14, 9, 12), changes: [['markets', ['mv', 'my', 'us', 'in'], r.markets], ['type', r.type === 'percent' ? 'fixed' : 'percent', r.type]] });
+  });
+
+  /* dummy legacy history (old system): one row per save = the full rule AFTER that save, newest first, no create row.
+     Old rules are all-portal rules with one supplier. It ends at the state before the rule's first current entry;
+     HistoryLegacy.toEntries (js/history-legacy.js) turns it into normal Edit / Status Change entries. "commission" stands for
+     the dropped commission fields: a save that only changed them shows nothing. */
+  const LEGACY_KEYS = ['markets', 'api', 'type', 'amount', 'active'];
+  const LEGACY_BY = ['Super Admin', 'Ops Team', 'Rahim Uddin'];
+  rules.forEach(r => {
+    if (!r.legacy) return;
+    const v = { commission: null }; LEGACY_KEYS.forEach(k => v[k] = r[k]);
+    r.history.forEach(h => (h.changes || []).forEach(([f, o]) => { v[f] = o; })); // state before the current entries
+    const steps = [
+      s => { s.amount = String(+s.amount + (s.type === 'percent' ? 2 : 100)); },
+      s => { s.type = s.type === 'percent' ? 'fixed' : 'percent'; s.amount = s.type === 'percent' ? '5' : '500'; },
+      s => { s.active = !s.active; },
+      s => { s.commission = '0.00'; },                                  // only commission → no entry
+      s => { s.markets = s.markets.length > 1 ? s.markets.slice(1) : s.markets.concat(s.markets[0] === 'in' ? 'np' : 'in'); },
+    ];
+    const n = 3 + (r.id % 3), rows = [];
+    let s = { ...v };
+    for (let k = 0; k < n; k++) {
+      rows.push({ by: LEGACY_BY[(r.id + k) % 3], at: new Date(2026, 6 - k, 24 - (r.id + k * 5) % 20, 10 + k, (r.id * 7) % 60, 38 - k * 6), values: { ...s } });
+      s = { ...s }; steps[(r.id + k) % steps.length](s);
+    }
+    r.history.push(...HistoryLegacy.toEntries(rows, LEGACY_KEYS));
   });
 
   /* ---------- helpers ---------- */
@@ -526,7 +554,7 @@ ${lines(over)}`;
   /* ---------- history: same card design and rules as Hotel APIs ----------
      Create = the values the rule was created with. Edit = one row per changed field, old value → new value;
      Markets and Suppliers show only what was removed / added. Status Change = old → new status and what it means. Newest first. */
-  const USERS = { 'Super Admin': 'superadmin@mynztrip.com', 'Ops Team': 'ops@mynztrip.com' };
+  const USERS = { 'Super Admin': 'superadmin@mynztrip.com', 'Ops Team': 'ops@mynztrip.com', 'Rahim Uddin': 'rahim@mynztrip.com' };
   const OP_CLASS = { Create: 'success', Edit: 'info', 'Status Change': 'neutral' };
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dateOnly = d => `${String(d.getDate()).padStart(2, '0')}-${MONTHS[d.getMonth()]}-${d.getFullYear()}`;
@@ -558,7 +586,9 @@ ${lines(over)}`;
   function historyEntries(rule) {
     let after = {}; SNAPSHOT.forEach(k => after[k] = rule[k]);
     return rule.history.map(h => {
-      if (h.created) return { op: 'Create', summary: 'Markup added with these settings', fields: SHOW.map(([, l, f, wide]) => [l, f(after), wide]), ...h };
+      if (h.created) return { op: 'Create', summary: '', fields: SHOW.map(([, l, f, wide]) => [l, f(after), wide]), ...h };
+      // oldest old-system row: it holds the settings after that save, but not what they were before
+      if (h.first) return { op: 'Edit', summary: '', fields: SHOW.map(([, l, f, wide]) => [l, f(after), wide]), ...h };
       const before = { ...after };
       h.changes.forEach(([f, o]) => { before[f] = o; });
       const keys = [...new Set(h.changes.map(c => showKey(c[0])))];
@@ -570,10 +600,10 @@ ${lines(over)}`;
       const nowActive = after.active;
       after = before;
       if (keys.length === 1 && keys[0] === 'active') return {
-        op: 'Status Change', summary: nowActive ? 'Activated' : 'Deactivated', active: nowActive,
+        op: 'Status Change', summary: '', active: nowActive,
         note: nowActive ? 'Added to hotel prices again.' : 'No longer added to hotel prices.', ...h,
       };
-      return { op: 'Edit', summary: `${rows.length} field${rows.length === 1 ? '' : 's'} changed`, rows, ...h };
+      return { op: 'Edit', summary: '', rows, ...h };
     });
   }
 
@@ -584,14 +614,14 @@ ${lines(over)}`;
     const list = historyEntries(rule);
     $('#hist-body').innerHTML = list.length ? `<div class="history-list">${list.map((h, i) => `
       <div class="history-entry">
-        <div class="history-entry-label">Entry ${i + 1} of ${list.length}</div>
+        <div class="history-entry-label">${h.legacy ? 'Old system · ' : ''}Entry ${i + 1} of ${list.length}</div>
         <div class="history-card">
           <div class="history-who">
             <span class="history-user" data-tooltip="${esc(h.by)}">${esc(h.by)}</span><span class="history-date">${dateOnly(h.at)}</span>
-            <span class="history-email" data-tooltip="${esc(USERS[h.by] || '')}">${esc(USERS[h.by] || '')}</span><span class="history-time">${timeOnly(h.at)}</span>
+            <span class="history-email" data-tooltip="${esc(h.email || USERS[h.by] || '')}">${esc(h.email || USERS[h.by] || '')}</span><span class="history-time">${timeOnly(h.at)}</span>
           </div>
           <div class="history-op-line"><span class="pill operation-pill ${OP_CLASS[h.op]}">${h.op}</span>
-            <div class="history-desc">${h.summary}</div></div>
+            ${h.summary ? `<div class="history-desc">${h.summary}</div>` : ''}</div>
           ${h.fields
             ? `<dl class="history-fields">${h.fields.map(([k, v, wide]) => `<div${wide ? ' class="wide"' : ''}><dt>${k}</dt><dd${wide ? ' class="wrap"' : ''}>${v}</dd></div>`).join('')}</dl>`
             : h.op === 'Status Change'
