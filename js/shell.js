@@ -27,7 +27,7 @@
   const fullList = MENU.map(g => {
     const open = g.items.some(i => i.page === current);
     const body = g.items.map(i =>
-      `<li><a class="side-sub${i.page === current ? ' current' : ''}" href="${i.href}">${ico(i.icon)}${esc(i.label)}</a></li>`).join('');
+      `<li><a class="side-sub${i.page === current ? ' current' : ''}" href="${i.href}"${i.page === current ? ' aria-current="page"' : ''}>${ico(i.icon)}${esc(i.label)}</a></li>`).join('');
     return `<li class="side-acc${open ? ' open' : ''}">
       <button type="button" class="side-acc-btn" aria-expanded="${open}">${ico(g.icon)}<span>${esc(g.label)}</span></button>
       <ul class="side-acc-body">${body}</ul></li>`;
@@ -35,9 +35,9 @@
 
   // slim strip: icon buttons, each with a flyout
   const slimList = MENU.map((g, n) => `<li class="slim-group">
-      <button type="button" class="slim-btn" data-flyout="fly-${n}" aria-expanded="false" aria-label="${esc(g.label)}"><i class="fas fa-${g.icon}"></i></button>
+      <button type="button" class="slim-btn${g.items.some(i => i.page === current) ? ' current' : ''}" data-flyout="fly-${n}" aria-expanded="false" aria-label="${esc(g.label)}"><i class="fas fa-${g.icon}"></i></button>
       <ul class="slim-flyout" id="fly-${n}">${g.items.map(i =>
-        `<li><a class="slim-submenu-item" href="${i.href}">${ico(i.icon)}${esc(i.label)}</a></li>`).join('')}</ul></li>`).join('');
+        `<li><a class="slim-submenu-item${i.page === current ? ' current' : ''}" href="${i.href}"${i.page === current ? ' aria-current="page"' : ''}>${ico(i.icon)}${esc(i.label)}</a></li>`).join('')}</ul></li>`).join('');
 
   const header = `<nav class="shell-header">
       <a class="shell-logo" href="index.html"><img src="assets/mynztrip_logo_white.png" alt="mynztrip.com"></a>
@@ -61,7 +61,7 @@
       </div>
       <div class="shell-user">
         <button type="button" class="notification-btn" aria-label="Notifications" title="Opens All Notifications in the portal (not in prototype)"><i class="fas fa-bell"></i></button>
-        <img class="avatar-image" src="assets/profile_icon.png" alt="Profile" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+        <img class="avatar-image" src="assets/profile-photo.png" alt="Profile" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
         <div class="profile-dropdown" role="menu">
           <button type="button" role="menuitem">My Profile</button>
           <button type="button" role="menuitem">Change Password</button>
