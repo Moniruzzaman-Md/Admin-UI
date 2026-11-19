@@ -125,9 +125,7 @@
           <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.5V12l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div></td>
       </tr>`).join('')
-      : `<tr><td class="empty-cell" colspan="10"><section class="empty-state">
-          <div class="empty-state__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"></circle><path d="m15 15 4 4"></path><path d="M8.5 10.5h4"></path></svg></div>
-          <h3>No hotel APIs found</h3><p>Try adjusting the filters or add a new API.</p></section></td></tr>`;
+      : EmptyState.row(10);
 
     // pagination always visible (0 results → "Showing 0 of 0", buttons disabled)
     $('#pg-range').textContent = list.length ? `${start + 1}–${start + slice.length}` : '0';
@@ -138,21 +136,23 @@
     $('#pg-pages').innerHTML = pageList(state.page, pages).map(n => n === '…'
       ? '<span class="pagination__ellipsis">…</span>'
       : `<button type="button" class="pagination__page${n === state.page ? ' pagination__page--active' : ''}" data-pg="${n}"${n === state.page ? ' aria-current="page"' : ''} aria-label="Page ${n}${n === state.page ? ', current page' : ''}">${n}</button>`).join('');
-    $('#f-clear').hidden = !(state.q || state.currency || state.status);
   }
 
-  $('#f-q').addEventListener('input', e => { state.q = e.target.value; state.page = 1; render(); });
-  cur.addEventListener('change', e => { state.currency = e.target.value; state.page = 1; render(); });
-  $('#f-status').addEventListener('change', e => { state.status = e.target.value; state.page = 1; render(); });
+  // a query in the real portal → skeleton first (saves / edits re-render directly)
+  const load = () => TableLoading.run($('.tbl-area'), render);
+  let typing;
+  $('#f-q').addEventListener('input', e => { clearTimeout(typing); typing = setTimeout(() => { state.q = e.target.value; state.page = 1; load(); }, 300); });
+  cur.addEventListener('change', e => { state.currency = e.target.value; state.page = 1; load(); });
+  $('#f-status').addEventListener('change', e => { state.status = e.target.value; state.page = 1; load(); });
   $('#f-clear').addEventListener('click', () => {
     Object.assign(state, { q: '', currency: '', status: '', page: 1 });
     $('#f-q').value = ''; cur.value = ''; $('#f-status').value = '';
-    render();
+    load();
   });
-  $('#pg-pages').addEventListener('click', e => { const b = e.target.closest('[data-pg]'); if (b) { state.page = +b.dataset.pg; render(); } });
-  $('#pg-prev').addEventListener('click', () => { state.page--; render(); });
-  $('#pg-next').addEventListener('click', () => { state.page++; render(); });
-  $('#pg-size').addEventListener('change', e => { state.size = +e.target.value; state.page = 1; render(); });
+  $('#pg-pages').addEventListener('click', e => { const b = e.target.closest('[data-pg]'); if (b) { state.page = +b.dataset.pg; load(); } });
+  $('#pg-prev').addEventListener('click', () => { state.page--; load(); });
+  $('#pg-next').addEventListener('click', () => { state.page++; load(); });
+  $('#pg-size').addEventListener('change', e => { state.size = +e.target.value; state.page = 1; load(); });
 
   /* ---------- drawers ---------- */
   let lastFocus = null;
@@ -350,6 +350,6 @@
     if (hi) openHistory(apis.find(a => a.id === +hi.dataset.hist));
   });
 
-  render();
+  load();
   SearchableSelect.init();
 })();

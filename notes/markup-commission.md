@@ -66,8 +66,13 @@ In this order: **ID · Portal · Client · Market · Supplier · Status**.
 - **Market**: each market as "Name (CUR)". Shows every rule that **covers** it: rules that name it **and** All-markets rules.
 - **Supplier**: each hotel API. Shows every rule that covers it: rules that name it **and** All-suppliers rules.
 - **Status**: All statuses (default) / Active / Inactive (no counts).
-- Filters apply right away. The separate Search and Reset buttons are replaced by **Clear filters**, which appears only when a filter is set and resets all of them.
-- Changing a filter goes back to page 1.
+Shared filter bar (`js/filters.js`, same as Map-UI hotel-system): a row with the main search box · **Search** · **Filters** (count of set filters + chevron) · **Reset**; the other fields sit in a collapsible **Filters** panel (closed by default) with a label over each field.
+- While the panel is closed, each set panel filter shows as a chip ("Portal: B2C ×"); × clears that field (takes effect on the next Search). The count on Filters follows the fields as you change them.
+- **Search** (or Enter in the search box) applies every field, closes the panel and goes to page 1. Changing a field alone doesn't reload the list.
+- **Reset** puts every field back to its default and reloads right away.
+- Row: **ID**, then Search · Filters · Reset, with **Check overlaps** on the far right. Panel: Portal · Client · Market · Supplier · Status.
+- Reset: every field cleared, Client disabled again, Status back to All statuses.
+- The Client field enables/disables as soon as Portal changes (before Search).
 
 ## Create / edit (drawer)
 
@@ -196,3 +201,5 @@ Still open (backend, doesn't change the screen): whether the pricing service can
 - 2026-11-19 — Create entry: summary text removed. Old-system entries marked "Old system · Entry N of M".
 - 2026-11-19 — Status Change ("Activated" / "Deactivated") and Edit ("N fields changed") summary text removed.
 - 2026-11-19 — "Earliest recorded settings" removed too: no summary text on any history entry.
+- 2026-11-20 — Filters: same bar as Hotel API Logs — Search + Reset buttons, fields apply on Search; Clear filters removed.
+- 2026-11-20 — Filter bar restyled like Map-UI hotel-system: ID + Search · Filters (count) · Reset, collapsible labelled panel, chips when closed.

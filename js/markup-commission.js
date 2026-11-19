@@ -256,9 +256,7 @@
           <button class="tbl-action danger" type="button" data-del="${r.id}" data-tip="Delete" aria-label="Delete markup: ${esc(ruleLabel(r))}">${ICON.del}</button>
         </div></td>
       </tr>`).join('')
-      : `<tr><td class="empty-cell" colspan="8"><section class="empty-state">
-          <div class="empty-state__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"></circle><path d="m15 15 4 4"></path><path d="M8.5 10.5h4"></path></svg></div>
-          <h3>No markups found</h3><p>Try adjusting the filters or add a new markup.</p></section></td></tr>`;
+      : EmptyState.row(8);
 
     $('#pg-range').textContent = list.length ? `${start + 1}–${start + slice.length}` : '0';
     $('#pg-total').textContent = list.length;
@@ -268,37 +266,45 @@
     $('#pg-pages').innerHTML = pageList(state.page, pages).map(n => n === '…'
       ? '<span class="pagination__ellipsis">…</span>'
       : `<button type="button" class="pagination__page${n === state.page ? ' pagination__page--active' : ''}" data-pg="${n}"${n === state.page ? ' aria-current="page"' : ''} aria-label="Page ${n}${n === state.page ? ', current page' : ''}">${n}</button>`).join('');
-    $('#f-clear').hidden = !(state.id || state.portal || state.agent || state.market || state.api || state.status);
   }
 
-  // no portal picked (or "All") → the client filter stays visible but disabled (and cleared)
+  // no portal picked (or "All") in the Portal field → the client filter stays visible but disabled (and cleared)
   function syncClientFilter() {
-    const on = !!state.portal && state.portal !== '*';
+    const on = !!fPortal.value && fPortal.value !== '*';
     fAgent.disabled = !on;
     // a disabled button gets no hover events, so the tooltip sits on the dropdown's wrapper
     const wrap = fAgent.closest('.searchable-select') || fAgent;
     if (on) delete wrap.dataset.tooltip; else wrap.dataset.tooltip = 'Pick a portal first';
-    if (!on && state.agent) { state.agent = ''; fAgent.value = ''; fAgent._searchableRefresh?.(); }
+    if (!on && fAgent.value) { fAgent.value = ''; fAgent._searchableRefresh?.(); }
   }
+  // fields apply only on Search (or Enter in ID); Reset clears every field and reloads
   $('#f-id').addEventListener('input', e => {
     const v = e.target.value.replace(/[^\d]/g, '');
     if (v !== e.target.value.replace(/^#/, '')) e.target.value = v;
-    state.id = v; state.page = 1; render();
   });
-  fPortal.addEventListener('change', e => { state.portal = e.target.value; syncClientFilter(); state.page = 1; render(); });
-  fAgent.addEventListener('change', e => { state.agent = e.target.value; state.page = 1; render(); });
-  fMarket.addEventListener('change', e => { state.market = e.target.value; state.page = 1; render(); });
-  fApi.addEventListener('change', e => { state.api = e.target.value; state.page = 1; render(); });
-  $('#f-status').addEventListener('change', e => { state.status = e.target.value; state.page = 1; render(); });
-  $('#f-clear').addEventListener('click', () => {
-    Object.assign(state, { id: '', portal: '', agent: '', market: '', api: '', status: '', page: 1 });
-    $('#f-id').value = ''; fPortal.value = ''; syncClientFilter(); fAgent.value = ''; fMarket.value = ''; fApi.value = ''; $('#f-status').value = '';
-    render();
+  fPortal.addEventListener('change', syncClientFilter);
+  // a query in the real portal → skeleton first (saves / edits / deletes re-render directly)
+  const load = () => TableLoading.run($('.tbl-area'), render);
+  function applyFilters() {
+    Object.assign(state, { id: $('#f-id').value, portal: fPortal.value, agent: fAgent.value, market: fMarket.value, api: fApi.value,
+      status: $('#f-status').value, page: 1 });
+    load();
+  }
+  // shared filter bar: count + chips cover the panel's fields
+  const optText = sel => sel.options[sel.selectedIndex]?.text || '';
+  const pick = (label, sel, after) => ({ label, isSet: () => !!sel.value, text: () => optText(sel), clear: () => { sel.value = ''; if (after) after(); } });
+  FilterBar.init($('#filter-bar'), {
+    fields: [pick('Portal', fPortal, syncClientFilter), pick('Client', fAgent), pick('Market', fMarket), pick('Supplier', fApi), pick('Status', $('#f-status'))],
+    onSearch: applyFilters,
+    onReset: () => {
+      $('#f-id').value = ''; fPortal.value = ''; syncClientFilter(); fAgent.value = ''; fMarket.value = ''; fApi.value = ''; $('#f-status').value = '';
+      applyFilters();
+    },
   });
-  $('#pg-pages').addEventListener('click', e => { const b = e.target.closest('[data-pg]'); if (b) { state.page = +b.dataset.pg; render(); } });
-  $('#pg-prev').addEventListener('click', () => { state.page--; render(); });
-  $('#pg-next').addEventListener('click', () => { state.page++; render(); });
-  $('#pg-size').addEventListener('change', e => { state.size = +e.target.value; state.page = 1; render(); });
+  $('#pg-pages').addEventListener('click', e => { const b = e.target.closest('[data-pg]'); if (b) { state.page = +b.dataset.pg; load(); } });
+  $('#pg-prev').addEventListener('click', () => { state.page--; load(); });
+  $('#pg-next').addEventListener('click', () => { state.page++; load(); });
+  $('#pg-size').addEventListener('change', e => { state.size = +e.target.value; state.page = 1; load(); });
   $('#btn-check').addEventListener('click', runCheck);
 
   /* ---------- drawers ---------- */
@@ -643,7 +649,7 @@ ${lines(over)}`;
     if (de) askDelete(byId(de.dataset.del));
   });
 
-  render();
+  load();
   SearchableSelect.init();
   syncClientFilter(); // after init: the tooltip goes on the dropdown wrapper
 })();

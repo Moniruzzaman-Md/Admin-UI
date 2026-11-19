@@ -114,6 +114,7 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
   box-shadow: var(--shadow-lg); display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease;
 }
 .drawer.open { transform: none; }
+.drawer.drawer-wide { width: min(880px, 100vw); }
 .drawer.open + .drawer-backdrop, .drawer-backdrop.show { opacity: 1; pointer-events: auto; }
 .drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 24px 16px; border-bottom: 1px solid var(--border); }
 .drawer-head h2 { font-size: var(--fs-lg); font-weight: 600; margin: 0; }
@@ -155,3 +156,74 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
 .tooltip[hidden] { display: none; }
 .tooltip::after { content: ''; position: absolute; left: var(--arrow-x, 50%); top: 100%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1c1c33; }
 .tooltip.below::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: #1c1c33; }
+
+/* code viewer: read-only file (log viewers) — a bar on top, then the Monaco editor (js/code-viewer.js) filling the rest */
+.code-view { display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; overflow: hidden; }
+.code-view-bar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
+.code-view-bar .spacer { flex: 1; }
+.code-view-bar .meta { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; }
+.code-view-bar .btn { height: 32px; }
+.cv-host { flex: 1; min-height: 0; position: relative; }
+/* The portal sets *{font-family:Poppins !important}, which also hits the text inside Monaco and turns the code
+   proportional. Give the editor's text back its code font (same stack as VS Code on Windows / macOS / Linux). */
+.cv-host .monaco-editor .view-lines, .cv-host .monaco-editor .view-lines *,
+.cv-host .monaco-editor .margin, .cv-host .monaco-editor .margin *,
+.cv-host .monaco-editor .inputarea, .cv-host .monaco-editor .sticky-widget * {
+  font-family: Consolas, 'Courier New', Menlo, Monaco, 'Droid Sans Mono', monospace !important;
+}
+/* …and its icons (fold arrows, find box buttons) back to Monaco's icon font */
+.cv-host .codicon, .cv-host .codicon::before, .cv-host [class*='codicon-']::before { font-family: codicon !important; }
+/* loading / error overlay over the editor */
+.cv-state { position: absolute; inset: 0; z-index: 5; background: #fff; overflow: hidden; }
+.cv-state.is-loading { padding-top: 8px; }
+.cv-skel-line { display: flex; align-items: center; height: 19px; }
+.cv-skel-no { flex: none; width: 44px; padding-right: 16px; text-align: right; font: 12px Consolas, 'Courier New', monospace !important; color: #c3c6d4; }
+.cv-skel-line .skeleton-bar { display: block; height: 9px; border-radius: 999px; background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }
+.cv-state.is-error { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 24px; text-align: center; color: var(--text-2); }
+.cv-state.is-error svg { color: #c2410c; margin-bottom: 4px; }
+.cv-state.is-error b { color: var(--text-1); font-size: var(--fs-md, 15px); }
+.cv-state.is-error span { font-size: var(--fs-sm); color: var(--text-3); }
+.cv-state.is-error .btn { margin-top: 10px; height: 32px; }
+.code-view-bar .meta .skeleton-bar { display: inline-block; vertical-align: middle; width: 44px; height: 9px; border-radius: 999px; background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }
+
+/* simple list toolbar (Hotel Api List): instant filters */
+.toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.toolbar .searchable-select { width: 170px; }
+.toolbar .spacer { flex: 1; }
+/* Reset in the simple toolbar = same button as the filter bar's (same size) */
+.toolbar > .btn-reset { width: 130px; height: 38px; padding: 0 10px; }
+.inline-switch { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 500; color: var(--text-2); cursor: pointer; white-space: nowrap; }
+
+/* FILTER BAR — Map-UI style (D:/Office/Design/hotel-system.html), behaviour in js/filters.js.
+   Row: main search box · Search · Filters (count + chevron) · Reset · (page actions pushed right).
+   Under it: chips of the set filters (panel closed) or the tinted panel of labelled fields (panel open). */
+.filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.filter-bar > .search-input { width: 240px; }
+.filter-bar > .btn, .filter-bar > .filters-toggle-btn { height: 38px; min-width: 110px; padding: 0 14px; }
+/* Search / Filters / Reset share one fixed width, so the count appearing never moves the row */
+.filter-bar > [data-filters-go], .filter-bar > [data-filters-toggle], .filter-bar > [data-filters-reset] { width: 130px; min-width: 0; padding: 0 10px; }
+.filter-bar > .push-right { margin-left: auto; }
+.filters-toggle-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+  background: var(--surface); color: var(--text); font: 600 var(--fs-md) var(--font); cursor: pointer;
+}
+.filters-toggle-btn:hover { background: #ececfa; }
+.filters-toggle-btn:focus-visible { outline: 2px solid var(--brand-accent); outline-offset: 2px; }
+.filters-toggle-btn .chevron { transition: transform .15s ease; }
+.filters-toggle-btn.open .chevron { transform: rotate(180deg); }
+.filters-count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #2b3ed1; color: #fff; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; }
+.btn-reset { background: rgba(243, 210, 207, .9); color: #e23434; }
+.btn-reset:hover { background: #f3d2cf; }
+.filters-summary { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px 5px 10px; border-radius: 999px; background: rgba(43, 62, 209, .08); color: #1c1c33; font-size: 12px; font-weight: 600; }
+.filter-chip button { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 0; background: rgba(43, 62, 209, .15); color: #2b3ed1; font-size: 12px; line-height: 1; cursor: pointer; padding: 0; }
+.filter-chip button:hover { background: #2b3ed1; color: #fff; }
+.filters-panel { flex-basis: 100%; display: grid; grid-template-columns: repeat(auto-fill, 190px); gap: 16px; padding: 16px; background: #ececfa; border-radius: var(--radius-sm); }
+.filter-field { min-width: 0; }
+.filter-field > label:not(.inline-switch) { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: #6b6b85; }
+.filter-field .input, .filter-field .search-input, .filter-field .date-input { width: 100%; }
+.filter-field .searchable-select { display: flex; width: 100%; }
+.filter-field--toggle { display: flex; align-items: flex-end; }
+.filter-field--toggle .inline-switch { height: 38px; color: #1c1c33; }
+.filters-section-label { grid-column: 1 / -1; padding-top: 12px; margin-top: 4px; border-top: 1px solid #d9d9ee; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #6b6b85; }
+.filters-section-label:first-child { padding-top: 0; margin-top: 0; border-top: 0; }

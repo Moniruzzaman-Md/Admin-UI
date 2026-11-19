@@ -26,7 +26,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - **Status** (dropdown): All statuses / Active / Inactive (no counts).
 - Every dropdown on the page (filters, form currency, rows per page) has a search box to type and narrow the options; arrow keys + Enter pick, Esc closes.
 - Filters apply as you type or change them. The separate search button is removed.
-- "Clear filters" appears only when a filter is set, and resets all three.
+- **Reset** (same button as the other lists, always shown) clears all three filters.
 - Changing any filter goes back to page 1.
 - No results → the table's standard empty state.
 
@@ -119,3 +119,4 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 - 2026-11-19 — Create entry: summary text removed. Old-system entries marked "Old system · Entry N of M".
 - 2026-11-19 — Status Change ("Activated" / "Deactivated") and Edit ("N fields changed") summary text removed.
 - 2026-11-19 — "Earliest recorded settings" removed too: no summary text on any history entry.
+- 2026-11-20 — "Clear filters" replaced by the Reset button used on the other lists (always shown).

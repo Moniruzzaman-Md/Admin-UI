@@ -17,6 +17,9 @@
       { label: 'Api List', icon: 'list-alt', page: 'hotel-apis', href: 'hotel-apis.html' },
       { label: 'Markup', icon: 'sliders-h', page: 'markup-commission', href: 'markup-commission.html' },
     ] },
+    { label: 'Logs', icon: 'user-lock', items: [
+      { label: 'Hotel Api', icon: 'address-book', page: 'hotel-api-logs', href: 'hotel-api-logs.html' },
+    ] },
   ];
 
   const current = document.body.dataset.page;

@@ -9,24 +9,17 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
 <link rel="stylesheet" href="css/tokens.css?v=26">
 <link rel="stylesheet" href="css/shell.css?v=30">
-<link rel="stylesheet" href="css/components.css?v=32">
+<link rel="stylesheet" href="css/components.css?v=44">
 <link rel="stylesheet" href="css/skeleton.css?v=26">
-<link rel="stylesheet" href="css/table.css?v=48">
+<link rel="stylesheet" href="css/table.css?v=69">
 <link rel="stylesheet" href="css/select.css?v=26">
 <link rel="stylesheet" href="css/modal.css?v=2">
 <link rel="stylesheet" href="css/history.css?v=33">
 <style>
-  .toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .toolbar .search-input { flex: 1 1 260px; max-width: 340px; }
   .toolbar .searchable-select { width: 190px; }
   .toolbar .spacer { flex: 1; }
   .page-head { padding: 0 8px; }
-  /* list fills the screen height: rows scroll inside the table, header + pagination stay in view */
-  .shell-main { height: 100%; display: flex; flex-direction: column; padding-bottom: 16px; }
-  .shell-main > .card { flex: 0 1 auto; min-height: 220px; display: flex; flex-direction: column; }
-  .tbl-area { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
-  .tbl-area .table-responsive { flex: 0 1 auto; min-height: 0; overflow: auto; border-top: 0; }
-  .tbl-area .pagination { flex: none; }
   /* hold booking options (shown when Hold booking is on) */
   .hold-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 12px 14px 14px; border-top: 1px dashed var(--border); background: var(--surface-2); border-radius: 0 0 var(--radius) var(--radius); }
   .hold-opts[hidden] { display: none; }
@@ -74,8 +67,10 @@
       <select class="input" id="f-status" aria-label="Status">
         <option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option>
       </select>
-      <span class="spacer"></span>
-      <button class="btn btn-ghost" id="f-clear" type="button" hidden>Clear filters</button>
+      <button class="btn btn-reset" id="f-clear" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Reset
+      </button>
     </div>
 
     <!-- Portal reusable table (css/table.css) — format fixed; only columns/cell content are page-specific -->
@@ -197,11 +192,13 @@
 <div class="toast" id="toast" role="status"></div>
 
 <style>.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
-<script src="js/shell.js?v=29"></script>
+<script src="js/shell.js?v=31"></script>
 <script src="js/select.js?v=27"></script>
 <script src="js/tooltip.js?v=1"></script>
 <script src="js/modal.js?v=1"></script>
 <script src="js/history-legacy.js?v=3"></script>
-<script src="js/hotel-apis.js?v=36"></script>
+<script src="js/empty-state.js?v=3"></script>
+<script src="js/table-loading.js?v=1"></script>
+<script src="js/hotel-apis.js?v=40"></script>
 </body>
 </html>

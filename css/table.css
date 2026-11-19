@@ -121,6 +121,26 @@
   font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: .2px;
 }
 .tbl-tag.warn { background: #fff1d6; color: #8a5300; box-shadow: inset 0 0 0 1px #f2d9a6; }
+
+/* two-line cell: value + muted second line (e.g. date over time, operation over its step) */
+.tbl-stack { display: inline-flex; flex-direction: column; gap: 1px; line-height: 18px; }
+.tbl-stack small { font-size: 12px; color: var(--tbl-muted); font-weight: 500; }
+.tbl-stack.fill { display: flex; }
+/* column that takes the table's free width (others shrink to their content) */
+.table .tbl-grow { width: 100%; }
+/* long value cut in the middle to the cell's width: <x class="tbl-mid"><span class="tbl-mid-head">start</span><span class="tbl-mid-tail">end</span></x>
+   the start gets "…" only when it doesn't fit; the end always shows. Doesn't widen its column. */
+.tbl-mid { display: flex; width: 0; min-width: 100%; white-space: nowrap; }
+.tbl-mid-head { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tbl-mid-tail { flex: none; }
+/* coloured text inside a cell (e.g. the Request / Response ending of a file name) */
+.tbl-text-info   { color: #2563eb; font-weight: 600; }   /* blue */
+.tbl-text-ok     { color: #15803d; font-weight: 600; }   /* green */
+.tbl-text-orange { color: #c2410c; font-weight: 600; }   /* orange */
+/* code badge that filters the list when clicked */
+button.tbl-code { border: 0; cursor: pointer; font-family: inherit; }
+button.tbl-code:hover { background: #e2e3f8; text-decoration: underline; }
+button.tbl-code:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 2px; }
 /* action buttons: bordered squares, fill on hover, tooltip from data-tip */
 .tbl-actions { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .tbl-action {
@@ -138,18 +158,32 @@
 }
 
 /* ---------- empty state (inside a full-width td) ---------- */
-.table td.empty-cell { padding: 0; }
+.table td.empty-cell { padding: 0; background: #fff !important; box-shadow: none !important; }
 .empty-state {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 20px; text-align: center; white-space: normal;
-  background: radial-gradient(circle at 50% 30%, rgba(43, 62, 209, .06), transparent 160px), #fff;
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 260px;
+  padding: 36px 20px 40px; text-align: center; white-space: normal; overflow: hidden;
+  background: none;
 }
-.empty-state__icon {
-  display: flex; align-items: center; justify-content: center; width: 54px; height: 54px; margin: 0 0 16px; border-radius: 50%;
-  background: #ececfa; color: #10108a; box-shadow: 0 0 0 7px rgba(236, 236, 250, .6);
-}
-.empty-state__icon svg { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.empty-state h3 { margin: 0 0 6px; color: #1c1c33; font-size: 16px; font-weight: 700; line-height: 22px; }
-.empty-state p { margin: 0; color: #6b6b85; font-size: 13px; line-height: 20px; }
+.empty-state > * { position: relative; }
+.empty-art { width: 250px; height: auto; margin: 0 0 14px; overflow: visible; }
+.empty-art .ea-shadow { fill: rgba(16, 16, 138, .08); }
+.empty-art .ea-card { fill: #fff; stroke: #d9dbf1; stroke-width: 1.5; }
+.empty-art .ea-head { fill: #0100a6; }
+.empty-art .ea-bar { fill: #c9cdf3; }
+.empty-art .ea-bar--soft { fill: #e6e8f8; }
+.empty-art .ea-lens { fill: rgba(255, 255, 255, .78); }
+.empty-art .ea-ring { fill: none; stroke: #2b3ed1; stroke-width: 6; }
+.empty-art .ea-dash { stroke: #2b3ed1; stroke-width: 4; stroke-linecap: round; }
+.empty-art .ea-handle { stroke: #10108a; stroke-width: 9; stroke-linecap: round; }
+.empty-art .ea-spark { fill: #8f9be8; stroke: #8f9be8; stroke-width: 2; stroke-linecap: round; }
+.empty-art .ea-glass { animation: ea-float 3.2s ease-in-out infinite; transform-origin: 160px 80px; }
+.empty-art .ea-spark { animation: ea-twinkle 2.4s ease-in-out infinite; }
+.empty-art .ea-shadow { animation: ea-shadow 3.2s ease-in-out infinite; transform-origin: 110px 138px; }
+@keyframes ea-float { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(-8px, -6px) rotate(-6deg); } }
+@keyframes ea-twinkle { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@keyframes ea-shadow { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.9); } }
+@media (prefers-reduced-motion: reduce) { .empty-art * { animation: none !important; } }
+.empty-state h3 { margin: 0; color: #1c1c33; font-size: 17px; font-weight: 700; line-height: 24px; }
 
 /* ---------- pagination ---------- */
 .pagination {
@@ -243,3 +277,49 @@
 .tbl-warn.danger { background: #fdecee; color: #b3261e; box-shadow: inset 0 0 0 1px #f5c2c7; }
 /* info pill under the status (e.g. this rule overrides an older one): blue, same shape as the warning pill */
 .tbl-note { display: inline-flex; align-items: center; padding: 0 6px; border-radius: 999px; background: #e8f1fd; color: #1d5fb8; box-shadow: inset 0 0 0 1px #c7dcf7; font-size: 11px; line-height: 16px; font-weight: 600; white-space: nowrap; cursor: help; }
+
+/* LIST PAGE LAYOUT — the list card always fills the screen height, whatever the row count:
+   rows scroll inside the table, the header row and pagination stay in view, pagination sits at the card's bottom.
+   Few rows → blank space inside the table area (as with a full list); no rows → the empty state is centred in it.
+   Markup: <main class="shell-main"> page-head + <section class="card"> toolbar/filter-bar + <div class="tbl-area"> table + pagination */
+.shell-main { height: 100%; display: flex; flex-direction: column; padding-bottom: 16px; }
+.shell-main > .card { flex: 1 1 auto; min-height: 220px; display: flex; flex-direction: column; }
+.tbl-area { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.tbl-area .table-responsive { flex: 1 1 auto; min-height: 0; overflow: auto; border-top: 0; }
+.tbl-area .pagination { flex: none; }
+.tbl-area .table-responsive:has(td.empty-cell) table { height: 100%; }
+.tbl-area .table-responsive:has(td.empty-cell) thead tr { height: 1px; }
+
+/* SKELETON LOADER — js/table-loading.js. Header stays; the body is shimmering bars in the same columns;
+   rows fade towards the bottom (a list continuing, not one that is exactly N long); pagination contents hidden. */
+.skeleton tbody td { pointer-events: none; height: 52px; }
+.skeleton .skeleton-bar {
+  display: block; width: 60%; height: 11px; border-radius: 999px;
+  background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%;
+  animation: skeleton-shimmer 1.3s ease-in-out infinite;
+}
+.skeleton td.tbl-action-col .skeleton-bar { margin-left: auto; width: 56px !important; }
+.skeleton td.tbl-num .skeleton-bar { width: 14px; }
+.skeleton tbody tr:nth-child(n + 4) { opacity: .55; }
+.skeleton tbody tr:nth-child(n + 6) { opacity: .3; }
+.skeleton .pagination > * { visibility: hidden; }
+@keyframes skeleton-shimmer { from { background-position: 150% 0; } to { background-position: -150% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton .skeleton-bar { animation: none; } }
+
+/* ROW LINK — a row that opens its record when clicked (tr.row-link); the last opened one stays marked (tr.is-last-opened) */
+.table tbody tr.row-link { cursor: pointer; }
+/* transaction ID badge + its timeline button (Hotel API Logs list and viewer) */
+.txn-line { display: inline-flex; align-items: center; gap: 4px; }
+.txn-tl-btn { display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 1px solid #d6daf7; border-radius: 6px; background: #fff; color: #2b3ed1; cursor: pointer; }
+.txn-tl-btn:hover { background: #2b3ed1; border-color: #2b3ed1; color: #fff; }
+.txn-tl-btn:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 2px; }
+.txn-line small + .txn-tl-btn { width: 22px; height: 22px; }
+/* copy-to-clipboard icon after a value (transaction ID, file name) */
+.tbl-copy { display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 5px; background: none; color: #8a8aa3; cursor: pointer; }
+.tbl-copy:hover { background: #ececfa; color: #2b3ed1; }
+.tbl-copy:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 1px; }
+/* file name (cut to the column width) + its copy button on one line */
+.file-line { display: flex; align-items: center; gap: 2px; width: 0; min-width: 100%; }   /* takes the cell's width, never widens the column */
+.file-line .tbl-mid { flex: 0 1 auto; width: auto; min-width: 0; }                        /* shrinks (cut in the middle) only when it doesn't fit */
+.table tbody tr.is-last-opened > * { background-color: #eef0ff !important; box-shadow: inset 0 1px 0 #d6daf7, inset 0 -1px 0 #d6daf7; }
+.table tbody tr.is-last-opened > td:first-child { box-shadow: inset 3px 0 0 #2b3ed1, inset 0 1px 0 #d6daf7, inset 0 -1px 0 #d6daf7; }
