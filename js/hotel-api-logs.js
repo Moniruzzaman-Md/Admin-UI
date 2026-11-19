@@ -386,6 +386,10 @@
   $('#cv-find').addEventListener('click', () => viewer.find());
   $('#cv-format').addEventListener('change', e => viewer.setFormat(e.target.value));
   $('#cv-wrap').addEventListener('change', e => viewer.setWrap(e.target.checked));
+  // phones: every column counts — no minimap, Wrap on (the switch still turns it off)
+  const phone = matchMedia('(max-width: 640px)');
+  const fitViewer = () => { viewer.setMinimap(!phone.matches); $('#cv-wrap').checked = phone.matches; viewer.setWrap(phone.matches); };
+  fitViewer(); phone.addEventListener('change', fitViewer);
   const copy = (s, msg) => navigator.clipboard?.writeText(s).then(() => toast(msg), () => toast('Couldn’t copy'));
   $('#cv-copy').addEventListener('click', () => copy(viewer.text, 'Copied'));
   $('#lm-copy-file').addEventListener('click', () => copy(cur.fileName, 'File name copied'));

@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
 <link rel="stylesheet" href="css/tokens.css?v=26">
 <link rel="stylesheet" href="css/shell.css?v=30">
-<link rel="stylesheet" href="css/components.css?v=45">
+<link rel="stylesheet" href="css/components.css?v=47">
 <link rel="stylesheet" href="css/skeleton.css?v=26">
 <link rel="stylesheet" href="css/table.css?v=70">
 <link rel="stylesheet" href="css/select.css?v=26">
@@ -20,7 +20,7 @@
   /* log viewer drawer — compact: everything but the file content fits in the header + one info line */
   #log-drawer .drawer-head { align-items: center; padding: 12px 16px 12px 20px; }
   #log-drawer .drawer-head .head-main { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
-  #log-drawer .drawer-head h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #log-drawer .drawer-head h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 3em; }
   #log-drawer .seg button { height: 26px; padding: 0 10px; }
   #log-drawer .drawer-body { display: flex; flex-direction: column; gap: 10px; overflow: hidden; padding: 12px 20px 16px; }
   /* one line: Transaction ID | Supplier | full file name (wraps, never cut) + copy */
@@ -76,6 +76,66 @@
   .tl-skel .skeleton-bar { display: block; height: 11px; border-radius: 999px; background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }
   .code-view-bar .searchable-select:has(#cv-format) { width: 96px; }
   .code-view-bar .searchable-select:has(#cv-format) .input { height: 32px; font-size: var(--fs-sm); font-weight: 600; }
+  .ph-only { display: none; }
+
+  /* ---------- phones (≤ 640px) ---------- */
+  @media (max-width: 640px) {
+    /* list: no scroll box inside the card — the page scrolls; each row is a card:
+       operation + full file name / transaction ID + portal / date · time + supplier */
+    .shell-main { height: auto; }
+    .tbl-area, .tbl-area .table-responsive { flex: none; overflow: visible; }
+    .table.log-table, .log-table tbody, .log-table tr { display: block; border: 0; }
+    .log-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .table.log-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "op op" "txn txn" "date sup"; gap: 6px 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .table.log-table tbody tr > td { display: block; padding: 0; border: 0; background: none !important; box-shadow: none !important; white-space: normal !important; }
+    .table.log-table tbody tr.is-last-opened { background: #eef0ff; box-shadow: inset 3px 0 0 #2b3ed1; }
+    .log-table td.tbl-num { display: none !important; }
+    .log-table td:nth-child(2) { grid-area: date; }
+    .log-table td:nth-child(3) { grid-area: txn; }
+    .log-table td:nth-child(4) { grid-area: op; }
+    .log-table td:nth-child(5) { grid-area: sup; align-self: end; text-align: right; font-weight: 600; }
+    .log-table td:nth-child(2) .tbl-stack { flex-direction: row; flex-wrap: wrap; gap: 0 8px; font-size: 13px; color: var(--text-2); }
+    .log-table td:nth-child(3) .tbl-stack { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+    .log-table .file-line { width: auto; min-width: 0; align-items: flex-start; }
+    .log-table .file-line .tbl-mid { display: inline; white-space: normal; overflow-wrap: anywhere; }   /* the full name, wrapped (no hover on phones) */
+    .log-table .file-line .tbl-mid-head { overflow: visible; }
+    .table.log-table tbody tr:has(td.empty-cell) { display: block; padding: 0; border: 0; }
+    .skeleton .log-table tbody td { height: auto; }
+    .skeleton .log-table td:nth-child(4) .skeleton-bar { width: 85% !important; }
+    .skeleton .log-table td:nth-child(5) .skeleton-bar { width: 56px !important; }
+
+    /* drawers: tighter padding; header items wrap onto a second row */
+    #txn-drawer .drawer-head, #log-drawer .drawer-head { flex-wrap: wrap; row-gap: 8px; padding: 10px 10px 10px 16px; }
+    #txn-drawer .drawer-body { padding: 10px 14px 16px; }
+    #log-drawer .drawer-body { padding: 10px 12px 12px; gap: 8px; }
+
+    /* timeline header: Transaction · Show in list · ✕, then the ID on its own row */
+    #txn-drawer .drawer-head .head-main { display: contents; }
+    #txn-title { order: 1; flex: 1; }
+    #txn-filter { order: 2; }
+    #txn-drawer .drawer-head [data-close] { order: 3; }
+    #txn-id { order: 4; flex-basis: 100%; }
+    /* timeline: no indent under the time, so file names get the width */
+    .tl-head { gap: 2px 8px; }
+    .tl-head b { order: 1; } .tl-head .tl-sup { order: 2; }
+    .tl-head .tl-time { order: 3; min-width: 0; margin-left: auto; }
+    .tl-head .tl-dur { order: 4; margin-left: 0; }
+    .tl-files, .tl-call .tl-load { margin-left: 0; }
+    .tl-file { gap: 8px; padding: 6px 8px; }
+
+    /* viewer header: title + ✕, then Request | Response and prev / next */
+    #log-drawer .drawer-head .head-main { display: contents; }
+    #log-title { order: 1; flex: 1 1 calc(100% - 48px); }
+    #log-drawer .drawer-head [data-close] { order: 2; }
+    #sw-kind { order: 3; }
+    #log-nav { order: 4; margin: 0 0 0 auto; }
+    /* viewer bar on one row: Find, Copy, Download become icon buttons */
+    #log-drawer .code-view-bar { gap: 6px; padding: 6px; }
+    .code-view-bar .searchable-select:has(#cv-format) { width: 84px; }
+    .ph-only { display: inline; }
+    #cv-find, #cv-copy, #cv-download { width: 32px; min-width: 0; padding: 0; justify-content: center; }
+    #cv-find .btn-label, #cv-copy .btn-label, #cv-download .btn-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  }
 </style>
 </head>
 <body data-page="hotel-api-logs">
@@ -125,7 +185,7 @@
     <!-- Portal reusable table (css/table.css) — format fixed; only columns/cell content are page-specific -->
     <div class="tbl-area">
       <div class="table-responsive">
-        <table class="table table-hover table-striped table-bordered f-14 text-nowrap">
+        <table class="table log-table table-hover table-striped table-bordered f-14 text-nowrap">
           <thead>
             <tr class="text-uppercase">
               <th class="tbl-num" scope="col">#</th><th class="text-start">Date &amp; Time</th><th class="text-start">Transaction ID</th><th class="text-start tbl-grow">Operation</th>
@@ -189,12 +249,12 @@
         <span class="meta" id="cv-size" tabindex="0"></span>
         <button class="btn btn-secondary" type="button" id="cv-find">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4-4"/></svg>
-          Find
+          <span class="btn-label">Find</span>
         </button>
         <span class="spacer"></span>
         <label class="inline-switch"><span class="switch"><input type="checkbox" id="cv-wrap"><span></span></span>Wrap</label>
-        <button class="btn btn-secondary" type="button" id="cv-copy">Copy</button>
-        <button class="btn btn-primary" type="button" id="cv-download">Download</button>
+        <button class="btn btn-secondary" type="button" id="cv-copy"><svg class="ph-only" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg><span class="btn-label">Copy</span></button>
+        <button class="btn btn-primary" type="button" id="cv-download"><svg class="ph-only" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="btn-label">Download</span></button>
       </div>
       <div id="cv-editor" aria-label="File content"></div>
     </div>
@@ -211,7 +271,7 @@
 <script src="js/filters.js?v=1"></script>
 <script src="js/empty-state.js?v=3"></script>
 <script src="js/table-loading.js?v=1"></script>
-<script src="js/code-viewer.js?v=4"></script>
-<script src="js/hotel-api-logs.js?v=50"></script>
+<script src="js/code-viewer.js?v=5"></script>
+<script src="js/hotel-api-logs.js?v=51"></script>
 </body>
 </html>

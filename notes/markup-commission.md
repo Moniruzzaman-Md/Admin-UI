@@ -140,6 +140,7 @@ Still open (backend, doesn't change the screen): whether the pricing service can
 
 ## Changelog
 
+- 2026-11-20 — phones (≤ 640px): the ID field takes the full filter row; Search, Filters and Reset share the next row; Check overlaps gets its own row.
 - 2026-11-18 — Whole page redesigned: list, filters, create/edit drawer, delete confirm, history.
 - 2026-11-18 — Action column right-aligned (standing rule for every list).
 - 2026-11-18 — Agent-specific markup for B2B; All suppliers for agent rules only, so one rule can cover all markets + all suppliers.

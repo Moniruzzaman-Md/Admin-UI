@@ -203,6 +203,12 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
 /* Search / Filters / Reset share one fixed width, so the count appearing never moves the row */
 .filter-bar > [data-filters-go], .filter-bar > [data-filters-toggle], .filter-bar > [data-filters-reset] { width: 130px; min-width: 0; padding: 0 10px; }
 .filter-bar > .push-right { margin-left: auto; }
+@media (max-width: 640px) {
+  .filter-bar { gap: 10px; padding: 12px; }
+  .filter-bar > .search-input { width: 100%; }
+  .filter-bar > .push-right { flex: 1 1 100%; margin-left: 0; }
+  .filter-bar > [data-filters-go], .filter-bar > [data-filters-toggle], .filter-bar > [data-filters-reset] { flex: 1 1 0; width: auto; padding: 0 6px; }
+}
 .filters-toggle-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
   background: var(--surface); color: var(--text); font: 600 var(--fs-md) var(--font); cursor: pointer;

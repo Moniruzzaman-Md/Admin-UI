@@ -100,6 +100,23 @@ Search in the live logs (checked 2026-11-20): `Common-Search-…-Request` first,
 - Esc closes Monaco's find box first; with it closed, Esc closes the drawer.
 - Esc, ✕ or clicking outside closes.
 
+## Phones (≤ 640px wide)
+
+Tablet and desktop are unchanged.
+
+- **Filters**: Transaction ID takes the full row; Search, Filters and Reset share the next row equally.
+- **List**: each row becomes a card, and the page scrolls (no scroll area inside the card):
+  - line 1: operation name (opens the file);
+  - line 2: the **full** file name, wrapped (no hover on phones, so nothing is cut), + copy;
+  - line 3: transaction ID + copy, portal, timeline button;
+  - line 4: date · time on the left, supplier on the right.
+  - Tapping a card opens the file, as on desktop. The last opened card stays marked. The `#` column isn't shown.
+- **Transaction timeline**: header row "Transaction" · Show in list · ✕, the transaction ID on its own row below. File rows use the full width (no indent under the call time); a call's line reads operation · supplier · time · duration.
+- **Log viewer**:
+  - Header row 1: operation name + ✕; row 2: Request | Response switch and prev / next.
+  - Find, Copy and Download are icon buttons, so the bar stays on one row.
+  - **Wrap starts on** and the minimap is off, so the content uses the full width without scrolling sideways. The Wrap switch still turns it off.
+
 ## Changelog
 
 - 2026-11-20 — first version.
@@ -134,4 +151,5 @@ Search in the live logs (checked 2026-11-20): `Common-Search-…-Request` first,
 - 2026-11-20 — list: copy buttons for transaction ID and file name; timeline button moved next to the portal.
 - 2026-11-20 — viewer: skeleton while `download` loads, bar disabled meanwhile, error state with Try again; files kept once loaded; only the latest request shows.
 - 2026-11-20 — list: Action column (View) removed; the operation name opens the file (the row click still does).
+- 2026-11-20 — phones: list rows as cards with the full file name; timeline and viewer headers on two rows; viewer bar with icon buttons, Wrap on and no minimap; filter buttons share one row.
 - 2026-11-20 — sidebar: moved from Hotel Management to its live parent, Logs › Hotel Api.
