@@ -1,7 +1,9 @@
 /* Shared tooltip: instant, styled, replaces the slow native title="" tooltip.
    Markup: any element with data-tooltip="Text" (make it focusable with tabindex="0" if it isn't already,
-   so keyboard users get it too). Shows on hover / focus straight away, above the element (below if there's
-   no room), kept inside the window. Hides on leave / blur / scroll / Esc. One tooltip at a time.
+   so keyboard users get it too). Shows on hover / focus straight away (short fade), above the element (below if
+   there's no room), kept inside the window. Hides on leave / blur / press / scroll / Esc. One tooltip at a time.
+   - A key hint at the end in brackets, e.g. "Previous file (↑)" or "Search (Enter)", shows as a key cap.
+   - Long unbroken values (file names, IDs) get a wider box and wrap anywhere instead of at every hyphen.
    Styles: css/components.css (.tooltip). */
 (() => {
   const tip = document.createElement('div');
@@ -9,16 +11,22 @@
   tip.id = 'app-tooltip';
   tip.setAttribute('role', 'tooltip');
   tip.hidden = true;
-  let owner = null;
+  let owner = null, muted = null;   // muted: the element just pressed — no tooltip again until the pointer leaves it
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
+  function fill(text) {
+    const key = text.match(/^(.+?)\s+\(([^()\s]{1,12}(?:\s?\/\s?[^()\s]{1,12})?)\)$/);   // "Label (↑)" · "Label (Ctrl+F)"
+    tip.classList.toggle('is-long', !/\s/.test(text) && text.length > 32);
+    tip.innerHTML = key ? `<span>${esc(key[1])}</span><kbd>${esc(key[2])}</kbd>` : esc(text);
+  }
   function show(el) {
     const text = el.dataset.tooltip;
     if (!text) return;
     if (!tip.isConnected) document.body.append(tip);
     owner = el;
-    tip.textContent = text;
+    fill(text);
     tip.hidden = false;
-    tip.classList.remove('below');
+    tip.classList.remove('below', 'is-in');
     el.setAttribute('aria-describedby', tip.id);
     const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, gap = 8;
     let top = r.top - h - gap;
@@ -27,22 +35,28 @@
     tip.style.top = `${top}px`;
     tip.style.left = `${left}px`;
     // the arrow points at the element's centre even when the box was pushed in from the edge
-    tip.style.setProperty('--arrow-x', `${Math.min(Math.max(10, r.left + r.width / 2 - left), w - 10)}px`);
+    tip.style.setProperty('--arrow-x', `${Math.min(Math.max(12, r.left + r.width / 2 - left), w - 12)}px`);
+    void tip.offsetWidth;            // restart the fade-in for each element
+    tip.classList.add('is-in');
   }
   function hide() {
     if (!owner) return;
     owner.removeAttribute('aria-describedby');
     owner = null;
     tip.hidden = true;
+    tip.classList.remove('is-in');
   }
 
   document.addEventListener('mouseover', e => {
     const el = e.target.closest?.('[data-tooltip]');
-    if (el === owner) return;
+    if (el === owner || (el && el === muted)) return;
+    muted = null;
     el ? show(el) : hide();
   });
   document.addEventListener('focusin', e => { const el = e.target.closest?.('[data-tooltip]'); el ? show(el) : hide(); });
   document.addEventListener('focusout', hide);
+  // pressing a button: the tooltip gets out of the way and stays away while the pointer is on it
+  document.addEventListener('pointerdown', e => { muted = e.target.closest?.('[data-tooltip]') || null; hide(); }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
   addEventListener('scroll', hide, true);
   addEventListener('resize', hide);

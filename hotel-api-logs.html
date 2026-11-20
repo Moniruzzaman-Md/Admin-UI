@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
 <link rel="stylesheet" href="css/tokens.css?v=26">
 <link rel="stylesheet" href="css/shell.css?v=30">
-<link rel="stylesheet" href="css/components.css?v=47">
+<link rel="stylesheet" href="css/components.css?v=48">
 <link rel="stylesheet" href="css/skeleton.css?v=26">
 <link rel="stylesheet" href="css/table.css?v=70">
 <link rel="stylesheet" href="css/select.css?v=26">
@@ -23,16 +23,28 @@
   #log-drawer .drawer-head h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 3em; }
   #log-drawer .seg button { height: 26px; padding: 0 10px; }
   #log-drawer .drawer-body { display: flex; flex-direction: column; gap: 10px; overflow: hidden; padding: 12px 20px 16px; }
-  /* one line: Transaction ID | Supplier | full file name (wraps, never cut) + copy */
+  /* one line: Transaction ID | Supplier | file name (one line, cut in the middle to fit, like the list) + copy */
   .log-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 0; font-size: var(--fs-sm); color: var(--text-2); }
   .log-meta > * + * { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--border-strong); }
   .log-meta .lm-sup { color: var(--text); font-weight: 600; white-space: nowrap; }
   .log-meta .lm-file { display: inline-flex; align-items: center; gap: 4px; flex: 1 1 260px; min-width: 0; }
-  .log-meta .lm-file span { min-width: 0; overflow-wrap: anywhere; color: var(--text-2); }
+  .log-meta .lm-file .tbl-mid { flex: 0 1 auto; width: auto; min-width: 0; color: var(--text-2); }
   .log-meta .lm-file .icon-btn { width: 24px; height: 24px; flex: none; }
   #log-drawer .code-view-bar { padding: 6px 8px; }
-  #log-drawer .code-view { flex: 1; }
-  #cv-editor { flex: 1; min-height: 0; }
+  .cv-panes { flex: 1; min-height: 0; display: flex; gap: 12px; }
+  #log-drawer .code-view { flex: 1 1 0; min-width: 0; }
+  #log-drawer .code-view[hidden], .log-meta .lm-file[hidden], .cv-kind[hidden] { display: none; }
+  .cv-editor { flex: 1; min-height: 0; }
+  /* side by side: wider drawer, Request left · Response right, each pane names its file */
+  #log-drawer.is-split { width: min(1480px, 100vw); }
+  /* the drawer grows / shrinks smoothly when side by side turns on / off (only while open, not while it slides in) */
+  #log-drawer.open.can-resize { transition: transform .25s ease, width .32s cubic-bezier(.2, .8, .2, 1); }
+  #log-drawer.can-resize .code-view.is-entering { animation: cv-pane-in .32s cubic-bezier(.2, .8, .2, 1); }
+  @keyframes cv-pane-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { #log-drawer.open.can-resize { transition: transform .25s ease; } #log-drawer .code-view.is-entering { animation: none; } }
+  .cv-kind { font-size: var(--fs-sm); font-weight: 700; margin-right: 2px; cursor: default; }
+  .cv-kind.is-request { color: #1d4ed8; } .cv-kind.is-response { color: #15803d; }
+  @media (max-width: 1099.98px) { #sw-kind .sw-both { display: none; } }
   /* the viewer opens on top of the timeline */
   #log-drawer { z-index: 120; } #log-drawer + .drawer-backdrop { z-index: 110; }
   .log-nav { display: flex; align-items: center; gap: 2px; margin-right: 4px; }
@@ -52,6 +64,16 @@
   .tl-call { position: relative; padding: 0 0 14px 24px; }
   .tl-call::before { content: ''; position: absolute; left: 0; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #2b3ed1; box-sizing: border-box; }
   .tl-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  /* a call's header folds its files: whole header is the toggle, chevron on the right, file count while folded */
+  button.tl-head { width: 100%; margin: 0 0 6px; padding: 2px 4px 2px 0; border: 0; border-radius: var(--radius-sm); background: none; font: inherit; text-align: left; cursor: pointer; }
+  button.tl-head:hover .tl-chev, button.tl-head:focus-visible .tl-chev { color: var(--text); }
+  button.tl-head:focus-visible { outline: 2px solid #9ec5fe; outline-offset: 2px; }
+  .tl-head .tl-chev { flex: none; align-self: center; margin-left: auto; color: var(--text-3); transition: transform .15s; }
+  .tl-head .tl-dur ~ .tl-chev { margin-left: 0; }
+  .tl-call:not(.is-collapsed) .tl-head .tl-count { display: none; }
+  .tl-call.is-collapsed .tl-chev { transform: rotate(-90deg); }
+  .tl-call.is-collapsed .tl-files, .tl-call.is-collapsed .tl-load { display: none; }
+  .tl-call.is-collapsed button.tl-head { margin-bottom: 0; }
   .tl-head .tl-time { font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; min-width: 78px; }
   .tl-head b { font-size: var(--fs-md); color: var(--text); }
   .tl-head .tl-sup { font-size: var(--fs-sm); color: var(--text-2); }
@@ -74,14 +96,14 @@
   .tl-more .skeleton-bar { display: block; height: 11px; border-radius: 999px; background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }
   .tl-skel { display: flex; flex-direction: column; gap: 16px; }
   .tl-skel .skeleton-bar { display: block; height: 11px; border-radius: 999px; background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }
-  .code-view-bar .searchable-select:has(#cv-format) { width: 96px; }
-  .code-view-bar .searchable-select:has(#cv-format) .input { height: 32px; font-size: var(--fs-sm); font-weight: 600; }
+  .code-view-bar .searchable-select:has(.cv-format) { width: 96px; }
+  .code-view-bar .searchable-select:has(.cv-format) .input { height: 32px; font-size: var(--fs-sm); font-weight: 600; }
   .ph-only { display: none; }
 
   /* ---------- phones (≤ 640px) ---------- */
   @media (max-width: 640px) {
     /* list: no scroll box inside the card — the page scrolls; each row is a card:
-       operation + full file name / transaction ID + portal / date · time + supplier */
+       operation + file name (one line, cut in the middle like desktop) / transaction ID + portal / date · time + supplier */
     .shell-main { height: auto; }
     .tbl-area, .tbl-area .table-responsive { flex: none; overflow: visible; }
     .table.log-table, .log-table tbody, .log-table tr { display: block; border: 0; }
@@ -92,17 +114,14 @@
     .log-table td.tbl-num { display: none !important; }
     .log-table td:nth-child(2) { grid-area: date; }
     .log-table td:nth-child(3) { grid-area: txn; }
-    .log-table td:nth-child(4) { grid-area: op; }
-    .log-table td:nth-child(5) { grid-area: sup; align-self: end; text-align: right; font-weight: 600; }
+    .log-table td:nth-child(5) { grid-area: op; }
+    .log-table td:nth-child(4) { grid-area: sup; align-self: end; text-align: right; font-weight: 600; }
     .log-table td:nth-child(2) .tbl-stack { flex-direction: row; flex-wrap: wrap; gap: 0 8px; font-size: 13px; color: var(--text-2); }
     .log-table td:nth-child(3) .tbl-stack { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
-    .log-table .file-line { width: auto; min-width: 0; align-items: flex-start; }
-    .log-table .file-line .tbl-mid { display: inline; white-space: normal; overflow-wrap: anywhere; }   /* the full name, wrapped (no hover on phones) */
-    .log-table .file-line .tbl-mid-head { overflow: visible; }
     .table.log-table tbody tr:has(td.empty-cell) { display: block; padding: 0; border: 0; }
     .skeleton .log-table tbody td { height: auto; }
-    .skeleton .log-table td:nth-child(4) .skeleton-bar { width: 85% !important; }
-    .skeleton .log-table td:nth-child(5) .skeleton-bar { width: 56px !important; }
+    .skeleton .log-table td:nth-child(5) .skeleton-bar { width: 85% !important; }
+    .skeleton .log-table td:nth-child(4) .skeleton-bar { width: 56px !important; }
 
     /* drawers: tighter padding; header items wrap onto a second row */
     #txn-drawer .drawer-head, #log-drawer .drawer-head { flex-wrap: wrap; row-gap: 8px; padding: 10px 10px 10px 16px; }
@@ -120,6 +139,8 @@
     .tl-head b { order: 1; } .tl-head .tl-sup { order: 2; }
     .tl-head .tl-time { order: 3; min-width: 0; margin-left: auto; }
     .tl-head .tl-dur { order: 4; margin-left: 0; }
+    .tl-head .tl-count { order: 2; }
+    .tl-head .tl-chev { order: 5; margin-left: 0; }
     .tl-files, .tl-call .tl-load { margin-left: 0; }
     .tl-file { gap: 8px; padding: 6px 8px; }
 
@@ -130,11 +151,13 @@
     #sw-kind { order: 3; }
     #log-nav { order: 4; margin: 0 0 0 auto; }
     /* viewer bar on one row: Find, Copy, Download become icon buttons */
-    #log-drawer .code-view-bar { gap: 6px; padding: 6px; }
-    .code-view-bar .searchable-select:has(#cv-format) { width: 84px; }
+    #log-drawer .code-view-bar { gap: 4px; padding: 6px; flex-wrap: nowrap; }
+    .code-view-bar .searchable-select:has(.cv-format) { width: 76px; flex: none; }
+    .code-view-bar .searchable-select:has(.cv-format) .searchable-select-trigger { padding: 0 6px 0 9px; gap: 2px; }
+    #log-drawer .code-view-bar .inline-switch { gap: 6px; }
     .ph-only { display: inline; }
-    #cv-find, #cv-copy, #cv-download { width: 32px; min-width: 0; padding: 0; justify-content: center; }
-    #cv-find .btn-label, #cv-copy .btn-label, #cv-download .btn-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .cv-find, .cv-fold, .cv-copy, .cv-download { width: 32px; min-width: 0; padding: 0; justify-content: center; }
+    .cv-find .btn-label, .cv-fold .btn-label, .cv-copy .btn-label, .cv-download .btn-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   }
 </style>
 </head>
@@ -188,8 +211,8 @@
         <table class="table log-table table-hover table-striped table-bordered f-14 text-nowrap">
           <thead>
             <tr class="text-uppercase">
-              <th class="tbl-num" scope="col">#</th><th class="text-start">Date &amp; Time</th><th class="text-start">Transaction ID</th><th class="text-start tbl-grow">Operation</th>
-              <th>Supplier</th>
+              <th class="tbl-num" scope="col">#</th><th class="text-start">Date &amp; Time</th><th class="text-start">Transaction ID</th><th>Supplier</th>
+              <th class="text-start tbl-grow">Operation</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -239,25 +262,12 @@
     <div class="log-meta">
       <span id="lm-txn"></span>
       <span class="lm-sup" id="lm-api" data-tooltip="Supplier" tabindex="0"></span>
-      <span class="lm-file"><span id="lm-file"></span>
+      <span class="lm-file"><span class="tbl-mid" id="lm-file" tabindex="0"></span>
         <button class="icon-btn" type="button" id="lm-copy-file" data-tooltip="Copy file name" aria-label="Copy file name"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg></button></span>
     </div>
 
-    <div class="code-view">
-      <div class="code-view-bar">
-        <select class="input" id="cv-format" aria-label="Format"><option>JSON</option><option>XML</option><option>HTML</option><option>Text</option></select>
-        <span class="meta" id="cv-size" tabindex="0"></span>
-        <button class="btn btn-secondary" type="button" id="cv-find">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4-4"/></svg>
-          <span class="btn-label">Find</span>
-        </button>
-        <span class="spacer"></span>
-        <label class="inline-switch"><span class="switch"><input type="checkbox" id="cv-wrap"><span></span></span>Wrap</label>
-        <button class="btn btn-secondary" type="button" id="cv-copy"><svg class="ph-only" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg><span class="btn-label">Copy</span></button>
-        <button class="btn btn-primary" type="button" id="cv-download"><svg class="ph-only" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="btn-label">Download</span></button>
-      </div>
-      <div id="cv-editor" aria-label="File content"></div>
-    </div>
+    <!-- one content pane, or Request | Response side by side (built by js/hotel-api-logs.js) -->
+    <div class="cv-panes" id="cv-panes"></div>
   </div>
 </aside>
 <div class="drawer-backdrop" data-close></div>
@@ -266,12 +276,12 @@
 
 <script src="js/shell.js?v=31"></script>
 <script src="js/select.js?v=27"></script>
-<script src="js/tooltip.js?v=1"></script>
+<script src="js/tooltip.js?v=2"></script>
 <script src="js/datepicker.js?v=2"></script>
 <script src="js/filters.js?v=1"></script>
 <script src="js/empty-state.js?v=3"></script>
 <script src="js/table-loading.js?v=1"></script>
-<script src="js/code-viewer.js?v=5"></script>
-<script src="js/hotel-api-logs.js?v=51"></script>
+<script src="js/code-viewer.js?v=6"></script>
+<script src="js/hotel-api-logs.js?v=57"></script>
 </body>
 </html>

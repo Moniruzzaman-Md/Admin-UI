@@ -209,8 +209,8 @@
           <span class="txn-line"><button type="button" class="tbl-code" data-txn="${l.id}" data-tooltip="Transaction timeline">${l.id}</button>${copyBtn(l.id, 'Copy transaction ID')}</span>
           <span class="txn-line"><small>${esc(l.ctx.portal)}</small><button type="button" class="txn-tl-btn" data-txn="${l.id}" data-tooltip="Transaction timeline" aria-label="Transaction timeline for ${l.id}">${ICON_TL}</button></span>
         </span></td>
-        <td><span class="tbl-stack fill"><button type="button" class="tbl-strong tbl-open" aria-label="Open ${esc(l.operationName)} ${l.kind.toLowerCase()}">${esc(l.operationName)}</button><span class="file-line"><small class="tbl-mid" tabindex="0" data-tooltip="${esc(l.fileName)}">${fileLabel(l)}</small>${copyBtn(l.fileName, 'Copy file name')}</span></span></td>
         <td class="text-center">${esc(API_NAME[l.supplierId] || `Supplier ${l.supplierId}`)}</td>
+        <td><span class="tbl-stack fill"><button type="button" class="tbl-strong tbl-open" aria-label="Open ${esc(l.operationName)} ${l.kind.toLowerCase()}">${esc(l.operationName)}</button><span class="file-line"><small class="tbl-mid" tabindex="0" data-tooltip="${esc(l.fileName)}">${fileLabel(l)}</small>${copyBtn(l.fileName, 'Copy file name')}</span></span></td>
       </tr>`).join('')
       : EmptyState.row(5);
 
@@ -295,9 +295,9 @@
       const raw = content(l); fileCache.set(k, raw); res(raw);
     }, 500 + Math.random() * 1000));
   }
-  function download(l) {
+  function download(l, ext) {
     const raw = fileCache.get(fileKey(l)); if (raw == null) return;
-    const ext = l === cur ? viewer.ext : CodeViewer.detect(raw).ext;   // the viewer's (possibly corrected) format
+    ext = ext || CodeViewer.detect(raw).ext;            // the pane's (possibly corrected) format
     const blob = new Blob([raw], { type: MIME[ext] });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${l.fileName}.${ext}`;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
@@ -321,79 +321,167 @@
     show(l);
     drawer.classList.add('open');
   }
+  // side by side, the other file of the pair is already on screen → prev / next skips it
+  function target(d) {
+    let j = nav.i + d;
+    if (split.on && nav.list[j] && nav.list[j] === split.other) j += d;
+    return j >= 0 && j < nav.list.length ? j : -1;
+  }
   function step(d) {
-    const j = nav.i + d;
-    if (j < 0 || j >= nav.list.length) return;
+    const j = target(d); if (j < 0) return;
     nav.i = j; show(nav.list[j]);
   }
   function markOpened(l) {
     lastOpened = fileKey(l);
     document.querySelectorAll('.is-last-opened').forEach(x => x.classList.remove('is-last-opened'));
-    document.querySelectorAll(`[data-file="${CSS.escape(fileKey(l))}"]`).forEach(x => x.classList.add('is-last-opened'));
+    document.querySelectorAll(`[data-file="${CSS.escape(fileKey(l))}"]`).forEach(x => {
+      x.classList.add('is-last-opened');
+      const call = x.closest('.tl-call.is-collapsed'); if (call) setCollapsed(call, false);   // stepping into a folded call opens it
+    });
     const i = pageRows.indexOf(l); if (i >= 0) $(`#rows tr[data-row="${i}"]`)?.classList.add('is-last-opened');
   }
   function show(l) {
     cur = l;
     markOpened(l);
     const j = nav.list.indexOf(l); if (j >= 0) nav.i = j;   // the Request | Response switch may land on a file that's also in the list
-    $('#log-nav').hidden = nav.list.length < 2;
-    $('#nav-pos').textContent = nav.i >= 0 ? `${nav.i + 1} of ${nav.list.length}` : '';
-    $('#nav-prev').disabled = nav.i <= 0;
-    $('#nav-next').disabled = nav.i < 0 || nav.i >= nav.list.length - 1;
-    $('#lm-txn').innerHTML = `<span class="txn-line"><button type="button" class="tbl-code" data-txn="${l.id}" data-tooltip="Transaction timeline">${l.id}</button><button type="button" class="txn-tl-btn" data-txn="${l.id}" data-tooltip="Transaction timeline" aria-label="Transaction timeline">${ICON_TL}</button></span>`;
-    $('#lm-api').textContent = API_NAME[l.supplierId];
-    $('#lm-file').textContent = l.fileName;
 
     const pair = pairOf(l);
+    split.on = split.want && !!pair && wide.matches;     // side by side needs the pair and a wide screen
+    split.other = split.on ? pair : null;
+    // animate the width change only while the viewer is already open (opening straight into side by side just slides in)
+    const wasOpen = drawer.classList.contains('open'), wasSplit = drawer.classList.contains('is-split');
+    drawer.classList.toggle('can-resize', wasOpen);
+    drawer.classList.toggle('is-split', split.on);
+    if (wasOpen && split.on && !wasSplit) {
+      const el = panes[1].el;
+      el.classList.add('is-entering');
+      el.addEventListener('animationend', () => el.classList.remove('is-entering'), { once: true });
+    }
+
+    $('#log-nav').hidden = nav.list.length < 2;
+    $('#nav-pos').textContent = nav.i >= 0 ? `${nav.i + 1} of ${nav.list.length}` : '';
+    $('#nav-prev').disabled = target(-1) < 0;
+    $('#nav-next').disabled = target(1) < 0;
+    $('#lm-txn').innerHTML = `<span class="txn-line"><button type="button" class="tbl-code" data-txn="${l.id}" data-tooltip="Transaction timeline">${l.id}</button><button type="button" class="txn-tl-btn" data-txn="${l.id}" data-tooltip="Transaction timeline" aria-label="Transaction timeline">${ICON_TL}</button></span>`;
+    $('#lm-api').textContent = API_NAME[l.supplierId];
+    $('#lm-file').innerHTML = fileLabel(l);              // one line, cut in the middle to fit (like the list); full name on hover
+    $('#lm-file').dataset.tooltip = l.fileName;
+    $('.log-meta .lm-file').hidden = split.on;           // side by side, each pane names its own file
+
     // with a Request | Response switch the title is just the operation; without one it says the type too
     $('#log-title').textContent = pair ? l.operationName : `${l.operationName} · ${l.kind}`;
     $('#sw-kind').hidden = !pair;
-    $('#sw-kind').innerHTML = pair ? ['Request', 'Response'].map(k => `<button type="button" data-k="${k}" aria-pressed="${l.kind === k}">${k}</button>`).join('') : '';
+    $('#sw-kind').innerHTML = pair ? ['Request', 'Response', 'Both'].map(k =>
+      `<button type="button" data-k="${k}"${k === 'Both' ? ' class="sw-both"' : ''} aria-pressed="${split.on ? k === 'Both' : l.kind === k}">${k === 'Both' ? 'Side by side' : k}</button>`).join('') : '';
 
-    // the header above is known from the list row; the content comes from the download API → skeleton until it's in.
+    if (split.on) {
+      const [req, res] = l.kind === 'Request' ? [l, pair] : [pair, l];
+      panes[0].load(req, 'Request'); panes[1].load(res, 'Response');
+    } else {
+      panes[0].load(l); panes[1].clear();
+    }
+  }
+
+  /* one content pane: its own bar (Format · size · Find · Wrap · Copy · Download) and Monaco viewer (js/code-viewer.js).
+     The viewer shows one pane; side by side shows two: Request left, Response right. */
+  const ICON_FOLD = { collapse: 'M7 20l5-5 5 5M7 4l5 5 5-5', expand: 'M7 15l5 5 5-5M7 9l5-5 5 5' };
+  const PANE = `
+    <div class="code-view-bar">
+      <span class="cv-kind" hidden></span>
+      <select class="input cv-format" aria-label="Format">${CodeViewer.formats.map(f => `<option>${f}</option>`).join('')}</select>
+      <span class="meta cv-size" tabindex="0"></span>
+      <button class="btn btn-secondary cv-find" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4-4"/></svg>
+        <span class="btn-label">Find</span>
+      </button>
+      <button class="btn btn-secondary cv-fold" type="button" aria-pressed="false">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="cv-fold-ic" d="${ICON_FOLD.collapse}"/></svg>
+        <span class="btn-label">Collapse all</span>
+      </button>
+      <span class="spacer"></span>
+      <label class="inline-switch"><span class="switch"><input type="checkbox" class="cv-wrap"><span></span></span>Wrap</label>
+      <button class="btn btn-secondary cv-copy" type="button"><svg class="ph-only" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg><span class="btn-label">Copy</span></button>
+      <button class="btn btn-primary cv-download" type="button"><svg class="ph-only" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="btn-label">Download</span></button>
+    </div>
+    <div class="cv-editor" aria-label="File content"></div>`;
+  function makePane() {
+    const el = document.createElement('div'); el.className = 'code-view'; el.innerHTML = PANE;
+    $('#cv-panes').appendChild(el);
+    const q = s => el.querySelector(s);
+    const viewer = CodeViewer.create(q('.cv-editor'));
+    const p = { el, viewer, file: null, seq: 0 };
+    // while a file loads (or failed): Format, Find, Copy, Download are off; the size shows a shimmer
+    // Collapse all ⇄ Expand all: back to "Collapse all" whenever the content changes; off for plain text (nothing to fold)
+    const setFold = folded => {
+      const b = q('.cv-fold');
+      b.setAttribute('aria-pressed', String(folded));
+      b.querySelector('.btn-label').textContent = folded ? 'Expand all' : 'Collapse all';
+      b.querySelector('.cv-fold-ic').setAttribute('d', folded ? ICON_FOLD.expand : ICON_FOLD.collapse);
+      b.dataset.tooltip = folded ? 'Expand all' : 'Collapse all';
+    };
+    const foldable = () => { q('.cv-fold').disabled = viewer.format === 'Text'; setFold(false); };
+    const busy = on => {
+      ['.cv-format', '.cv-find', '.cv-fold', '.cv-copy', '.cv-download'].forEach(s => { q(s).disabled = on; });
+      if (!on) foldable();
+      if (on) { q('.cv-size').innerHTML = '<span class="skeleton-bar"></span>'; delete q('.cv-size').dataset.tooltip; }
+    };
+    // the header is known from the list row; the content comes from the download API → skeleton until it's in.
     // Only the latest request counts (prev / next pressed quickly).
-    const seq = ++loadSeq;
-    setBusy(true);
-    if (!fileCache.has(fileKey(l))) viewer.loading();
-    fetchFile(l).then(raw => {
-      if (seq !== loadSeq) return;
-      const shown = viewer.show(raw);
-      $('#cv-format').value = shown.format;   // starts on the guess; the user can switch it
-      const bytes = utf8.encode(raw).length;
-      $('#cv-size').textContent = sizeLabel(bytes);
-      $('#cv-size').dataset.tooltip = `${bytes.toLocaleString('en-US')} bytes`;
-      setBusy(false);
-    }, e => {
-      if (seq !== loadSeq) return;
-      viewer.error(e.message, () => show(l));
-      $('#cv-size').innerHTML = '';
+    p.load = (l, kind) => {
+      p.file = l; el.hidden = false;
+      const k = q('.cv-kind'); k.hidden = !kind;
+      if (kind) { k.textContent = kind; k.className = `cv-kind is-${kind.toLowerCase()}`; k.dataset.tooltip = l.fileName; k.tabIndex = 0; }
+      const seq = ++p.seq;
+      busy(true);
+      if (!fileCache.has(fileKey(l))) viewer.loading();
+      fetchFile(l).then(raw => {
+        if (seq !== p.seq) return;
+        q('.cv-format').value = viewer.show(raw).format;   // starts on the guess; the user can switch it
+        const bytes = utf8.encode(raw).length;
+        q('.cv-size').textContent = sizeLabel(bytes);
+        q('.cv-size').dataset.tooltip = `${bytes.toLocaleString('en-US')} bytes`;
+        busy(false);
+      }, e => {
+        if (seq !== p.seq) return;
+        viewer.error(e.message, () => p.load(l, kind));
+        q('.cv-size').innerHTML = '';
+      });
+    };
+    p.clear = () => { p.seq++; p.file = null; el.hidden = true; };
+    p.setWrap = on => { q('.cv-wrap').checked = on; viewer.setWrap(on); };
+    q('.cv-find').addEventListener('click', () => viewer.find());
+    q('.cv-format').addEventListener('change', e => { viewer.setFormat(e.target.value); foldable(); });
+    q('.cv-fold').addEventListener('click', e => {
+      const folded = e.currentTarget.getAttribute('aria-pressed') === 'true';
+      (folded ? viewer.expandAll() : viewer.collapseAll()).then(() => setFold(!folded));
     });
+    q('.cv-wrap').addEventListener('change', e => viewer.setWrap(e.target.checked));
+    q('.cv-copy').addEventListener('click', () => copy(viewer.text, 'Copied'));
+    q('.cv-download').addEventListener('click', () => download(p.file, viewer.ext));
+    return p;
   }
-  let loadSeq = 0;
-  // while a file loads (or failed): Format, Find, Copy, Download are off; the size shows a shimmer
-  function setBusy(on) {
-    ['#cv-format', '#cv-find', '#cv-copy', '#cv-download'].forEach(s => { $(s).disabled = on; });
-    if (on) { $('#cv-size').innerHTML = '<span class="skeleton-bar"></span>'; delete $('#cv-size').dataset.tooltip; }
-  }
+  const panes = [makePane(), makePane()];
+  panes[1].el.hidden = true;
+
+  // Request | Response | Side by side — side by side stays on (for every file with a pair) until Request or Response is picked
+  const split = { want: false, on: false, other: null };
+  const wide = matchMedia('(min-width: 1100px)');      // narrower screens: no room for two panes (the option is hidden)
+  wide.addEventListener('change', () => { if (cur && drawer.classList.contains('open')) show(cur); });
   $('#sw-kind').addEventListener('click', e => {
     const b = e.target.closest('[data-k]');
     if (!b || b.getAttribute('aria-pressed') === 'true') return;
-    const pair = pairOf(cur); if (pair) show(pair);
+    const k = b.dataset.k;
+    split.want = k === 'Both';
+    if (split.want || cur.kind === k) return show(cur);
+    show(pairOf(cur));
   });
 
-  // file content: shared Monaco viewer (js/code-viewer.js) — format detected from the content
-  const viewer = CodeViewer.create($('#cv-editor'));
-  $('#cv-find').addEventListener('click', () => viewer.find());
-  $('#cv-format').addEventListener('change', e => viewer.setFormat(e.target.value));
-  $('#cv-wrap').addEventListener('change', e => viewer.setWrap(e.target.checked));
   // phones: every column counts — no minimap, Wrap on (the switch still turns it off)
   const phone = matchMedia('(max-width: 640px)');
-  const fitViewer = () => { viewer.setMinimap(!phone.matches); $('#cv-wrap').checked = phone.matches; viewer.setWrap(phone.matches); };
+  const fitViewer = () => panes.forEach(p => { p.viewer.setMinimap(!phone.matches); p.setWrap(phone.matches); });
   fitViewer(); phone.addEventListener('change', fitViewer);
   const copy = (s, msg) => navigator.clipboard?.writeText(s).then(() => toast(msg), () => toast('Couldn’t copy'));
-  $('#cv-copy').addEventListener('click', () => copy(viewer.text, 'Copied'));
   $('#lm-copy-file').addEventListener('click', () => copy(cur.fileName, 'File name copied'));
-  $('#cv-download').addEventListener('click', () => download(cur));
   // from the viewer: open (or bring forward) the timeline of this file's transaction; the viewer closes so the timeline is on top
   $('#lm-txn').addEventListener('click', e => {
     const b = e.target.closest('[data-txn]'); if (!b) return;
@@ -454,7 +542,7 @@
     $('#txn-id').innerHTML = `<span class="tbl-code">${esc(id)}</span>`;
     $('#txn-body').innerHTML = `<div class="tl-skel" aria-busy="true">${[40, 70, 55, 80, 45, 65].map(w => `<span class="skeleton-bar" style="width:${w}%"></span>`).join('')}</div>`;
     tDrawer.classList.add('open');
-    tl = { id, base: newPart({ includeSearch: false }), search: newPart({ includeSearch: true, operationName: 'Search' }) };
+    tl = { id, base: newPart({ includeSearch: false }), search: newPart({ includeSearch: true, operationName: 'Search' }), collapsed: new Set() };
     loadPart(tl.base); loadPart(tl.search);
   }
   function fileRow(f) {
@@ -496,16 +584,24 @@
           <ul class="tl-files" aria-busy="true">${[62, 48, 70].map(w => `<li class="tl-more"><span class="skeleton-bar" style="width:${w}%"></span></li>`).join('')}</ul></li>`;
         const n = c.files.length, a = c.files[0].createdOn, b = c.files[n - 1].createdOn;
         const done = complete(c.part === 'search' ? search : base);
-        return `<li class="tl-call">
-          <div class="tl-head"><span class="tl-time">${fTime(a)}</span><b>${esc(c.op)}</b><span class="tl-sup">${esc(supOf(c))}</span>${n > 1 && done ? `<span class="tl-dur" data-tooltip="First to last file of this call">${durLabel(b - a)}</span>` : ''}</div>
+        const shut = tl.collapsed.has(c.key);
+        return `<li class="tl-call${shut ? ' is-collapsed' : ''}" data-call="${esc(c.key)}">
+          <button type="button" class="tl-head" aria-expanded="${!shut}"><span class="tl-time">${fTime(a)}</span><b>${esc(c.op)}</b><span class="tl-sup">${esc(supOf(c))}</span><span class="tl-count">${n.toLocaleString('en-US')} file${n === 1 ? '' : 's'}</span>${n > 1 && done ? `<span class="tl-dur" data-tooltip="First to last file of this call">${durLabel(b - a)}</span>` : ''}<svg class="tl-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <ul class="tl-files">${filesDesc(c).map(fileRow).join('')}</ul>
           ${c === lastSearch ? moreBtn(search, 'search') : ''}
         </li>`; }).join('')}</ol>
       ${moreBtn(base, 'base')}`;
     $('#txn-body').scrollTop = scroll;
   }
+  // a call folds its files away (its header stays); kept across re-renders (Load more) while the timeline is open
+  function setCollapsed(li, shut) {
+    li.classList.toggle('is-collapsed', shut);
+    li.querySelector('.tl-head').setAttribute('aria-expanded', String(!shut));
+    tl.collapsed[shut ? 'add' : 'delete'](li.dataset.call);
+  }
   $('#txn-body').addEventListener('click', e => {
     const m = e.target.closest('[data-more]'); if (m) return loadPart(tl[m.dataset.more]);
+    const h = e.target.closest('.tl-head'); if (h) return setCollapsed(h.closest('.tl-call'), h.getAttribute('aria-expanded') === 'true');
     const b = e.target.closest('.tl-file'); if (!b) return;
     openLog(txnFiles.find(f => fileKey(f) === b.dataset.file), txnFiles);
   });
@@ -544,7 +640,7 @@
     if (inField && !e.altKey) return;
     e.preventDefault(); e.stopPropagation(); step(e.key === 'ArrowUp' ? -1 : 1);
   }, true);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !viewer.findOpen() && !document.querySelector('.searchable-select.open, .flatpickr-calendar.open')) closeDrawer(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panes.some(p => p.viewer.findOpen()) && !document.querySelector('.searchable-select.open, .flatpickr-calendar.open')) closeDrawer(); });
 
   SearchableSelect.init();
   load();

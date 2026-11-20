@@ -24,7 +24,7 @@ Shared filter bar (`js/filters.js`, same as Map-UI hotel-system): a row with the
 
 ## List
 
-Reusable table. Columns: **#** | DATE & TIME | TRANSACTION ID | OPERATION | SUPPLIER. No Action column. Newest first (API order).
+Reusable table. Columns: **#** | DATE & TIME | TRANSACTION ID | SUPPLIER | OPERATION. No Action column. Newest first (API order).
 
 - **#** = position in the whole filtered result (row 21 on page 2).
 - **Date & Time**: `createdOn` in local time — date line `20-Nov-2026`, time line `06:15:11 PM` (seconds kept: calls of one transaction are seconds apart).
@@ -71,6 +71,7 @@ Search in the live logs (checked 2026-11-20): `Common-Search-…-Request` first,
   - No page-size increase needed.
 - Info line: Portal | date | first – last loaded file time (one time when they're equal).
 - **Calls** = files grouped by **call ID + operation** (both read from the file name), newest first. Each call: start time · operation · supplier (the supplier of its supplier-side files, otherwise Common) · duration (last file time − first file time; not shown for a one-file call — log times, so approximate).
+- **Folding a call**: the whole call header is a toggle (chevron on the right; keyboard: Tab to it, Enter / Space). A folded call shows only its header plus a file count ("30 files"); its files and its Load more button are hidden. Every call starts open. The fold state is kept while the timeline stays open (also through Load more) and resets when it is opened again. Prev / next in the viewer still walks every loaded file; stepping onto a file in a folded call opens that call.
 - Under each call its files, newest first: file name (shortened, coloured, as in the list) · supplier (for supplier-side files) · time. A call's header lists **every** supplier it went to ("Dida, TBO Holidays"). Clicking a file opens it in the viewer **on top of** the timeline; prev / next walks the timeline's loaded files in order.
 - **Show in list**: closes the timeline and shows the same files in the list: Transaction ID = this transaction, **Include search logs on**, From / To = the dates of the first and last loaded file, Supplier / Operation type / Portal cleared, then Search. Rows per page stay as the user has them (20 by default): `per_page` 100 is used only by the timeline's own `get-log` requests. The filter bar's chips show what was set; Reset restores the defaults.
 - Esc / ✕ / outside click close the top drawer only (viewer first, then the timeline).
@@ -80,8 +81,12 @@ Search in the live logs (checked 2026-11-20): `Common-Search-…-Request` first,
 
 - **Previous / next file** (header arrows, "3 of 20"): steps through the list the file was opened from — the current page of the table, or the timeline's files. Keys: ↑ / ↓ (when the focus isn't in the editor or a field); Alt+↑ / Alt+↓ work everywhere. Hidden when there's only one file. The Request | Response switch keeps the position if the other file is in the same list.
 - Opens from View. Header: the operation name, then the **Request | Response** switch beside it (when the pair exists); without a switch the title reads `operationName · Type`.
-- One compact info line under the header: **Transaction ID | Supplier | full file name** (wraps, never shortened) + copy. No portal and no date/time here (date/time may not be known after switching to the paired file).
+- One compact info line under the header: **Transaction ID | Supplier | file name** + copy. The file name stays on one line on every screen size, fitted the same way as the list (start cut with `…`, last 12 characters always shown, Request / Response / Trace ending coloured); full name on hover / focus, and Copy copies it whole. No portal and no date/time here (date/time may not be known after switching to the paired file).
 - **Request | Response** switch (in the header): shown only when the other file of the pair exists — **same supplier** (`supplierId`) and the same file name with just the last part swapped (`…-Request` ⇄ `…-Response`; a part number like `-3` is kept). The supplier matters: one Search call goes to several suppliers under the same call ID and they log **identical file names** (Dida and TBO Holidays both write `…-Request-4`). Picking the other side opens that file in the viewer. No switch for Trace files or when the other file isn't in the log. No Common / supplier switch and no part picker.
+  - **Side by side** (third option of the switch, screens 1100px+ wide only): the drawer widens and shows both files of the pair at once — **Request left, Response right** — each in its own pane with its own bar (its label Request / Response, full file name on hover · Format · size · Find · Wrap · Copy · Download). The info line then shows only Transaction ID | Supplier (each pane names its file). Each pane loads, fails and retries on its own.
+    - Side by side stays on as you step through files; a file without a pair (e.g. a Trace) shows alone, and the next file with a pair shows side by side again. Picking Request or Response goes back to one file.
+    - Prev / next skip the other file of the pair (it is already on screen); the position ("3 of 20") is the file that was opened or stepped to.
+    - Below 1100px the option is hidden and the single view shows; widening the window brings side by side back if it was on.
   - Finding the other file: `get-log` with `id` = the transaction (all dates, `includeSearch: true`) and match on `fileName`, or fetch it by name via `download`. No new endpoint needed.
 - **Content viewer: Monaco** (the VS Code editor, read-only, VS Code light theme and font). Loaded only when a log is first opened (lazy; ~few MB, then cached). Folding, minimap, sticky headers, VS Code find (Find button or Ctrl+F).
 - Content comes from `download` (the response is a JSON-encoded string → decode once to get the raw file). The **format is detected from the content** (the API doesn't say):
@@ -90,6 +95,7 @@ Search in the live logs (checked 2026-11-20): `Common-Search-…-Request` first,
   - `<?xml` or another tag → **XML**, indented if it arrived on one line;
   - anything else → **Text**, as is (e.g. SearchStream traces).
 - Bar above the content: **format dropdown** (JSON / XML / HTML / Text) · file size · **Find** · Wrap switch (off by default) · **Copy** (the shown, formatted text) · **Download** (the raw file as stored, named `<fileName>.<json|xml|html|txt>` by its format).
+- **Collapse all** (bar, after Find): folds every block except the outermost, so the top-level keys / elements stay visible with their contents folded; the button then reads **Expand all** and unfolds everything. It goes back to "Collapse all" when another file opens or the format changes. Disabled for Text (nothing to fold) and while the file loads. Side by side, each pane has its own. Phones: icon button.
 - **Format dropdown**: starts on the detected format; picking another shows the same file as that format (JSON is laid out if it parses, otherwise shown as is with JSON colours; one-line XML is indented). Opening another file starts from its own detected format again. Download uses the chosen format's extension. Backend request: store the format when writing the log (from the supplier's `Content-Type`) and return it, so the guess is only a fallback for old logs.
 - **Loading** (`download` takes time): the header, info line and Request | Response switch show at once (they come from the list row); the content area shows a **skeleton of code lines** until `download` returns. Meanwhile Format, Find, Copy and Download are disabled and the size is a shimmer. Wrap stays usable.
   - Only the **latest** request counts: pressing next several times quickly shows only the file you land on (earlier responses are ignored).
@@ -107,7 +113,7 @@ Tablet and desktop are unchanged.
 - **Filters**: Transaction ID takes the full row; Search, Filters and Reset share the next row equally.
 - **List**: each row becomes a card, and the page scrolls (no scroll area inside the card):
   - line 1: operation name (opens the file);
-  - line 2: the **full** file name, wrapped (no hover on phones, so nothing is cut), + copy;
+  - line 2: the file name on one line, fitted to the card width the same way as desktop (start cut with `…`, last 12 characters always shown), + copy;
   - line 3: transaction ID + copy, portal, timeline button;
   - line 4: date · time on the left, supplier on the right.
   - Tapping a card opens the file, as on desktop. The last opened card stays marked. The `#` column isn't shown.
@@ -153,3 +159,10 @@ Tablet and desktop are unchanged.
 - 2026-11-20 — list: Action column (View) removed; the operation name opens the file (the row click still does).
 - 2026-11-20 — phones: list rows as cards with the full file name; timeline and viewer headers on two rows; viewer bar with icon buttons, Wrap on and no minimap; filter buttons share one row.
 - 2026-11-20 — sidebar: moved from Hotel Management to its live parent, Logs › Hotel Api.
+- 2026-11-20 — list: Supplier column moved to the left of Operation.
+- 2026-11-20 — timeline: calls fold / unfold from their header (file count while folded).
+- 2026-11-20 — viewer: Request | Response | Side by side — both files of a pair in two panes (wide screens).
+- 2026-11-20 — viewer: Collapse all / Expand all button in the bar.
+- 2026-11-20 — viewer: drawer width animates when side by side turns on / off (Response pane fades in).
+- 2026-11-20 — phones: file name in the list on one line, fitted like desktop (no longer wrapped).
+- 2026-11-20 — viewer info line: file name on one line, fitted like the list (desktop + phones); phone viewer bar kept on one row with the Collapse all button.

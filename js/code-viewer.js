@@ -9,7 +9,8 @@
      plain text (anything else)                         → as is
    loading(): skeleton over the editor while the file is being fetched (also shown while Monaco itself loads).
    error(message, onRetry): message + "Try again" in place of the content.
-   Read-only, folding, minimap (setMinimap(on)), VS Code find (Ctrl+F or find()), word wrap via setWrap(). */
+   Read-only, folding, minimap (setMinimap(on)), VS Code find (Ctrl+F or find()), word wrap via setWrap().
+   collapseAll() folds every block but the outermost; expandAll() unfolds everything. */
 (function () {
   const VS = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs';
   let loading = null;
@@ -131,6 +132,13 @@
       setMinimap(on) { minimap = on; if (editor) editor.updateOptions({ minimap: { enabled: on } }); },
       setWrap(on) { wrap = on; if (editor) editor.updateOptions({ wordWrap: on ? 'on' : 'off' }); },
       find() { if (editor) { editor.focus(); editor.getAction('actions.find').run(); } },
+      // collapse every block except the outermost one (so the top-level keys / elements stay visible); expand all again
+      collapseAll() {
+        if (!editor || !model) return Promise.resolve();
+        const root = Math.max(0, model.getLinesContent().findIndex(l => l.trim() && !/^<\?xml|^<!/i.test(l.trim())));
+        return editor.getAction('editor.foldAll').run().then(() => editor.trigger('cv', 'editor.unfold', { levels: 1, selectionLines: [root] }));
+      },
+      expandAll() { return editor ? editor.getAction('editor.unfoldAll').run() : Promise.resolve(); },
       focus() { if (editor) editor.focus(); },
       // true while Monaco's own find box is open (Esc should close that, not the drawer)
       findOpen() { return !!host.querySelector('.find-widget.visible'); },
