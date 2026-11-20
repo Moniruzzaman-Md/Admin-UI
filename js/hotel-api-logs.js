@@ -58,7 +58,7 @@
     const others = [2, 3, 4].filter(x => x !== sup);
     const sups = ctx.bigSearch ? [sup] : rnd() < .6 ? [sup, pick(others)] : [sup];
     add('Search', sid, C, RQ);
-    const partsOf = sups.map(() => ctx.bigSearch ? 150 : 3 + Math.floor(rnd() * 6));   // bigSearch: shows paging in the timeline
+    const partsOf = sups.map(() => ctx.bigSearch ? 40 : 3 + Math.floor(rnd() * 6));   // bigSearch: one long Search, to show paging
     sups.forEach((sp, i) => { add('Search', sid, O, RQ, '', null, sp); for (let p = 1; p <= partsOf[i]; p++) add('Search', sid, O, RQ, '', p, sp); });
     const resp = [];
     sups.forEach((sp, i) => { resp.push([sp, null]); for (let p = 1; p <= partsOf[i]; p++) resp.push([sp, p]); });
@@ -189,9 +189,6 @@
     return out;
   }
 
-  const ICON_COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg>';
-  const copyBtn = (text, label) => `<button type="button" class="tbl-copy" data-copy="${esc(text)}" data-tooltip="${label}" aria-label="${label}">${ICON_COPY}</button>`;
-  const ICON_TL = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><path d="M5 8v8M10 6h10M10 12h7M10 18h10"/></svg>';
 
   let pageRows = [];
   function render() {
@@ -202,15 +199,15 @@
     pageRows = list.slice(start, start + state.size);
 
     $('#rows').innerHTML = pageRows.length ? pageRows.map((l, i) => `
-      <tr class="row-link${fileKey(l) === lastOpened ? ' is-last-opened' : ''}" data-row="${i}">
+      <tr class="row-link${fileKey(l) === lastOpened ? ' is-last-opened' : ''}" data-row="${i}" tabindex="0" aria-label="Open ${esc(l.operationName)} ${l.kind.toLowerCase()}">
         <td class="tbl-num">${start + i + 1}</td>
         <td><span class="tbl-stack"><span>${fDate(l.createdOn)}</span><small>${fTime(l.createdOn)}</small></span></td>
         <td><span class="tbl-stack">
-          <span class="txn-line"><button type="button" class="tbl-code" data-txn="${l.id}" data-tooltip="Transaction timeline">${l.id}</button>${copyBtn(l.id, 'Copy transaction ID')}</span>
-          <span class="txn-line"><small>${esc(l.ctx.portal)}</small><button type="button" class="txn-tl-btn" data-txn="${l.id}" data-tooltip="Transaction timeline" aria-label="Transaction timeline for ${l.id}">${ICON_TL}</button></span>
+          <span class="txn-line"><button type="button" class="tbl-code is-copy" data-copy="${l.id}" data-tooltip="Copy transaction ID" aria-label="Copy transaction ID ${l.id}">${l.id}</button></span>
+          <small>${esc(l.ctx.portal)}</small>
         </span></td>
         <td class="text-center">${esc(API_NAME[l.supplierId] || `Supplier ${l.supplierId}`)}</td>
-        <td><span class="tbl-stack fill"><button type="button" class="tbl-strong tbl-open" aria-label="Open ${esc(l.operationName)} ${l.kind.toLowerCase()}">${esc(l.operationName)}</button><span class="file-line"><small class="tbl-mid" tabindex="0" data-tooltip="${esc(l.fileName)}">${fileLabel(l)}</small>${copyBtn(l.fileName, 'Copy file name')}</span></span></td>
+        <td><span class="tbl-stack fill"><span class="tbl-strong">${esc(l.operationName)}</span><span class="file-line"><small class="tbl-mid is-copy" role="button" tabindex="0" data-copy="${esc(l.fileName)}" data-copy-msg="File name copied" data-tooltip="${esc(l.fileName)}" aria-label="Copy file name ${esc(l.fileName)}">${fileLabel(l)}</small></span></span></td>
       </tr>`).join('')
       : EmptyState.row(5);
 
@@ -257,14 +254,20 @@
     onSearch: applyFilters,
     onReset: () => { setFields(DEFAULTS()); applyFilters(); },
   });
-  // row click (or the operation name, the keyboard way in) opens the file; the transaction badge opens the transaction timeline
+  // row click (or Enter / Space on a focused row) opens the file; clicking the transaction badge or the file name copies it
+  const copyEl = el => copy(el.dataset.copy, el.dataset.copyMsg || 'Transaction ID copied');
   $('#rows').addEventListener('click', e => {
     const cp = e.target.closest('[data-copy]');
-    if (cp) return copy(cp.dataset.copy, cp.dataset.tooltip === 'Copy file name' ? 'File name copied' : 'Transaction ID copied');
-    const tx = e.target.closest('[data-txn]');
-    if (tx) return openTxn(tx.dataset.txn);
+    if (cp) return copyEl(cp);
     if (window.getSelection().toString()) return;   // selecting text in a row isn't a click
-    const r = e.target.closest('tr[data-row]'); if (r) openLog(pageRows[r.dataset.row], pageRows);
+    const r = e.target.closest('tr[data-row]'); if (r) openLog(pageRows[r.dataset.row]);
+  });
+  // keyboard: Tab to a row, Enter / Space opens its file; on the file name, Enter / Space copies it
+  $('#rows').addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target.matches('small[data-copy]')) { e.preventDefault(); return copyEl(e.target); }
+    if (!e.target.matches('tr[data-row]')) return;
+    e.preventDefault(); openLog(pageRows[e.target.dataset.row]);
   });
   $('#pg-pages').addEventListener('click', e => { const b = e.target.closest('[data-pg]'); if (b) { state.page = +b.dataset.pg; load(); } });
   $('#pg-prev').addEventListener('click', () => { state.page--; load(); });
@@ -312,42 +315,23 @@
   // the other file of the pair: same supplier, name with the last part swapped (several suppliers can log identical file names)
   const pairOf = l => { const n = pairName(l.fileName); return n ? logs.find(x => x.fileName === n && x.supplierId === l.supplierId) : null; };
 
-  // prev / next: steps through the list the file was opened from (the current page of the table, or the timeline)
-  let nav = { list: [], i: -1 };
   let lastOpened = null;                               // key (supplier + file name) of the last opened file → its row stays marked
-  function openLog(l, list) {
+  function openLog(l) {
     if (!drawer.classList.contains('open')) lastFocus = document.activeElement;
-    nav = { list: list || [l], i: (list || [l]).indexOf(l) };
     show(l);
     drawer.classList.add('open');
-  }
-  // side by side, the other file of the pair is already on screen → prev / next skips it
-  function target(d) {
-    let j = nav.i + d;
-    if (split.on && nav.list[j] && nav.list[j] === split.other) j += d;
-    return j >= 0 && j < nav.list.length ? j : -1;
-  }
-  function step(d) {
-    const j = target(d); if (j < 0) return;
-    nav.i = j; show(nav.list[j]);
   }
   function markOpened(l) {
     lastOpened = fileKey(l);
     document.querySelectorAll('.is-last-opened').forEach(x => x.classList.remove('is-last-opened'));
-    document.querySelectorAll(`[data-file="${CSS.escape(fileKey(l))}"]`).forEach(x => {
-      x.classList.add('is-last-opened');
-      const call = x.closest('.tl-call.is-collapsed'); if (call) setCollapsed(call, false);   // stepping into a folded call opens it
-    });
     const i = pageRows.indexOf(l); if (i >= 0) $(`#rows tr[data-row="${i}"]`)?.classList.add('is-last-opened');
   }
   function show(l) {
     cur = l;
     markOpened(l);
-    const j = nav.list.indexOf(l); if (j >= 0) nav.i = j;   // the Request | Response switch may land on a file that's also in the list
 
     const pair = pairOf(l);
     split.on = split.want && !!pair && wide.matches;     // side by side needs the pair and a wide screen
-    split.other = split.on ? pair : null;
     // animate the width change only while the viewer is already open (opening straight into side by side just slides in)
     const wasOpen = drawer.classList.contains('open'), wasSplit = drawer.classList.contains('is-split');
     drawer.classList.toggle('can-resize', wasOpen);
@@ -358,14 +342,11 @@
       el.addEventListener('animationend', () => el.classList.remove('is-entering'), { once: true });
     }
 
-    $('#log-nav').hidden = nav.list.length < 2;
-    $('#nav-pos').textContent = nav.i >= 0 ? `${nav.i + 1} of ${nav.list.length}` : '';
-    $('#nav-prev').disabled = target(-1) < 0;
-    $('#nav-next').disabled = target(1) < 0;
-    $('#lm-txn').innerHTML = `<span class="txn-line"><button type="button" class="tbl-code" data-txn="${l.id}" data-tooltip="Transaction timeline">${l.id}</button><button type="button" class="txn-tl-btn" data-txn="${l.id}" data-tooltip="Transaction timeline" aria-label="Transaction timeline">${ICON_TL}</button></span>`;
+    $('#lm-txn').innerHTML = `<button type="button" class="tbl-code is-copy" data-copy="${l.id}" data-tooltip="Copy transaction ID" aria-label="Copy transaction ID ${l.id}">${l.id}</button>`;
     $('#lm-api').textContent = API_NAME[l.supplierId];
     $('#lm-file').innerHTML = fileLabel(l);              // one line, cut in the middle to fit (like the list); full name on hover
     $('#lm-file').dataset.tooltip = l.fileName;
+    $('#lm-file').setAttribute('aria-label', `Copy file name ${l.fileName}`);
     $('.log-meta .lm-file').hidden = split.on;           // side by side, each pane names its own file
 
     // with a Request | Response switch the title is just the operation; without one it says the type too
@@ -481,165 +462,22 @@
   const fitViewer = () => panes.forEach(p => { p.viewer.setMinimap(!phone.matches); p.setWrap(phone.matches); });
   fitViewer(); phone.addEventListener('change', fitViewer);
   const copy = (s, msg) => navigator.clipboard?.writeText(s).then(() => toast(msg), () => toast('Couldn’t copy'));
-  $('#lm-copy-file').addEventListener('click', () => copy(cur.fileName, 'File name copied'));
-  // from the viewer: open (or bring forward) the timeline of this file's transaction; the viewer closes so the timeline is on top
-  $('#lm-txn').addEventListener('click', e => {
-    const b = e.target.closest('[data-txn]'); if (!b) return;
-    closeDrawer(drawer);
-    if (!(tDrawer.classList.contains('open') && txnId === b.dataset.txn)) openTxn(b.dataset.txn);
-  });
-  $('#nav-prev').addEventListener('click', () => step(-1));
-  $('#nav-next').addEventListener('click', () => step(1));
-
-  /* ---------- simulated get-log (the real endpoint, as it is today + the new operationName / portal params) ----------
-     POST api/admin/hotel/api-log/get-log { id, includeSearch, operationName, from_date, to_date, page, per_page ≤ 100 }
-     → { data: [{ id, fileName, operationName, supplierId, createdOn }], totalRecord }   newest first. */
-  const PER_PAGE_MAX = 100;
-  function getLog(q) {
-    const per = Math.min(q.per_page || 20, PER_PAGE_MAX), page = q.page || 1;
-    const rows = logs.filter(l => (!q.id || l.id === q.id) && (q.includeSearch || !SEARCH_OPS.includes(l.operationName)) && (!q.operationName || l.operationName === q.operationName));
-    return new Promise(res => setTimeout(() => res({ data: rows.slice((page - 1) * per, page * per), totalRecord: rows.length, pageNo: page, pageSize: per }), 220 + Math.random() * 180));
-  }
-  /* ---------- transaction timeline ----------
-     Built only from get-log rows (max 100 per page, newest first), in two separate parts so Search never shares a page with the other calls:
-       base   id = the transaction, includeSearch: false                          → every call except Search
-       search id = the transaction, includeSearch: true, operationName: 'Search'  → the Search files
-     Both start together and load their first page (100). Each part has its own "Load more" for its next page.
-     The timeline is newest first (same order as the API): latest call on top, latest file on top inside each call,
-     so Load more adds older files at the bottom — below the oldest Search call loaded (Search), or under the timeline (other calls).
-     Calls = files grouped by call ID + operation (both in the file name). Duration = last file time − first file time
-     (shown once that part is fully loaded). */
-  const tDrawer = $('#txn-drawer');
-  let txnFiles = [], txnId = null, tl = null;
-  const durLabel = ms => ms < 60000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.floor(ms / 60000)} m ${Math.round(ms % 60000 / 1000)} s`;
-  const byTime = (a, b) => a.createdOn - b.createdOn || a.seq - b.seq;
-  function groupCalls(files, part) {
-    const calls = [];
-    files.slice().sort(byTime).forEach(f => {
-      const key = f.callId + '|' + f.operationName;
-      let c = calls.find(x => x.key === key);
-      if (!c) calls.push(c = { key, op: f.operationName, part, files: [] });
-      c.files.push(f);
-    });
-    return calls;
-  }
-  const newPart = query => ({ query, files: [], total: null, page: 0, loading: false });
-  const complete = part => part.total !== null && part.files.length >= part.total;
-  // next page of a part (page 1 on open)
-  function loadPart(part) {
-    if (part.loading || complete(part)) return;
-    const id = tl.id;
-    part.loading = true; if (part.page) renderTxn();
-    getLog({ ...part.query, id, page: part.page + 1, per_page: PER_PAGE_MAX }).then(r => {
-      if (!tl || tl.id !== id || txnId !== id) return;
-      part.files = part.files.concat(r.data); part.total = r.totalRecord; part.page++; part.loading = false;
-      renderTxn();
-    });
-  }
-  function openTxn(id) {
-    txnId = id;
-    lastFocus = document.activeElement;
-    $('#txn-id').innerHTML = `<span class="tbl-code">${esc(id)}</span>`;
-    $('#txn-body').innerHTML = `<div class="tl-skel" aria-busy="true">${[40, 70, 55, 80, 45, 65].map(w => `<span class="skeleton-bar" style="width:${w}%"></span>`).join('')}</div>`;
-    tDrawer.classList.add('open');
-    tl = { id, base: newPart({ includeSearch: false }), search: newPart({ includeSearch: true, operationName: 'Search' }), collapsed: new Set() };
-    loadPart(tl.base); loadPart(tl.search);
-  }
-  function fileRow(f) {
-    const sup = f.supplierId ? `<span class="tl-fsup">${esc(API_NAME[f.supplierId])}</span>` : '';
-    return `<li><button type="button" class="tl-file${fileKey(f) === lastOpened ? ' is-last-opened' : ''}" data-file="${esc(fileKey(f))}" data-tooltip="${esc(f.fileName)}">
-      <span class="tbl-mid">${fileLabel(f)}</span>${sup}<span class="tl-ftime">${fTime(f.createdOn)}</span></button></li>`;
-  }
-  const moreBtn = (part, key) => {
-    const left = part.total - part.files.length;
-    if (part.loading) return `<div class="tl-load"><span class="skeleton-bar"></span></div>`;
-    return left > 0 ? `<div class="tl-load"><button type="button" class="btn btn-secondary" data-more="${key}">Load more <span>· ${left.toLocaleString('en-US')} earlier ${key === 'search' ? 'Search ' : ''}file${left === 1 ? '' : 's'}</span></button></div>` : '';
-  };
-  function renderTxn() {
-    if (!tl || tl.base.total === null) return;           // the timeline appears once the first page of the other calls is in
-    const { base, search } = tl;
-    const calls = groupCalls(base.files, 'base');
-    if (search.total === null) {
-      // Search's first page not in yet: a placeholder before the SearchStream trace (same call ID), if this transaction searched
-      const k = calls.findIndex(c => c.op === 'SearchStream');
-      if (k >= 0) calls.splice(k, 0, { key: 'search-wait', op: 'Search', part: 'search', files: [], waiting: true });
-    } else {
-      groupCalls(search.files, 'search').forEach(sc => {   // Search calls sit by time, like any other call
-        const k = calls.findIndex(c => c.files.length && c.files[0].createdOn > sc.files[0].createdOn);
-        calls.splice(k < 0 ? calls.length : k, 0, sc);
-      });
-    }
-    // newest first, like the API: latest call on top, and inside each call its latest file on top — Load more adds older files at the bottom
-    calls.reverse();
-    const filesDesc = c => c.files.slice().reverse();
-    txnFiles = calls.flatMap(filesDesc);                 // prev / next order in the viewer = timeline order (loaded files)
-    const all = txnFiles.slice().sort(byTime), first = all[0], last = all[all.length - 1];
-    const lastSearch = calls.filter(c => c.part === 'search' && c.files.length).pop();   // the oldest Search call loaded so far
-    const supOf = c => { const ids = [...new Set(c.files.map(f => f.supplierId).filter(Boolean))]; return ids.length ? ids.map(i => API_NAME[i]).join(', ') : 'Common'; };
-    const scroll = $('#txn-body').scrollTop;
-    $('#txn-body').innerHTML = `
-      ${first ? `<div class="tl-meta"><span>Portal <b>${esc(first.ctx.portal)}</b></span><span>${fDate(first.createdOn)}</span><span>${+first.createdOn === +last.createdOn ? fTime(first.createdOn) : `${fTime(first.createdOn)} – ${fTime(last.createdOn)}`}</span></div>` : ''}
-      <ol class="tl">${calls.map(c => {
-        if (c.waiting) return `<li class="tl-call"><div class="tl-head"><span class="tl-time"></span><b>Search</b></div>
-          <ul class="tl-files" aria-busy="true">${[62, 48, 70].map(w => `<li class="tl-more"><span class="skeleton-bar" style="width:${w}%"></span></li>`).join('')}</ul></li>`;
-        const n = c.files.length, a = c.files[0].createdOn, b = c.files[n - 1].createdOn;
-        const done = complete(c.part === 'search' ? search : base);
-        const shut = tl.collapsed.has(c.key);
-        return `<li class="tl-call${shut ? ' is-collapsed' : ''}" data-call="${esc(c.key)}">
-          <button type="button" class="tl-head" aria-expanded="${!shut}"><span class="tl-time">${fTime(a)}</span><b>${esc(c.op)}</b><span class="tl-sup">${esc(supOf(c))}</span><span class="tl-count">${n.toLocaleString('en-US')} file${n === 1 ? '' : 's'}</span>${n > 1 && done ? `<span class="tl-dur" data-tooltip="First to last file of this call">${durLabel(b - a)}</span>` : ''}<svg class="tl-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <ul class="tl-files">${filesDesc(c).map(fileRow).join('')}</ul>
-          ${c === lastSearch ? moreBtn(search, 'search') : ''}
-        </li>`; }).join('')}</ol>
-      ${moreBtn(base, 'base')}`;
-    $('#txn-body').scrollTop = scroll;
-  }
-  // a call folds its files away (its header stays); kept across re-renders (Load more) while the timeline is open
-  function setCollapsed(li, shut) {
-    li.classList.toggle('is-collapsed', shut);
-    li.querySelector('.tl-head').setAttribute('aria-expanded', String(!shut));
-    tl.collapsed[shut ? 'add' : 'delete'](li.dataset.call);
-  }
-  $('#txn-body').addEventListener('click', e => {
-    const m = e.target.closest('[data-more]'); if (m) return loadPart(tl[m.dataset.more]);
-    const h = e.target.closest('.tl-head'); if (h) return setCollapsed(h.closest('.tl-call'), h.getAttribute('aria-expanded') === 'true');
-    const b = e.target.closest('.tl-file'); if (!b) return;
-    openLog(txnFiles.find(f => fileKey(f) === b.dataset.file), txnFiles);
-  });
-  // "Show in list": the list filtered to this transaction (what clicking the badge used to do)
-  // "Show in list": the list filtered to this transaction, showing everything the timeline covers —
-  // search logs on, dates = the transaction's first–last file date, Supplier / Operation type / Portal cleared;
-  // rows per page stay as the user has them (20 by default) — 100 is only for the timeline's own get-log requests
-  $('#txn-filter').addEventListener('click', () => {
-    const id = txnId, all = txnFiles.slice().sort(byTime);
-    const day = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
-    closeDrawer(tDrawer);
-    setFields({ txn: id, api: '', op: '', portal: '', search: true,
-      from: all.length ? day(all[0].createdOn) : new Date(today), to: all.length ? day(all[all.length - 1].createdOn) : new Date(today) });
-    bar.update();
-    applyFilters();
-  });
+  $('#lm-file').addEventListener('click', () => copy(cur.fileName, 'File name copied'));
+  $('#lm-file').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copy(cur.fileName, 'File name copied'); } });
+  $('#lm-txn').addEventListener('click', e => { const b = e.target.closest('[data-copy]'); if (b) copy(b.dataset.copy, 'Transaction ID copied'); });
 
   let lastFocus = null;
-  // the viewer sits on top of the timeline: Esc / ✕ / outside click close the top one only
+  // Esc / ✕ / outside click close the viewer
   function closeDrawer(d) {
-    d = d || (drawer.classList.contains('open') ? drawer : tDrawer.classList.contains('open') ? tDrawer : null);
-    if (!d || !d.classList.contains('open')) return;
+    d = d || drawer;
+    if (!d.classList.contains('open')) return;
     d.classList.remove('open');
-    if (d === tDrawer) txnId = null;
     if (!document.querySelector('.drawer.open')) lastFocus?.focus?.();
   }
   document.addEventListener('click', e => {
     const c = e.target.closest('[data-close]'); if (!c) return;
     closeDrawer(c.closest('.drawer') || c.previousElementSibling);
   });
-  // ↑ / ↓ step through files while the viewer is open (Alt+↑ / Alt+↓ also work inside the editor and fields)
-  document.addEventListener('keydown', e => {
-    if (!drawer.classList.contains('open') || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
-    const t = e.target instanceof Element ? e.target : document.activeElement;
-    const inField = t && t.closest && t.closest('input, select, textarea, .monaco-editor, .searchable-select');
-    if (inField && !e.altKey) return;
-    e.preventDefault(); e.stopPropagation(); step(e.key === 'ArrowUp' ? -1 : 1);
-  }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panes.some(p => p.viewer.findOpen()) && !document.querySelector('.searchable-select.open, .flatpickr-calendar.open')) closeDrawer(); });
 
   SearchableSelect.init();

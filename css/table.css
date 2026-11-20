@@ -141,6 +141,9 @@
 button.tbl-code { border: 0; cursor: pointer; font-family: inherit; }
 button.tbl-code:hover { background: #e2e3f8; text-decoration: underline; }
 button.tbl-code:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 2px; }
+/* a badge that copies its value (no link look) */
+button.tbl-code.is-copy { cursor: copy; }
+button.tbl-code.is-copy:hover { text-decoration: none; }
 /* action buttons: bordered squares, fill on hover, tooltip from data-tip */
 .tbl-actions { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .tbl-action {
@@ -309,20 +312,14 @@ button.tbl-code:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 2px;
 /* ROW LINK — a row that opens its record when clicked (tr.row-link); the last opened one stays marked (tr.is-last-opened) */
 .table tbody tr.row-link { cursor: pointer; }
 /* the operation name opens the file (the whole row does too); the button is the keyboard / screen-reader way in */
-button.tbl-open { all: unset; cursor: pointer; font-weight: 600; color: var(--tbl-text); width: fit-content; border-radius: 4px; }
-tr.row-link:hover button.tbl-open, button.tbl-open:hover { text-decoration: underline; text-underline-offset: 3px; }
-button.tbl-open:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-/* transaction ID badge + its timeline button (Hotel API Logs list and viewer) */
+.table tbody tr.row-link:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+/* transaction ID badge (Hotel API Logs) */
 .txn-line { display: inline-flex; align-items: center; gap: 4px; }
-.txn-tl-btn { display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 1px solid #d6daf7; border-radius: 6px; background: #fff; color: #2b3ed1; cursor: pointer; }
-.txn-tl-btn:hover { background: #2b3ed1; border-color: #2b3ed1; color: #fff; }
-.txn-tl-btn:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 2px; }
-.txn-line small + .txn-tl-btn { width: 22px; height: 22px; }
-/* copy-to-clipboard icon after a value (transaction ID, file name) */
-.tbl-copy { display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 5px; background: none; color: #8a8aa3; cursor: pointer; }
-.tbl-copy:hover { background: #ececfa; color: #2b3ed1; }
-.tbl-copy:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 1px; }
-/* file name (cut to the column width) + its copy button on one line */
+/* a value that copies itself on click (file name) */
+.tbl-mid.is-copy { cursor: copy; border-radius: 4px; }
+.tbl-mid.is-copy:hover { color: #2b3ed1; }
+.tbl-mid.is-copy:focus-visible { outline: 2px solid #2b3ed1; outline-offset: 1px; }
+/* file name, cut to the column width */
 .file-line { display: flex; align-items: center; gap: 2px; width: 0; min-width: 100%; }   /* takes the cell's width, never widens the column */
 .file-line .tbl-mid { flex: 0 1 auto; width: auto; min-width: 0; }                        /* shrinks (cut in the middle) only when it doesn't fit */
 .table tbody tr.is-last-opened > * { background-color: #eef0ff !important; box-shadow: inset 0 1px 0 #d6daf7, inset 0 -1px 0 #d6daf7; }

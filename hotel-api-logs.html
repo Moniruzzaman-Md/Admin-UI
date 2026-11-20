@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="css/shell.css?v=30">
 <link rel="stylesheet" href="css/components.css?v=48">
 <link rel="stylesheet" href="css/skeleton.css?v=26">
-<link rel="stylesheet" href="css/table.css?v=70">
+<link rel="stylesheet" href="css/table.css?v=74">
 <link rel="stylesheet" href="css/select.css?v=26">
 <link rel="stylesheet" href="css/datepicker.css?v=2">
 <style>
@@ -29,7 +29,6 @@
   .log-meta .lm-sup { color: var(--text); font-weight: 600; white-space: nowrap; }
   .log-meta .lm-file { display: inline-flex; align-items: center; gap: 4px; flex: 1 1 260px; min-width: 0; }
   .log-meta .lm-file .tbl-mid { flex: 0 1 auto; width: auto; min-width: 0; color: var(--text-2); }
-  .log-meta .lm-file .icon-btn { width: 24px; height: 24px; flex: none; }
   #log-drawer .code-view-bar { padding: 6px 8px; }
   .cv-panes { flex: 1; min-height: 0; display: flex; gap: 12px; }
   #log-drawer .code-view { flex: 1 1 0; min-width: 0; }
@@ -45,57 +44,6 @@
   .cv-kind { font-size: var(--fs-sm); font-weight: 700; margin-right: 2px; cursor: default; }
   .cv-kind.is-request { color: #1d4ed8; } .cv-kind.is-response { color: #15803d; }
   @media (max-width: 1099.98px) { #sw-kind .sw-both { display: none; } }
-  /* the viewer opens on top of the timeline */
-  #log-drawer { z-index: 120; } #log-drawer + .drawer-backdrop { z-index: 110; }
-  .log-nav { display: flex; align-items: center; gap: 2px; margin-right: 4px; }
-  .log-nav[hidden] { display: none; }
-  .log-nav-pos { min-width: 54px; text-align: center; font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
-  .log-nav .icon-btn:disabled { opacity: .35; cursor: default; background: none; }
-  /* transaction timeline */
-  #txn-drawer .drawer-head { align-items: center; padding: 12px 16px 12px 20px; }
-  #txn-drawer .drawer-head .head-main { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
-  #txn-drawer .drawer-head .btn { height: 32px; }
-  #txn-drawer .drawer-body { padding: 12px 20px 20px; }
-  .tl-meta { display: flex; flex-wrap: wrap; align-items: center; font-size: var(--fs-sm); color: var(--text-2); margin-bottom: 14px; }
-  .tl-meta > * + * { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--border-strong); }
-  .tl-meta b { color: var(--text); font-weight: 600; }
-  .tl { list-style: none; margin: 0; padding: 0; position: relative; }
-  .tl::before { content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 2px; background: #e4e6f7; }
-  .tl-call { position: relative; padding: 0 0 14px 24px; }
-  .tl-call::before { content: ''; position: absolute; left: 0; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #2b3ed1; box-sizing: border-box; }
-  .tl-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-  /* a call's header folds its files: whole header is the toggle, chevron on the right, file count while folded */
-  button.tl-head { width: 100%; margin: 0 0 6px; padding: 2px 4px 2px 0; border: 0; border-radius: var(--radius-sm); background: none; font: inherit; text-align: left; cursor: pointer; }
-  button.tl-head:hover .tl-chev, button.tl-head:focus-visible .tl-chev { color: var(--text); }
-  button.tl-head:focus-visible { outline: 2px solid #9ec5fe; outline-offset: 2px; }
-  .tl-head .tl-chev { flex: none; align-self: center; margin-left: auto; color: var(--text-3); transition: transform .15s; }
-  .tl-head .tl-dur ~ .tl-chev { margin-left: 0; }
-  .tl-call:not(.is-collapsed) .tl-head .tl-count { display: none; }
-  .tl-call.is-collapsed .tl-chev { transform: rotate(-90deg); }
-  .tl-call.is-collapsed .tl-files, .tl-call.is-collapsed .tl-load { display: none; }
-  .tl-call.is-collapsed button.tl-head { margin-bottom: 0; }
-  .tl-head .tl-time { font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; min-width: 78px; }
-  .tl-head b { font-size: var(--fs-md); color: var(--text); }
-  .tl-head .tl-sup { font-size: var(--fs-sm); color: var(--text-2); }
-  .tl-head .tl-dur { margin-left: auto; padding: 1px 8px; border-radius: 999px; background: #ececfa; color: #10108a; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .tl-files { list-style: none; margin: 0 0 0 88px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-  .tl-files li + li { border-top: 1px solid var(--border); }
-  .tl-file { display: flex; align-items: center; gap: 12px; width: 100%; padding: 6px 10px; border: 0; background: #fff; font: 12px var(--font); color: var(--text-2); text-align: left; cursor: pointer; }
-  .tl-file:hover, .tl-file:focus-visible { background: #f3f4fd; outline: 0; }
-  .tl-file.is-last-opened { background: #eef0ff; box-shadow: inset 3px 0 0 #2b3ed1; }
-  .tl-file .tbl-mid { flex: 1 1 auto; width: auto; min-width: 0; }
-  .tl-file .tl-fsup { flex: none; color: var(--text-2); font-weight: 500; }
-  .tl-file .tl-ftime { flex: none; color: var(--text-3); font-variant-numeric: tabular-nums; }
-  .tl-head .tl-count { padding: 1px 8px; border-radius: 999px; background: #f1f1f6; color: #4a4a66; font-size: 11px; font-weight: 700; }
-  .tl-more { padding: 9px 10px; display: flex; align-items: center; background: #fbfbfe; }
-  .tl-load { margin: 4px 0 0 24px; }
-  .tl-call .tl-load { margin: 6px 0 0 88px; }
-  .tl-load .btn { height: 28px; font-size: var(--fs-sm); }
-  .tl-load .btn span { color: var(--text-3); font-weight: 400; }
-  .tl-load .skeleton-bar { display: block; width: 220px; height: 28px; border-radius: var(--radius-sm); background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }
-  .tl-more .skeleton-bar { display: block; height: 11px; border-radius: 999px; background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }
-  .tl-skel { display: flex; flex-direction: column; gap: 16px; }
-  .tl-skel .skeleton-bar { display: block; height: 11px; border-radius: 999px; background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }
   .code-view-bar .searchable-select:has(.cv-format) { width: 96px; }
   .code-view-bar .searchable-select:has(.cv-format) .input { height: 32px; font-size: var(--fs-sm); font-weight: 600; }
   .ph-only { display: none; }
@@ -124,32 +72,14 @@
     .skeleton .log-table td:nth-child(4) .skeleton-bar { width: 56px !important; }
 
     /* drawers: tighter padding; header items wrap onto a second row */
-    #txn-drawer .drawer-head, #log-drawer .drawer-head { flex-wrap: wrap; row-gap: 8px; padding: 10px 10px 10px 16px; }
-    #txn-drawer .drawer-body { padding: 10px 14px 16px; }
+    #log-drawer .drawer-head { flex-wrap: wrap; row-gap: 8px; padding: 10px 10px 10px 16px; }
     #log-drawer .drawer-body { padding: 10px 12px 12px; gap: 8px; }
 
-    /* timeline header: Transaction · Show in list · ✕, then the ID on its own row */
-    #txn-drawer .drawer-head .head-main { display: contents; }
-    #txn-title { order: 1; flex: 1; }
-    #txn-filter { order: 2; }
-    #txn-drawer .drawer-head [data-close] { order: 3; }
-    #txn-id { order: 4; flex-basis: 100%; }
-    /* timeline: no indent under the time, so file names get the width */
-    .tl-head { gap: 2px 8px; }
-    .tl-head b { order: 1; } .tl-head .tl-sup { order: 2; }
-    .tl-head .tl-time { order: 3; min-width: 0; margin-left: auto; }
-    .tl-head .tl-dur { order: 4; margin-left: 0; }
-    .tl-head .tl-count { order: 2; }
-    .tl-head .tl-chev { order: 5; margin-left: 0; }
-    .tl-files, .tl-call .tl-load { margin-left: 0; }
-    .tl-file { gap: 8px; padding: 6px 8px; }
-
-    /* viewer header: title + ✕, then Request | Response and prev / next */
+    /* viewer header: title + ✕, then Request | Response */
     #log-drawer .drawer-head .head-main { display: contents; }
     #log-title { order: 1; flex: 1 1 calc(100% - 48px); }
     #log-drawer .drawer-head [data-close] { order: 2; }
     #sw-kind { order: 3; }
-    #log-nav { order: 4; margin: 0 0 0 auto; }
     /* viewer bar on one row: Find, Copy, Download become icon buttons */
     #log-drawer .code-view-bar { gap: 4px; padding: 6px; flex-wrap: nowrap; }
     .code-view-bar .searchable-select:has(.cv-format) { width: 76px; flex: none; }
@@ -233,17 +163,6 @@
   </section>
 </main>
 
-<!-- Transaction timeline drawer -->
-<aside class="drawer drawer-wide" id="txn-drawer" role="dialog" aria-modal="true" aria-labelledby="txn-title">
-  <div class="drawer-head">
-    <div class="head-main"><h2 id="txn-title">Transaction</h2><span id="txn-id"></span></div>
-    <button class="btn btn-secondary" type="button" id="txn-filter">Show in list</button>
-    <button class="icon-btn" type="button" data-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-  </div>
-  <div class="drawer-body" id="txn-body"></div>
-</aside>
-<div class="drawer-backdrop" data-close></div>
-
 <!-- Log viewer drawer -->
 <aside class="drawer drawer-wide" id="log-drawer" role="dialog" aria-modal="true" aria-labelledby="log-title">
   <div class="drawer-head">
@@ -251,19 +170,13 @@
       <h2 id="log-title">Log</h2>
       <div class="seg" role="group" aria-label="Request or response" id="sw-kind" hidden></div>
     </div>
-    <div class="log-nav" id="log-nav">
-      <button class="icon-btn" type="button" id="nav-prev" data-tooltip="Previous file (↑)" aria-label="Previous file"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
-      <span class="log-nav-pos" id="nav-pos"></span>
-      <button class="icon-btn" type="button" id="nav-next" data-tooltip="Next file (↓)" aria-label="Next file"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-    </div>
     <button class="icon-btn" type="button" data-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
   </div>
   <div class="drawer-body">
     <div class="log-meta">
       <span id="lm-txn"></span>
       <span class="lm-sup" id="lm-api" data-tooltip="Supplier" tabindex="0"></span>
-      <span class="lm-file"><span class="tbl-mid" id="lm-file" tabindex="0"></span>
-        <button class="icon-btn" type="button" id="lm-copy-file" data-tooltip="Copy file name" aria-label="Copy file name"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg></button></span>
+      <span class="lm-file"><span class="tbl-mid is-copy" id="lm-file" role="button" tabindex="0"></span></span>
     </div>
 
     <!-- one content pane, or Request | Response side by side (built by js/hotel-api-logs.js) -->
@@ -282,6 +195,6 @@
 <script src="js/empty-state.js?v=3"></script>
 <script src="js/table-loading.js?v=1"></script>
 <script src="js/code-viewer.js?v=6"></script>
-<script src="js/hotel-api-logs.js?v=57"></script>
+<script src="js/hotel-api-logs.js?v=63"></script>
 </body>
 </html>
