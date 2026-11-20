@@ -9,7 +9,7 @@
      plain text (anything else)                         → as is
    loading(): skeleton over the editor while the file is being fetched (also shown while Monaco itself loads).
    error(message, onRetry): message + "Try again" in place of the content.
-   Read-only, folding, minimap (setMinimap(on)), VS Code find (Ctrl+F or find()), word wrap via setWrap().
+   Read-only, folding, no minimap, VS Code find (Ctrl+F or find()), word wrap via setWrap().
    collapseAll() folds every block but the outermost; expandAll() unfolds everything. */
 (function () {
   const VS = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs';
@@ -71,7 +71,7 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
   function create(host) {
-    let editor = null, model = null, wrap = false, minimap = true, pending = null, current = { text: '' }, raw = '';
+    let editor = null, model = null, wrap = false, pending = null, current = { text: '' }, raw = '';
     let mode = 'loading', err = null, overlay = null;   // mode: 'loading' | 'error' | null (content showing)
     host.classList.add('cv-host');
     // the overlay sits on top of the editor: skeleton while loading (file or Monaco), message on error
@@ -104,7 +104,7 @@
           readOnly: true, domReadOnly: true, theme: 'vs', automaticLayout: true,
           // VS Code's own defaults (font stack, 14px); css/components.css protects this font from the portal's *{font-family}
           fontFamily: "Consolas, 'Courier New', Menlo, Monaco, 'Droid Sans Mono', monospace", fontSize: 14, lineNumbersMinChars: 4, scrollBeyondLastLine: false, renderLineHighlight: 'none',
-          minimap: { enabled: minimap, renderCharacters: false }, folding: true, showFoldingControls: 'always',
+          minimap: { enabled: false }, folding: true, showFoldingControls: 'always',
           wordWrap: wrap ? 'on' : 'off', stickyScroll: { enabled: true }, contextmenu: false,
           overviewRulerBorder: false, padding: { top: 8 },
         });
@@ -129,7 +129,6 @@
       },
       get format() { return current.format; },
       get ext() { return current.ext; },
-      setMinimap(on) { minimap = on; if (editor) editor.updateOptions({ minimap: { enabled: on } }); },
       setWrap(on) { wrap = on; if (editor) editor.updateOptions({ wordWrap: on ? 'on' : 'off' }); },
       find() { if (editor) { editor.focus(); editor.getAction('actions.find').run(); } },
       // collapse every block except the outermost one (so the top-level keys / elements stay visible); expand all again

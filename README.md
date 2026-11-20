@@ -76,4 +76,5 @@ Use dummy data only in published pages - no real customer names, booking refs, e
 |---|---|---|---|
 | [Hotel APIs](hotel-apis.html) | Whole page (list, filters, create/edit, history) | Draft | 2026-11-17 |
 | [Default Markup (Hotel)](markup-commission.html) | Whole page (list, filters, create/edit, delete, history) | Draft | 2026-11-18 |
+| [Hotel Logs](hotel-logs.html) | Whole page (filters, list, log viewer) | Draft | 2026-11-20 |
 | [Hotel Api Logs](hotel-api-logs.html) | Whole page (filters, list, log viewer) | Draft | 2026-11-20 |

@@ -462,9 +462,9 @@
     show(pairOf(cur));
   });
 
-  // phones: every column counts — no minimap, Wrap on (the switch still turns it off)
+  // phones: every column counts — Wrap on (the switch still turns it off)
   const phone = matchMedia('(max-width: 640px)');
-  const fitViewer = () => panes.forEach(p => { p.viewer.setMinimap(!phone.matches); p.setWrap(phone.matches); });
+  const fitViewer = () => panes.forEach(p => { p.setWrap(phone.matches); });
   fitViewer(); phone.addEventListener('change', fitViewer);
   // success shows on the clicked element itself (green + tick for 1.5 s, same size), no toast; a failure still toasts
   function flashCopied(el) {

@@ -67,7 +67,7 @@ Search in the live logs (checked 2026-11-20): `Common-Search-…-Request` first,
     - Side by side stays on while the viewer is open; a file without a pair (e.g. a Trace) shows alone. Picking Request or Response goes back to one file.
     - Below 1100px the option is hidden and the single view shows; widening the window brings side by side back if it was on.
   - Finding the other file: `get-log` with `id` = the transaction (all dates, `includeSearch: true`) and match on `fileName`, or fetch it by name via `download`. No new endpoint needed.
-- **Content viewer: Monaco** (the VS Code editor, read-only, VS Code light theme and font). Loaded only when a log is first opened (lazy; ~few MB, then cached). Folding, minimap, sticky headers, VS Code find (Find button or Ctrl+F).
+- **Content viewer: Monaco** (the VS Code editor, read-only, VS Code light theme and font). Loaded only when a log is first opened (lazy; ~few MB, then cached). Folding, sticky headers (no minimap), VS Code find (Find button or Ctrl+F).
 - Content comes from `download` (the response is a JSON-encoded string → decode once to get the raw file). The **format is detected from the content** (the API doesn't say):
   - starts with `{` / `[` and parses → **JSON**, shown indented 2 spaces (files are stored on one line);
   - `<!DOCTYPE html` / `<html` → **HTML**, shown as is;
@@ -99,7 +99,7 @@ Tablet and desktop are unchanged.
 - **Log viewer**:
   - Header row 1: operation name + ✕; row 2: Request | Response switch.
   - Find, Copy and Download are icon buttons, so the bar stays on one row.
-  - **Wrap starts on** and the minimap is off, so the content uses the full width without scrolling sideways. The Wrap switch still turns it off.
+  - **Wrap starts on**, so the content uses the full width without scrolling sideways. The Wrap switch still turns it off.
 
 ## Changelog
 
@@ -153,3 +153,4 @@ Tablet and desktop are unchanged.
 - 2026-11-20 — viewer Copy shows success on the button (tick + green, width unchanged), no toast.
 - 2026-11-20 — transaction ID and file name show copy success in place (green + tick), no toast.
 - 2026-11-20 — transaction ID and file name copy success reads "Copied ✓".
+- 2026-11-20 — viewer: minimap (code overview on the right) removed on every screen size.

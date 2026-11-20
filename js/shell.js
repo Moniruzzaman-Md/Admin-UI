@@ -18,6 +18,7 @@
       { label: 'Markup', icon: 'sliders-h', page: 'markup-commission', href: 'markup-commission.html' },
     ] },
     { label: 'Logs', icon: 'user-lock', items: [
+      { label: 'Hotel', icon: 'address-book', page: 'hotel-logs', href: 'hotel-logs.html' },
       { label: 'Hotel Api', icon: 'address-book', page: 'hotel-api-logs', href: 'hotel-api-logs.html' },
     ] },
   ];
