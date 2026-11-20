@@ -10,19 +10,21 @@ What this page lists: the agents' calls to our hotel API. One row = one call (`t
 
 Shared filter bar, same as Hotel Api Logs: main search box · **Search** · **Filters** (count of set filters) · **Reset**; the other fields sit in the collapsible **Filters** panel.
 - Fields apply only on **Search** (or Enter in a text box), then the list goes to page 1. **Reset** restores the defaults and reloads right away.
-- While the panel is closed, each set panel field shows as a chip ("Agent: skyway ×"); × clears it (applies on the next Search).
+- While the panel is closed, each set panel field shows as a chip ("Client: skyway ×"); × clears it (applies on the next Search).
 - Row: **Transaction ID** -> `unique_transaction_id`.
-- Panel: **From date** / **To date** -> `from_date` / `to_date` (default today / today, no future dates, To can't be before From) · **Agent** (text, name or SL number) -> `agent_sl_or_name` · **Operation type** (searchable dropdown) -> **new param** (e.g. `type`). Empty = all; then the 10 operations seen in the live log: search, paginated_search, availability, reprice, cancellation_policy, prebook, booking, booking_details, v2_cancellation_charges, v2_cancel_booking.
+- Panel: **From date** / **To date** -> `from_date` / `to_date` (default today / today, no future dates, To can't be before From) · **Client** (text, client name or ID) -> `agent_sl_or_name` · **Operation type** (searchable dropdown) -> **new param** (e.g. `type`). Empty = all; then the 10 operations seen in the live log: search, paginated_search, availability, reprice, cancellation_policy, prebook, booking, booking_details, v2_cancellation_charges, v2_cancel_booking. · **Portal** (searchable dropdown) -> **new param** (e.g. `portal`). Empty = all; then B2B, B2C, B2C APP, API.
+- "Client" is the agent: the label is Client on this page (filter, columns, viewer); the API fields stay `agent_*`.
 - A date counts as set when it isn't today.
 
 ## List
 
-Reusable table. Columns: **#** | DATE & TIME | AGENT | TRANSACTION ID | OPERATION | IP ADDRESS. No Action column. Newest first (API order).
+Reusable table. Columns: **#** | DATE & TIME | PORTAL | CLIENT NAME | CLIENT ID | TRANSACTION ID | OPERATION | IP ADDRESS. Every row is one line on desktop and tablet. No Action column. Newest first (API order).
 
 - **#** = position in the whole filtered result.
-- **Date & Time**: `date` in local time, date line `20-Nov-2026`, time line `06:15:11 PM`.
-- **Agent**: `agent_name`, with `agent_sl_no` under it (the two live columns merged). Empty agent (the system's own calls, e.g. booking_details from 127.0.0.1, and some calls the API couldn't match to an agent) -> `—`.
+- **Date & Time**: `date` in local time, `20-Nov-2026 06:15:11 PM` on one line.
+- **Client Name**: `agent_name`. **Client ID**: `agent_sl_no` (the live "Agent SL No."). Empty client (the system's own calls, e.g. booking_details from 127.0.0.1, and some calls the API couldn't match to an agent) -> `—` in both.
 - **Transaction ID**: badge; clicking it copies the ID (doesn't open the row).
+- **Portal** (new column): where the transaction came from: B2B, B2C, B2C APP, API (and any other channel the system has). Same value on every row of a transaction. **Needs a new field on each log row** (e.g. `portal`, taken from the request that started the transaction); `search-log` doesn't return it today.
 - **Operation**: `type` as is.
 - **IP Address**: `ip`.
 - **Clicking a row** (anywhere except the badge) opens the call in the viewer. Keyboard: Tab to the row, Enter / Space. Selecting text in a row doesn't open it.
@@ -34,7 +36,7 @@ Reusable table. Columns: **#** | DATE & TIME | AGENT | TRANSACTION ID | OPERATIO
 ## Log viewer (drawer, replaces the Request / Response modals)
 
 - Header: the operation (`type`) + **Request | Response | Side by side** switch.
-- Info line: Transaction ID (click copies) | agent name + SL ("No agent" when empty) | IP.
+- Info line: Transaction ID (click copies) | client name + ID ("No client" when empty) | IP.
 - Opens on **Response**. The switch choice is kept for the next row opened during this visit (pick Request once, the next call opens on Request).
 - **Side by side** (screens 1100px+ wide only): Request left, Response right, each in its own pane with its own bar.
 - **No request file** (`request_file_path` empty, seen live): Request and Side by side are disabled for that call; it shows the Response.
@@ -47,10 +49,14 @@ Reusable table. Columns: **#** | DATE & TIME | AGENT | TRANSACTION ID | OPERATIO
 
 ## Phones (≤ 640px wide)
 
-- List rows become cards: operation + IP / transaction ID / agent + date, time. Tapping a card opens the viewer.
+- List rows become cards: operation + IP / transaction ID + portal / client name + client ID / date, time. Tapping a card opens the viewer.
 - Viewer: title + ✕, then the switch; bar buttons become icons; Wrap on.
 
 ## Changelog
 
 - 2026-11-20 — first version.
 - 2026-11-20 — viewer: minimap removed.
+- 2026-11-20 — Portal shown under the transaction ID (new field).
+- 2026-11-20 — list rows on one line; separate columns Agent Name, Agent ID, Transaction ID, Portal.
+- 2026-11-20 — filters: Transaction ID · From / To date · Client (name or ID) · Operation type · Portal (new); "Agent" renamed "Client" (filter, columns, viewer).
+- 2026-11-20 — Portal column moved before Client Name.

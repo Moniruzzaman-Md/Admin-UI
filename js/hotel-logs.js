@@ -16,6 +16,7 @@
   const IPS = ['203.0.113.24', '203.0.113.190', '198.51.100.17', '198.51.100.186', '192.0.2.74'];
   const HOTELS = ['Harbour View Hostel', 'Lagoon Bay Resort', 'Old Town Boutique Hotel', 'Riverside Suites', 'Palm Grove Inn', 'Skyline City Hotel', 'Garden Court Hotel', 'Seabreeze Residence'];
   const CITIES = [['Phuket', 'Thailand', 'TH'], ['Kuala Lumpur', 'Malaysia', 'MY'], ['Bali', 'Indonesia', 'ID'], ['Bangkok', 'Thailand', 'TH']];
+  const PORTALS = ['B2B', 'B2B', 'B2C', 'B2C APP', 'API'];   // where the transaction came from (weighted)
   const ROOMS = ['Dormitory - Female Only', 'Deluxe Double Room', 'Superior Twin Room', 'Family Suite'];
   // the operations as the live log names them; the system's own calls (booking_details) have no agent and come from 127.0.0.1
   const OPS = ['search', 'paginated_search', 'availability', 'reprice', 'cancellation_policy', 'prebook', 'booking', 'booking_details', 'v2_cancellation_charges', 'v2_cancel_booking'];
@@ -52,7 +53,7 @@
       const start = new Date(today); start.setDate(start.getDate() - d); start.setHours(8 + Math.floor(rnd() * 10), Math.floor(rnd() * 60), Math.floor(rnd() * 60));
       if (start > new Date()) start.setTime(Date.now() - (i + 1) * 1800e3);
       const a = rnd() < .12 ? null : pick(AGENTS);           // some agent calls come in without a resolved agent (as live)
-      journey('NZH' + digits(15), a, pick(IPS), start, { hotel: pick(HOTELS), hotelId: String(800000 + Math.floor(rnd() * 99999)), city: pick(CITIES), room: pick(ROOMS),
+      journey('NZH' + digits(15), a, pick(IPS), start, { portal: pick(PORTALS), hotel: pick(HOTELS), hotelId: String(800000 + Math.floor(rnd() * 99999)), city: pick(CITIES), room: pick(ROOMS),
         nights: 1 + Math.floor(rnd() * 4), price: +(30 + rnd() * 900).toFixed(2), guest: pick([['MRS', 'NADIA', 'RAHMAN', 'Female'], ['MR', 'AARON', 'TAN', 'Male'], ['MS', 'LINA', 'WONG', 'Female']]) });
     }
   }
@@ -108,17 +109,19 @@
 
   /* ---------- filters + table ---------- */
   // applied filters (what the list shows); the fields are applied only on Search / Enter
-  const DEFAULTS = () => ({ txn: '', agent: '', op: '', from: new Date(today), to: new Date(today) });
+  const DEFAULTS = () => ({ txn: '', agent: '', op: '', portal: '', from: new Date(today), to: new Date(today) });
   const state = Object.assign(DEFAULTS(), { page: 1, size: 20 });
-  const fOp = $('#f-op'), fAgent = $('#f-agent');
+  const fOp = $('#f-op'), fAgent = $('#f-client'), fPortal = $('#f-portal');
   OPS.forEach(o => fOp.add(new Option(o, o)));
+  ['B2B', 'B2C', 'B2C APP', 'API'].forEach(p => fPortal.add(new Option(p, p)));
 
   const filtered = () => {
     const from = +state.from, to = +state.to + 864e5 - 1, q = state.txn.trim().toUpperCase(), ag = state.agent.trim().toLowerCase();
     return logs.filter(l => l.date >= from && l.date <= to
       && (!q || l.txn.includes(q))
       && (!ag || (l.agent && (l.agent[0].toLowerCase().includes(ag) || l.agent[1].includes(ag))))
-      && (!state.op || l.type === state.op));
+      && (!state.op || l.type === state.op)
+      && (!state.portal || l.ctx.portal === state.portal));
   };
 
   function pageList(page, pages) {
@@ -141,12 +144,14 @@
       <tr class="row-link${l.id === lastOpened ? ' is-last-opened' : ''}" data-row="${i}" tabindex="0" aria-label="Open ${esc(l.type)} log">
         <td class="tbl-num">${start + i + 1}</td>
         <td><span class="tbl-stack"><span>${fDate(l.date)}</span><small>${fTime(l.date)}</small></span></td>
-        <td>${l.agent ? `<span class="tbl-stack"><span>${esc(l.agent[0])}</span><small>${l.agent[1]}</small></span>` : '<span class="tbl-muted">—</span>'}</td>
+        <td>${esc(l.ctx.portal)}</td>
+        <td>${l.agent ? esc(l.agent[0]) : '<span class="tbl-muted">—</span>'}</td>
+        <td>${l.agent ? l.agent[1] : '<span class="tbl-muted">—</span>'}</td>
         <td>${txnBadge(l.txn)}</td>
         <td><span class="tbl-strong">${esc(l.type)}</span></td>
         <td>${l.ip}</td>
       </tr>`).join('')
-      : EmptyState.row(6);
+      : EmptyState.row(8);
 
     $('#pg-range').textContent = list.length ? `${start + 1}–${start + pageRows.length}` : '0';
     $('#pg-total').textContent = list.length.toLocaleString('en-US');
@@ -166,11 +171,11 @@
   // a query in the real portal → skeleton first
   const load = () => TableLoading.run($('.tbl-area'), render);
   function applyFilters() {
-    Object.assign(state, { txn: $('#f-txn').value.trim(), agent: fAgent.value.trim(), op: fOp.value, from: new Date(draft.from), to: new Date(draft.to), page: 1 });
+    Object.assign(state, { txn: $('#f-txn').value.trim(), agent: fAgent.value.trim(), op: fOp.value, portal: fPortal.value, from: new Date(draft.from), to: new Date(draft.to), page: 1 });
     load();
   }
   function setFields(v) {
-    $('#f-txn').value = v.txn; fAgent.value = v.agent; fOp.value = v.op;
+    $('#f-txn').value = v.txn; fAgent.value = v.agent; fOp.value = v.op; fPortal.value = v.portal;
     draft.from = v.from; draft.to = v.to;
     fromField.setMax(v.to); toField.setMin(v.from); fromField.set(v.from); toField.set(v.to);
   }
@@ -179,8 +184,9 @@
     fields: [
       { label: 'From', isSet: () => +draft.from !== +today, text: () => fmtDay(draft.from), clear: () => { draft.from = new Date(today); fromField.set(draft.from); toField.setMin(draft.from); } },
       { label: 'To', isSet: () => +draft.to !== +today, text: () => fmtDay(draft.to), clear: () => { draft.to = new Date(today); toField.set(draft.to); fromField.setMax(draft.to); } },
-      { label: 'Agent', isSet: () => !!fAgent.value.trim(), text: () => fAgent.value.trim(), clear: () => { fAgent.value = ''; } },
+      { label: 'Client', isSet: () => !!fAgent.value.trim(), text: () => fAgent.value.trim(), clear: () => { fAgent.value = ''; } },
       { label: 'Operation type', isSet: () => !!fOp.value, text: () => fOp.value, clear: () => { fOp.value = ''; } },
+      { label: 'Portal', isSet: () => !!fPortal.value, text: () => fPortal.value, clear: () => { fPortal.value = ''; } },
     ],
     onSearch: applyFilters,
     onReset: () => { setFields(DEFAULTS()); applyFilters(); },
@@ -264,7 +270,7 @@
 
     $('#log-title').textContent = l.type;
     $('#lm-txn').innerHTML = txnBadge(l.txn);
-    $('#lm-agent').innerHTML = l.agent ? `${esc(l.agent[0])}<small>${l.agent[1]}</small>` : '<span class="tbl-muted">No agent</span>';
+    $('#lm-agent').innerHTML = l.agent ? `${esc(l.agent[0])}<small>${l.agent[1]}</small>` : '<span class="tbl-muted">No client</span>';
     $('#lm-ip').textContent = l.ip;
     $('#sw-kind').hidden = false;
     $('#sw-kind').innerHTML = ['Request', 'Response', 'Both'].map(k => {

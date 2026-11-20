@@ -23,7 +23,7 @@
   #log-drawer .drawer-head h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 3em; }
   #log-drawer .seg button { height: 26px; padding: 0 10px; }
   #log-drawer .drawer-body { display: flex; flex-direction: column; gap: 10px; overflow: hidden; padding: 12px 20px 16px; }
-  /* one line: Transaction ID | Agent | IP */
+  /* one line: Transaction ID | Client | IP */
   .log-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 0; font-size: var(--fs-sm); color: var(--text-2); }
   .log-meta > * + * { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--border-strong); }
   .log-meta .lm-agent { color: var(--text); font-weight: 600; white-space: nowrap; }
@@ -52,24 +52,30 @@
   .cv-copy.is-copied .cv-ok { display: block; }
   .cv-copy.is-copied .btn-label, .cv-copy.is-copied .ph-only { visibility: hidden; }
   .tbl-muted { color: var(--text-2); }
+  /* single-line rows (desktop + tablet): each cell's two values side by side instead of stacked */
+  @media (min-width: 641px) {
+    .log-table .tbl-stack { flex-direction: row; align-items: center; gap: 8px; white-space: nowrap; }
+  }
 
   /* ---------- phones (<= 640px) ---------- */
   @media (max-width: 640px) {
-    /* list: the page scrolls; each row is a card: operation + IP / transaction ID / agent + date, time */
+    /* list: the page scrolls; each row is a card: operation + IP / transaction ID + portal / client name + client ID / date, time */
     .shell-main { height: auto; }
     .tbl-area, .tbl-area .table-responsive { flex: none; overflow: visible; }
     .table.log-table, .log-table tbody, .log-table tr { display: block; border: 0; }
     .log-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-    .table.log-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "op ip" "txn txn" "agent date"; gap: 6px 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .table.log-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "op ip" "txn portal" "agent sl" "date date"; gap: 6px 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
     .table.log-table tbody tr > td { display: block; padding: 0; border: 0; background: none !important; box-shadow: none !important; white-space: normal !important; }
     .table.log-table tbody tr.is-last-opened { background: #eef0ff; box-shadow: inset 3px 0 0 #2b3ed1; }
     .log-table td.tbl-num { display: none !important; }
-    .log-table td:nth-child(2) { grid-area: date; align-self: end; text-align: right; }
-    .log-table td:nth-child(3) { grid-area: agent; align-self: end; }
-    .log-table td:nth-child(4) { grid-area: txn; }
-    .log-table td:nth-child(5) { grid-area: op; }
-    .log-table td:nth-child(6) { grid-area: ip; text-align: right; font-size: 13px; color: var(--text-2); }
-    .log-table td:nth-child(2) .tbl-stack { font-size: 13px; color: var(--text-2); }
+    .log-table td:nth-child(2) { grid-area: date; }
+    .log-table td:nth-child(3) { grid-area: portal; align-self: center; text-align: right; font-size: 13px; color: var(--text-2); }
+    .log-table td:nth-child(4) { grid-area: agent; }
+    .log-table td:nth-child(5) { grid-area: sl; text-align: right; font-size: 13px; color: var(--text-2); }
+    .log-table td:nth-child(6) { grid-area: txn; }
+    .log-table td:nth-child(7) { grid-area: op; }
+    .log-table td:nth-child(8) { grid-area: ip; text-align: right; font-size: 13px; color: var(--text-2); }
+    .log-table td:nth-child(2) .tbl-stack { flex-direction: row; gap: 8px; font-size: 13px; color: var(--text-2); }
     .table.log-table tbody tr:has(td.empty-cell) { display: block; padding: 0; border: 0; }
     .skeleton .log-table tbody td { height: auto; }
 
@@ -122,10 +128,12 @@
           <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-from" type="text" readonly></div></div>
         <div class="filter-field"><label for="f-to">To date</label>
           <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-to" type="text" readonly></div></div>
-        <div class="filter-field"><label for="f-agent">Agent</label>
-          <input class="input" id="f-agent" type="text" placeholder="Agent name or SL" autocomplete="off" spellcheck="false"></div>
+        <div class="filter-field"><label for="f-client">Client</label>
+          <input class="input" id="f-client" type="text" placeholder="Client name or ID" autocomplete="off" spellcheck="false"></div>
         <div class="filter-field"><label for="f-op">Operation type</label>
           <select class="input" id="f-op"><option value="" data-placeholder>Operation type</option></select></div>
+        <div class="filter-field"><label for="f-portal">Portal</label>
+          <select class="input" id="f-portal"><option value="" data-placeholder>Portal</option></select></div>
       </div>
     </div>
 
@@ -135,7 +143,7 @@
         <table class="table log-table table-hover table-striped table-bordered f-14 text-nowrap">
           <thead>
             <tr class="text-uppercase">
-              <th class="tbl-num" scope="col">#</th><th class="text-start">Date &amp; Time</th><th class="text-start">Agent</th><th class="text-start">Transaction ID</th>
+              <th class="tbl-num" scope="col">#</th><th class="text-start">Date &amp; Time</th><th class="text-start">Portal</th><th class="text-start">Client Name</th><th class="text-start">Client ID</th><th class="text-start">Transaction ID</th>
               <th class="text-start tbl-grow">Operation</th><th class="text-start">IP Address</th>
             </tr>
           </thead>
@@ -189,6 +197,6 @@
 <script src="js/empty-state.js?v=3"></script>
 <script src="js/table-loading.js?v=1"></script>
 <script src="js/code-viewer.js?v=7"></script>
-<script src="js/hotel-logs.js?v=2"></script>
+<script src="js/hotel-logs.js?v=6"></script>
 </body>
 </html>
