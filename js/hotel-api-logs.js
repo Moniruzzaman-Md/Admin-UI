@@ -207,7 +207,7 @@
           <small>${esc(l.ctx.portal)}</small>
         </span></td>
         <td class="text-center">${esc(API_NAME[l.supplierId] || `Supplier ${l.supplierId}`)}</td>
-        <td><span class="tbl-stack fill"><span class="tbl-strong">${esc(l.operationName)}</span><span class="file-line"><small class="tbl-mid is-copy" role="button" tabindex="0" data-copy="${esc(l.fileName)}" data-copy-msg="File name copied" data-tooltip="${esc(l.fileName)}" aria-label="Copy file name ${esc(l.fileName)}">${fileLabel(l)}</small></span></span></td>
+        <td><span class="tbl-stack fill"><span class="tbl-strong">${esc(l.operationName)}</span><span class="file-line"><small class="tbl-mid is-copy" role="button" tabindex="0" data-copy="${esc(l.fileName)}" data-tooltip="${esc(l.fileName)}" aria-label="Copy file name ${esc(l.fileName)}">${fileLabel(l)}</small></span></span></td>
       </tr>`).join('')
       : EmptyState.row(5);
 
@@ -255,7 +255,7 @@
     onReset: () => { setFields(DEFAULTS()); applyFilters(); },
   });
   // row click (or Enter / Space on a focused row) opens the file; clicking the transaction badge or the file name copies it
-  const copyEl = el => copy(el.dataset.copy, el.dataset.copyMsg || 'Transaction ID copied');
+  const copyEl = el => copy(el.dataset.copy, el);
   $('#rows').addEventListener('click', e => {
     const cp = e.target.closest('[data-copy]');
     if (cp) return copyEl(cp);
@@ -381,7 +381,7 @@
       </button>
       <span class="spacer"></span>
       <label class="inline-switch"><span class="switch"><input type="checkbox" class="cv-wrap"><span></span></span>Wrap</label>
-      <button class="btn btn-secondary cv-copy" type="button"><svg class="ph-only" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg><span class="btn-label">Copy</span></button>
+      <button class="btn btn-secondary cv-copy" type="button"><svg class="ph-only" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg><svg class="cv-ok" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="btn-label">Copy</span></button>
       <button class="btn btn-primary cv-download" type="button"><svg class="ph-only" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="btn-label">Download</span></button>
     </div>
     <div class="cv-editor" aria-label="File content"></div>`;
@@ -437,7 +437,12 @@
       (folded ? viewer.expandAll() : viewer.collapseAll()).then(() => setFold(!folded));
     });
     q('.cv-wrap').addEventListener('change', e => viewer.setWrap(e.target.checked));
-    q('.cv-copy').addEventListener('click', () => copy(viewer.text, 'Copied'));
+    // success shows on the button itself: a tick in place of the label, green, for 1.5 s (same width), no toast; a failure still toasts
+    const cpBtn = q('.cv-copy'); let cpTimer;
+    cpBtn.addEventListener('click', () => navigator.clipboard?.writeText(viewer.text).then(() => {
+      cpBtn.setAttribute('aria-label', 'Copied'); flashCopied(cpBtn);
+      clearTimeout(cpTimer); cpTimer = setTimeout(() => cpBtn.removeAttribute('aria-label'), 1500);
+    }, () => toast('Couldn’t copy')));
     q('.cv-download').addEventListener('click', () => download(p.file, viewer.ext));
     return p;
   }
@@ -461,10 +466,16 @@
   const phone = matchMedia('(max-width: 640px)');
   const fitViewer = () => panes.forEach(p => { p.viewer.setMinimap(!phone.matches); p.setWrap(phone.matches); });
   fitViewer(); phone.addEventListener('change', fitViewer);
-  const copy = (s, msg) => navigator.clipboard?.writeText(s).then(() => toast(msg), () => toast('Couldn’t copy'));
-  $('#lm-file').addEventListener('click', () => copy(cur.fileName, 'File name copied'));
-  $('#lm-file').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copy(cur.fileName, 'File name copied'); } });
-  $('#lm-txn').addEventListener('click', e => { const b = e.target.closest('[data-copy]'); if (b) copy(b.dataset.copy, 'Transaction ID copied'); });
+  // success shows on the clicked element itself (green + tick for 1.5 s, same size), no toast; a failure still toasts
+  function flashCopied(el) {
+    clearTimeout(el._copiedTimer);
+    el.classList.add('is-copied');
+    el._copiedTimer = setTimeout(() => el.classList.remove('is-copied'), 1500);
+  }
+  const copy = (s, el) => navigator.clipboard?.writeText(s).then(() => flashCopied(el), () => toast('Couldn’t copy'));
+  $('#lm-file').addEventListener('click', () => copy(cur.fileName, $('#lm-file')));
+  $('#lm-file').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copy(cur.fileName, $('#lm-file')); } });
+  $('#lm-txn').addEventListener('click', e => { const b = e.target.closest('[data-copy]'); if (b) copy(b.dataset.copy, b); });
 
   let lastFocus = null;
   // Esc / ✕ / outside click close the viewer

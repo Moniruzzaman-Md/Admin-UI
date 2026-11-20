@@ -27,9 +27,10 @@ Reusable table. Columns: **#** | DATE & TIME | TRANSACTION ID | SUPPLIER | OPERA
 
 - **#** = position in the whole filtered result (row 21 on page 2).
 - **Date & Time**: `createdOn` in local time — date line `20-Nov-2026`, time line `06:15:11 PM` (seconds kept: calls of one transaction are seconds apart).
-- **Transaction ID** cell: line 1 = ID badge — clicking it copies the ID (toast "Transaction ID copied"); it doesn't open the row. No separate copy button. Line 2 = portal.
-- Under the operation name: the file name — clicking it copies the full name (toast "File name copied"); keyboard: Tab to it, Enter / Space. No separate copy button.
+- **Transaction ID** cell: line 1 = ID badge — clicking it copies the ID; it doesn't open the row. No separate copy button. Line 2 = portal.
+- Under the operation name: the file name — clicking it copies the full name; keyboard: Tab to it, Enter / Space. No separate copy button.
 - Clicking the transaction badge or the file name copies; it doesn't open the row.
+- **Copy feedback** (everywhere on this page — badge, file name, viewer Copy): on success the clicked element itself turns green for 1.5 s, keeping its size — the badge and file name show "Copied ✓" in place of their text, the viewer Copy button a tick in place of its label; no toast. A failed copy shows the toast "Couldn’t copy".
 - **Portal** (new, shown under the transaction ID in small text): where the transaction came from — B2B, B2C, B2C APP, API (and any other channel the system has). Same value on every row of a transaction. **Needs a new field on each log row** (e.g. `portal`, taken from the search/booking request that started the transaction); the list response doesn't have it today.
 - **Operation**: `operationName` as is, with `fileName` under it in small text, fitted to the column: the column takes the table's free width; the file name shows whole when it fits, otherwise its start is cut with `…` and the last 12 characters always show. Full name on hover. The Request / Response / Trace ending is coloured (Request blue, Response green, Trace orange; the visible part of `Request[-n]` / `Response[-n]` / `Trace`).
 - **Supplier**: name for `supplierId` (0 = "Common").
@@ -72,7 +73,7 @@ Search in the live logs (checked 2026-11-20): `Common-Search-…-Request` first,
   - `<!DOCTYPE html` / `<html` → **HTML**, shown as is;
   - `<?xml` or another tag → **XML**, indented if it arrived on one line;
   - anything else → **Text**, as is (e.g. SearchStream traces).
-- Bar above the content: **format dropdown** (JSON / XML / HTML / Text) · file size · **Find** · Wrap switch (off by default) · **Copy** (the shown, formatted text) · **Download** (the raw file as stored, named `<fileName>.<json|xml|html|txt>` by its format).
+- Bar above the content: **format dropdown** (JSON / XML / HTML / Text) · file size · **Find** · Wrap switch (off by default) · **Copy** (the shown, formatted text; on success the button shows a tick instead of its label and turns green for 1.5 s, same width, no toast — a failure still shows "Couldn’t copy") · **Download** (the raw file as stored, named `<fileName>.<json|xml|html|txt>` by its format).
 - **Collapse all** (bar, after Find): folds every block except the outermost, so the top-level keys / elements stay visible with their contents folded; the button then reads **Expand all** and unfolds everything. It goes back to "Collapse all" when another file opens or the format changes. Disabled for Text (nothing to fold) and while the file loads. Side by side, each pane has its own. Phones: icon button.
 - **Format dropdown**: starts on the detected format; picking another shows the same file as that format (JSON is laid out if it parses, otherwise shown as is with JSON colours; one-line XML is indented). Opening another file starts from its own detected format again. Download uses the chosen format's extension. Backend request: store the format when writing the log (from the supplier's `Content-Type`) and return it, so the guess is only a fallback for old logs.
 - **Loading** (`download` takes time): the header, info line and Request | Response switch show at once (they come from the list row); the content area shows a **skeleton of code lines** until `download` returns. Meanwhile Format, Find, Copy and Download are disabled and the size is a shimmer. Wrap stays usable.
@@ -149,3 +150,6 @@ Tablet and desktop are unchanged.
 - 2026-11-20 — transaction ID copy button removed (the badge itself copies).
 - 2026-11-20 — file name copies on click (list + viewer); its copy buttons removed.
 - 2026-11-20 — viewer: previous / next file (arrows, "1 of 20", ↑ / ↓ keys) removed; close the viewer and click another row.
+- 2026-11-20 — viewer Copy shows success on the button (tick + green, width unchanged), no toast.
+- 2026-11-20 — transaction ID and file name show copy success in place (green + tick), no toast.
+- 2026-11-20 — transaction ID and file name copy success reads "Copied ✓".

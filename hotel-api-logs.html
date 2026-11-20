@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="css/shell.css?v=30">
 <link rel="stylesheet" href="css/components.css?v=48">
 <link rel="stylesheet" href="css/skeleton.css?v=26">
-<link rel="stylesheet" href="css/table.css?v=74">
+<link rel="stylesheet" href="css/table.css?v=76">
 <link rel="stylesheet" href="css/select.css?v=26">
 <link rel="stylesheet" href="css/datepicker.css?v=2">
 <style>
@@ -47,6 +47,12 @@
   .code-view-bar .searchable-select:has(.cv-format) { width: 96px; }
   .code-view-bar .searchable-select:has(.cv-format) .input { height: 32px; font-size: var(--fs-sm); font-weight: 600; }
   .ph-only { display: none; }
+  /* viewer Copy: on success a tick replaces the label (width unchanged) and the button turns green */
+  .cv-copy { position: relative; }
+  .cv-copy .cv-ok { display: none; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  .cv-copy.is-copied, .cv-copy.is-copied:hover { color: #15803d; border-color: #86c79b; background: #f0faf3; }
+  .cv-copy.is-copied .cv-ok { display: block; }
+  .cv-copy.is-copied .btn-label, .cv-copy.is-copied .ph-only { visibility: hidden; }
 
   /* ---------- phones (≤ 640px) ---------- */
   @media (max-width: 640px) {
@@ -195,6 +201,6 @@
 <script src="js/empty-state.js?v=3"></script>
 <script src="js/table-loading.js?v=1"></script>
 <script src="js/code-viewer.js?v=6"></script>
-<script src="js/hotel-api-logs.js?v=63"></script>
+<script src="js/hotel-api-logs.js?v=66"></script>
 </body>
 </html>
