@@ -184,9 +184,9 @@
     fields: [
       { label: 'From', isSet: () => +draft.from !== +today, text: () => fmtDay(draft.from), clear: () => { draft.from = new Date(today); fromField.set(draft.from); toField.setMin(draft.from); } },
       { label: 'To', isSet: () => +draft.to !== +today, text: () => fmtDay(draft.to), clear: () => { draft.to = new Date(today); toField.set(draft.to); fromField.setMax(draft.to); } },
+      { label: 'Portal', isSet: () => !!fPortal.value, text: () => fPortal.value, clear: () => { fPortal.value = ''; } },
       { label: 'Client', isSet: () => !!fAgent.value.trim(), text: () => fAgent.value.trim(), clear: () => { fAgent.value = ''; } },
       { label: 'Operation type', isSet: () => !!fOp.value, text: () => fOp.value, clear: () => { fOp.value = ''; } },
-      { label: 'Portal', isSet: () => !!fPortal.value, text: () => fPortal.value, clear: () => { fPortal.value = ''; } },
     ],
     onSearch: applyFilters,
     onReset: () => { setFields(DEFAULTS()); applyFilters(); },
