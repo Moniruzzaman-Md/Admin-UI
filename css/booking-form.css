@@ -42,6 +42,9 @@
   .adm-wrap .row.c3.sup-rate { grid-template-columns: 1fr .75fr 1.25fr; }
 }
 .adm-wrap .mt { margin-top: 14px; }
+/* date-and-time values need ~260px: in a two-column row narrower than that, they take the full row */
+.adm-wrap .row.c2 { container-type: inline-size; }
+@container (max-width: 560px) { .adm-wrap .row.c2 > .field:has(input[data-date^="datetime"]), .adm-wrap .row.c2 > .field.dt { grid-column: 1 / -1; } }
 
 /* ---------- Admin card ---------- */
 .adm-wrap .card { margin-top: 16px; }
@@ -114,28 +117,18 @@
 .adm-wrap .dp input.dp-input.active { border-color: var(--focus); box-shadow: var(--focus-ring); }
 .adm-wrap .dp-clear { position: absolute; right: 9px; top: 9px; width: 20px; height: 20px; border: 0; border-radius: 50%; background: none; color: var(--faint); font-size: 16px; line-height: 1; cursor: pointer; display: none; place-items: center; }
 .adm-wrap .dp-clear:hover { background: var(--head); color: var(--ink); }
+/* very narrow date-and-time boxes (small phones): no calendar icon, tighter right side, so date + time + seconds fit */
+.adm-wrap .dp { container-type: inline-size; }
+@container (max-width: 250px) {
+  .adm-wrap .dp:has(> input[data-date^="datetime"]) > svg { display: none; }
+  .adm-wrap .dp:has(> input[data-date^="datetime"]) input.dp-input { padding-left: 12px; padding-right: 28px; }
+  .adm-wrap .dp:has(> input[data-date^="datetime"]) .dp-clear { right: 5px; }
+}
 .adm-wrap .dp.has .dp-clear { display: grid; }
 
-.flatpickr-calendar { font-family: Poppins, "Segoe UI", sans-serif; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgba(16,18,40,.14); padding: 4px 0 2px; }
-.flatpickr-calendar.hasTime.noCalendar { padding: 0; }
-.flatpickr-calendar:before, .flatpickr-calendar:after { display: none; }
-.flatpickr-months { padding: 2px 0 6px; }
-.flatpickr-months .flatpickr-month { height: 38px; color: var(--ink); }
-.flatpickr-current-month { font-size: 14px; font-weight: 600; padding-top: 9px; }
-.flatpickr-current-month input.cur-year { font-weight: 600; }
-.flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month { top: 8px; height: 34px; padding: 10px; border-radius: 8px; }
-.flatpickr-months .flatpickr-prev-month:hover, .flatpickr-months .flatpickr-next-month:hover { background: var(--navy-soft); }
-.flatpickr-months .flatpickr-prev-month:hover svg, .flatpickr-months .flatpickr-next-month:hover svg { fill: var(--navy); }
-.adm-wrap span.flatpickr-weekday { color: var(--faint); font-weight: 500; font-size: 12px; }
-.flatpickr-day { border-radius: 8px; font-size: 13px; color: var(--ink); height: 36px; line-height: 34px; }
-.flatpickr-day:hover, .flatpickr-day:focus { background: var(--navy-soft); border-color: transparent; }
-.flatpickr-day.today { border-color: var(--navy-line); }
-.flatpickr-day.today:hover { background: var(--navy-soft); color: var(--navy); border-color: var(--navy-line); }
-.flatpickr-day.selected, .flatpickr-day.selected:hover, .flatpickr-day.selected:focus { background: var(--navy); border-color: var(--navy); color: #fff; font-weight: 600; }
+/* calendar theme: css/datepicker.css (shared). Only the form's extras here: check-in → check-out stay range, time row */
 .flatpickr-day.stay { background: var(--navy-soft); border-color: transparent; border-radius: 0; color: var(--navy); }
 .flatpickr-day.stay-edge { border-color: var(--navy); color: var(--navy); font-weight: 600; }
-.flatpickr-day.flatpickr-disabled, .flatpickr-day.flatpickr-disabled:hover { color: #cfd2da; background: none; }
-.flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay { color: #b9bcc6; }
 .flatpickr-time { border-top: 1px solid var(--line-soft) !important; margin-top: 4px; }
 .flatpickr-time input, .flatpickr-time .flatpickr-time-separator { font-size: 14px; font-weight: 500; color: var(--ink); }
 .flatpickr-time input[type=number] { height: 100%; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
@@ -204,7 +197,7 @@
 .adm-wrap .group + .group { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); }
 
 .adm-wrap .pol { border: 1px solid var(--line-soft); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
-.adm-wrap .pol-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.adm-wrap .pol-head { display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin-bottom: 10px; }   /* same height with or without Remove */
 .adm-wrap .pol-head span { font-size: 12px; font-weight: 600; color: var(--ink); }
 
 /* ---------- Buttons ---------- */
@@ -303,6 +296,10 @@
 @container bf (min-width: 856px) {
   .adm-wrap .scope-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
   .adm-wrap .scope-groups .group + .group { margin-top: 0; padding-top: 0; border-top: 0; padding-left: 24px; border-left: 1px dashed var(--line); }
+  /* side by side: both columns use the same rows, so Policy N on each side has the same height */
+  .adm-wrap .scope-groups .group { display: grid; grid-template-rows: subgrid; grid-row: span var(--rows); align-content: start; }
+  .adm-wrap .scope-groups .group [data-derived] { display: contents; }
+  .adm-wrap .scope-groups .group > .btn-add { align-self: start; }
 }
 
 /* ---------- Time format (one for all policies) ---------- */
@@ -332,6 +329,22 @@
 .adm-wrap #f-tz.is-invalid { border-color: #f5c2c7; }
 .adm-wrap #f-tz.is-invalid .tz-h { border-color: var(--red); }
 .adm-wrap #f-tz.is-invalid .tz-m .ss-input { border-color: var(--input); background-color: #fff; }
+
+/* ---------- Client policy calculated from supplier ---------- */
+.adm-wrap .calc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; min-height: 56px; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--line-soft); border-radius: 8px; }
+.adm-wrap .calc-hours { display: inline-flex; align-items: center; gap: 8px; }
+.adm-wrap .calc-hint { font-size: 13px; color: var(--muted); }
+.adm-wrap .calc-row .calc-one { margin-left: auto; }
+.adm-wrap #f-clientHours.is-invalid { border-color: #f5c2c7; }
+.adm-wrap #f-clientHours.is-invalid .tz-h { border-color: var(--red); }
+.adm-wrap .group.derived .ro { font-weight: 500; }
+
+/* policies wait for the price details they're calculated from */
+.adm-wrap .sec-need { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0 0 12px; padding: 10px 12px; border: 1px dashed var(--border-strong); border-radius: 8px; background: var(--surface-2); color: var(--text-2); font: inherit; font-size: 13px; font-weight: 500; text-align: left; cursor: pointer; }
+.adm-wrap .sec-need[hidden] { display: none; }
+.adm-wrap .sec-need:hover { border-color: var(--navy); color: var(--navy); }
+.adm-wrap .sec-need svg { width: 15px; height: 15px; flex: none; }
+.adm-wrap .pol-lock.locked { opacity: .5; pointer-events: none; user-select: none; }
 
 /* ---------- Rich text (Quill, restyled) ---------- */
 .adm-wrap .rte { border: 1px solid var(--input); border-radius: 8px; background: #fff; transition: border-color .15s, box-shadow .15s; }
@@ -363,3 +376,6 @@
 :where(.adm-wrap) .field { display: block; flex-direction: revert; gap: revert; }
 :where(.adm-wrap) .field label { font-size: revert; font-weight: revert; color: revert; }
 :where(.adm-wrap) .field .hint { font-size: revert; color: revert; }
+
+/* small phones: tighter policy boxes so date + time fit */
+@container bf (max-width: 400px) { .adm-wrap .box-body { padding-left: 10px; padding-right: 10px; } .adm-wrap .pol { padding-left: 8px; padding-right: 8px; } }

@@ -9,17 +9,28 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
 <link rel="stylesheet" href="css/tokens.css?v=27">
 <link rel="stylesheet" href="css/shell.css?v=33">
-<link rel="stylesheet" href="css/components.css?v=55">
-<link rel="stylesheet" href="css/skeleton.css?v=27">
+<link rel="stylesheet" href="css/components.css?v=79">
+<link rel="stylesheet" href="css/datepicker.css?v=8">
+<link rel="stylesheet" href="css/table.css?v=80">
+<link rel="stylesheet" href="css/select.css?v=27">
 <style>
-  .bk-page { display: flex; flex-direction: column; gap: 12px; }
-  /* filter area: live portal = 3 rows of fields; "New booking" ends the 3rd row */
-  .bk-filters .sk-row { flex-wrap: wrap; }
-  .bk-filters .sk-row > * { flex: 1 1 140px; }
-  .bk-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-  .bk-actions .sk-box { flex: 0 0 140px; }
-  .bk-actions .btn { text-decoration: none; }
-  .bk-list { min-height: 360px; }
+  .page-head .btn { text-decoration: none; }
+  .bk-head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .bk-head-actions .searchable-select { width: 220px; }
+  /* the head's actions need ~700px with a full New booking button: below that New booking = just the + (as on every page);
+     Download goes icon-only at 640px (shared .btn-shrink). Narrower: the status switcher shrinks (min 110px) so title and
+     actions stay on one line; only when even that doesn't fit (phone) the actions take their own row */
+  @container (max-width: 720px) { .bk-head-actions .btn-new { width: 36px; padding: 0; gap: 0; flex-shrink: 0; } .bk-head-actions .btn-new .btn-label { display: none; } }
+  @container (max-width: 640px) { .page-head > :first-child { min-width: 160px; } .bk-head-actions { flex: 1 1 0; flex-wrap: nowrap; gap: 8px; justify-content: flex-end; } .bk-head-actions .searchable-select { flex: 0 1 220px; width: auto; min-width: 110px; } }
+  @container (max-width: 389px) { .bk-head-actions { flex: 1 1 100%; } .bk-head-actions .searchable-select { flex: 1 1 0; } }
+  /* list cells */
+  .bk-id { font-weight: 600; color: var(--brand); }
+  .bk-pay { display: inline-flex; align-items: center; gap: 6px; }
+  .bk-pay-ico { font-size: 13px; cursor: help; }
+  .bk-pay-ico.paid { color: var(--green); }
+  .bk-pay-ico.refunded { color: #6366f1; }
+  .bk-pay-ico.unpaid { color: var(--red); }
+  a.tbl-action { text-decoration: none; }
 </style>
 </head>
 <body data-page="hotel-bookings">
@@ -29,33 +40,147 @@
     <div>
       <h1 class="page-title">Hotel (All Booking)</h1>
     </div>
+    <div class="bk-head-actions">
+    <!-- status view (live: the "All Booking" switcher next to Download): applies at once, outside the filter bar -->
+    <select class="input bk-view" id="f-view" aria-label="Booking status"><option value="">All booking</option></select>
+    <button class="btn btn-secondary btn-shrink" type="button" id="btn-download" aria-label="Download" data-tooltip="Download" data-tooltip-if-icon>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>
+      <span class="btn-label">Download</span>
+    </button>
+    <a class="btn btn-primary btn-new" href="booking-form.html?returnUrl=hotel-bookings.html" aria-label="New booking" data-tooltip="New booking" data-tooltip-if-icon>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="btn-label">New booking</span>
+    </a>
+    </div>
   </div>
 
-  <div class="bk-page">
-    <section class="sk bk-filters" data-label="Filters">
-      <div class="sk-row"><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div></div>
-      <div class="sk-row"><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div></div>
-      <div class="bk-actions">
-        <div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div>
-        <!-- the only working control on this page: opens the manual booking form -->
-        <a class="btn btn-primary" href="booking-form.html?returnUrl=hotel-bookings.html">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          New booking
-        </a>
+  <!-- Booking list: the manual bookings (js/data.js Bookings). Shared filter bar (Map-UI style) + portal reusable table; columns = live list -->
+  <section class="card" aria-label="Booking list">
+    <div class="filter-bar" id="filter-bar">
+      <div class="search-input">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input class="input" id="f-q" type="text" placeholder="Booking ID" aria-label="Booking ID" autocomplete="off" spellcheck="false">
       </div>
-    </section>
+      <button class="btn btn-primary" type="button" data-filters-go data-tooltip="Search (Enter)" data-tooltip-if-icon>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4-4"/></svg>
+        Search
+      </button>
+      <button class="filters-toggle-btn" type="button" data-filters-toggle data-tooltip="Filters" data-tooltip-if-icon aria-expanded="false" aria-controls="filters-panel">
+        Filters <span class="filters-count" data-filters-count hidden></span>
+        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="btn btn-reset" type="button" data-filters-reset data-tooltip="Reset" data-tooltip-if-icon>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Reset
+      </button>
+      <div class="filters-summary" data-filters-summary hidden></div>
+      <div class="filters-panel" id="filters-panel" data-filters-panel hidden>
+        <div class="filter-groups">
+          <div class="filter-group">
+            <div class="filters-section-label">Client</div>
+            <div class="filter-pair">
+              <div class="filter-field"><label for="f-platform">Platform type</label>
+                <select class="input" id="f-platform"><option value="" data-placeholder>Platform type</option></select></div>
+              <div class="filter-field"><label for="f-client">Client</label>
+                <select class="input" id="f-client" disabled><option value="" data-placeholder>Select platform first</option></select></div>
+            </div>
+          </div>
+          <div class="filter-group">
+            <div class="filters-section-label">Supplier</div>
+            <div class="filter-pair">
+              <div class="filter-field"><label for="f-supplier">Supplier</label>
+                <select class="input" id="f-supplier"><option value="" data-placeholder>Supplier</option></select></div>
+              <div class="filter-field"><label for="f-ref">Supplier reference</label>
+                <input class="input" id="f-ref" type="text" placeholder="Supplier reference" autocomplete="off" spellcheck="false"></div>
+            </div>
+          </div>
+        </div>
+        <div class="filters-section-label">Booking</div>
+        <div class="filter-fields">
+          <div class="filter-field"><label for="f-type">Booking type</label>
+            <select class="input" id="f-type"><option value="" data-placeholder>Booking type</option><option value="online">Online</option><option value="offline">Offline</option></select></div>
+          <div class="filter-field"><label for="f-hotel">Hotel name</label>
+            <input class="input" id="f-hotel" type="text" placeholder="Hotel name" autocomplete="off"></div>
+          <div class="filter-field"><label for="f-country">Hotel country</label>
+            <select class="input" id="f-country"><option value="" data-placeholder>Country</option></select></div>
+          <div class="filter-field"><label for="f-guest">Guest name</label>
+            <input class="input" id="f-guest" type="text" placeholder="Guest name" autocomplete="off"></div>
+          <div class="filter-field"><label for="f-staff">Staff</label>
+            <select class="input" id="f-staff"><option value="" data-placeholder>Staff</option></select></div>
+          <div class="filter-field"><label for="f-hcn">Has HCN</label>
+            <select class="input" id="f-hcn"><option value="" data-placeholder>Has HCN</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+          <div class="filter-field"><label for="f-special">Has special request</label>
+            <select class="input" id="f-special"><option value="" data-placeholder>Has special request</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+        </div>
+        <div class="filters-section-label">Dates</div>
+        <div class="filter-pairs">
+          <div class="filter-pair">
+            <div class="filter-field"><label for="f-d-booking-from">Booking date from</label>
+              <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-d-booking-from" type="text" placeholder="Any date" readonly></div></div>
+            <div class="filter-field"><label for="f-d-booking-to">Booking date to</label>
+              <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-d-booking-to" type="text" placeholder="Any date" readonly></div></div>
+          </div>
+          <div class="filter-pair">
+            <div class="filter-field"><label for="f-d-status-from">Status date from</label>
+              <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-d-status-from" type="text" placeholder="Any date" readonly></div></div>
+            <div class="filter-field"><label for="f-d-status-to">Status date to</label>
+              <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-d-status-to" type="text" placeholder="Any date" readonly></div></div>
+          </div>
+          <div class="filter-pair">
+            <div class="filter-field"><label for="f-d-checkin-from">Check-in date from</label>
+              <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-d-checkin-from" type="text" placeholder="Any date" readonly></div></div>
+            <div class="filter-field"><label for="f-d-checkin-to">Check-in date to</label>
+              <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-d-checkin-to" type="text" placeholder="Any date" readonly></div></div>
+          </div>
+          <div class="filter-pair">
+            <div class="filter-field"><label for="f-d-deadline-from">Deadline date from</label>
+              <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-d-deadline-from" type="text" placeholder="Any date" readonly></div></div>
+            <div class="filter-field"><label for="f-d-deadline-to">Deadline date to</label>
+              <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-d-deadline-to" type="text" placeholder="Any date" readonly></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <section class="sk bk-list" data-label="Booking list">
-      <div class="sk-line"></div>
-      <div class="sk-line w-75"></div>
-      <div class="sk-line"></div>
-      <div class="sk-line w-50"></div>
-      <div class="sk-line"></div>
-      <div class="sk-line w-75"></div>
-    </section>
-  </div>
+    <div class="tbl-area">
+      <div class="table-responsive">
+        <table class="table table-hover table-striped table-bordered f-14 text-nowrap">
+          <thead>
+            <tr class="text-uppercase">
+              <th class="text-start">Booking ID</th><th class="text-start">Client name</th><th class="text-start">Guest name</th><th class="text-start">Hotel name</th>
+              <th>Booking date</th><th>Deadline date</th><th>Check-in</th><th>Check-out</th><th>Supplier code</th><th>Supplier ref.</th>
+              <th class="tbl-fit">Cost</th><th class="tbl-fit">Payment</th><th>Platform type</th><th>Status</th><th class="tbl-action-col">Action</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <nav class="pagination" id="pager" aria-label="Booking list pagination">
+        <p aria-live="polite" class="pagination__summary"><span class="pagination__summary-label">Showing</span><strong class="pagination__range" id="pg-range"></strong><span>of</span><strong id="pg-total"></strong></p>
+        <div class="pagination__navigation">
+          <button type="button" aria-label="Go to previous page" class="pagination__direction" id="pg-prev"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 15-5-5 5-5"></path></svg><span>Previous</span></button>
+          <div aria-label="Choose a page" class="pagination__pages" id="pg-pages"></div>
+          <span class="pagination__mobile-position" id="pg-mobile"></span>
+          <button type="button" aria-label="Go to next page" class="pagination__direction" id="pg-next"><span>Next</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 5 5 5-5 5"></path></svg></button>
+        </div>
+        <label class="pagination__page-size"><span class="pagination__page-size-label">Rows</span>
+          <select aria-label="Rows per page" id="pg-size"><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></label>
+      </nav>
+    </div>
+  </section>
 </main>
 
+<div class="toast" id="toast" role="status"></div>
+
 <script src="js/shell.js?v=38"></script>
+<script src="js/select.js?v=28"></script>
+<script src="js/tooltip.js?v=4"></script>
+<script src="js/history-legacy.js?v=4"></script>
+<script src="js/data.js?v=14"></script>
+<script src="js/datepicker.js?v=9"></script>
+<script src="js/filters.js?v=2"></script>
+<script src="js/empty-state.js?v=4"></script>
+<script src="js/table-loading.js?v=2"></script>
+<script src="js/hotel-bookings.js?v=8"></script>
 </body>
 </html>

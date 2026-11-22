@@ -9,19 +9,19 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
 <link rel="stylesheet" href="css/tokens.css?v=27">
 <link rel="stylesheet" href="css/shell.css?v=33">
-<link rel="stylesheet" href="css/components.css?v=55">
+<link rel="stylesheet" href="css/components.css?v=79">
 <link rel="stylesheet" href="css/skeleton.css?v=27">
-<link rel="stylesheet" href="css/table.css?v=77">
+<link rel="stylesheet" href="css/table.css?v=80">
 <link rel="stylesheet" href="css/select.css?v=27">
-<link rel="stylesheet" href="css/modal.css?v=3">
+<link rel="stylesheet" href="css/modal.css?v=7">
 <link rel="stylesheet" href="css/history.css?v=34">
 <style>
-  .filter-bar > .f-id { width: 160px; }
-  @media (max-width: 640px) { .filter-bar > .f-id { width: 100%; } }
   .title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   /* prototype-only link (dashed = an annotation, not portal UI) */
   .dev-link { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border: 1px dashed #b9bde0; border-radius: 999px; color: #4a4fa8; background: #fff; font-size: 12px; font-weight: 600; line-height: 20px; text-decoration: none; }
   .dev-link:hover { border-style: solid; background: #f0f1fb; }
+  /* narrow head: just its icon, so the title stays on one line (the head keeps every page's height) */
+  @container (max-width: 640px) { .dev-link { padding: 2px 6px; } .dev-link .btn-label { display: none; } }
   .dev-link:focus-visible { outline: 2px solid var(--brand-accent); outline-offset: 2px; }
   .field .searchable-select { display: flex; width: 100%; }
   .field.invalid .searchable-select-trigger { border-color: var(--red); }
@@ -45,14 +45,20 @@
     <div class="title-row">
       <h1 class="page-title">Default Markup (Hotel)</h1>
       <!-- prototype only: not part of the real portal -->
-      <a class="dev-link" href="markup-commission-backend.html" target="_blank" rel="noopener" data-tooltip="Backend guide for developers (MySQL schema, overlap queries, API). Opens in a new tab.">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>Backend guide
+      <a class="dev-link" aria-label="Backend guide" href="markup-commission-backend.html" target="_blank" rel="noopener" data-tooltip="Backend guide for developers (MySQL schema, overlap queries, API). Opens in a new tab.">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg><span class="btn-label">Backend guide</span>
       </a>
     </div>
-    <button class="btn btn-primary" id="btn-new" type="button">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      New markup
-    </button>
+    <div class="page-actions">
+      <button class="btn btn-secondary btn-shrink" id="btn-check" type="button" aria-label="Check overlaps" data-tooltip="Check overlaps" data-tooltip-if-icon>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="12" height="12" rx="2"/><rect x="9" y="3" width="12" height="12" rx="2"/></svg>
+      <span class="btn-label">Check overlaps</span>
+      </button>
+      <button class="btn btn-primary btn-new" id="btn-new" type="button" aria-label="New markup" data-tooltip="New markup" data-tooltip-if-icon>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="btn-label">New markup</span>
+      </button>
+    </div>
   </div>
 
   <section class="card" aria-label="Hotel markup list">
@@ -61,21 +67,17 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         <input class="input" id="f-id" type="text" inputmode="numeric" placeholder="ID" aria-label="Find by markup ID">
       </div>
-      <button class="btn btn-primary" type="button" data-filters-go>
+      <button class="btn btn-primary" type="button" data-filters-go data-tooltip="Search (Enter)" data-tooltip-if-icon>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4-4"/></svg>
         Search
       </button>
-      <button class="filters-toggle-btn" type="button" data-filters-toggle aria-expanded="false" aria-controls="filters-panel">
+      <button class="filters-toggle-btn" type="button" data-filters-toggle data-tooltip="Filters" data-tooltip-if-icon aria-expanded="false" aria-controls="filters-panel">
         Filters <span class="filters-count" data-filters-count hidden></span>
         <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <button class="btn btn-reset" type="button" data-filters-reset>
+      <button class="btn btn-reset" type="button" data-filters-reset data-tooltip="Reset" data-tooltip-if-icon>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Reset
-      </button>
-      <button class="btn btn-secondary push-right" id="btn-check" type="button">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="12" height="12" rx="2"/><rect x="9" y="3" width="12" height="12" rx="2"/></svg>
-      Check overlaps
       </button>
       <div class="filters-summary" data-filters-summary hidden></div>
       <div class="filters-panel" id="filters-panel" data-filters-panel hidden>
@@ -204,13 +206,13 @@
 
 <script src="js/shell.js?v=38"></script>
 <script src="js/select.js?v=28"></script>
-<script src="js/tooltip.js?v=3"></script>
+<script src="js/tooltip.js?v=4"></script>
 <script src="js/modal.js?v=2"></script>
 <script src="js/filters.js?v=2"></script>
 <script src="js/history-legacy.js?v=4"></script>
-<script src="js/data.js?v=12"></script>
+<script src="js/data.js?v=14"></script>
 <script src="js/empty-state.js?v=4"></script>
 <script src="js/table-loading.js?v=2"></script>
-<script src="js/markup-commission.js?v=97"></script>
+<script src="js/markup-commission.js?v=98"></script>
 </body>
 </html>

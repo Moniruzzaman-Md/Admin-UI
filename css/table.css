@@ -284,10 +284,12 @@ button.tbl-code.is-copy:hover { text-decoration: none; }
 /* LIST PAGE LAYOUT — the list card always fills the screen height, whatever the row count:
    rows scroll inside the table, the header row and pagination stay in view, pagination sits at the card's bottom.
    Few rows → blank space inside the table area (as with a full list); no rows → the empty state is centred in it.
-   Markup: <main class="shell-main"> page-head + <section class="card"> toolbar/filter-bar + <div class="tbl-area"> table + pagination */
+   Markup: <main class="shell-main"> page-head + <section class="card"> filter-bar + <div class="tbl-area"> table + pagination */
 .shell-main { height: 100%; display: flex; flex-direction: column; padding-bottom: 16px; }
-.shell-main > .card { flex: 1 1 auto; min-height: 220px; display: flex; flex-direction: column; }
-.tbl-area { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+/* the card never gets shorter than its filter bar (open Filters panel included) + 240px of table: a tall panel makes the page scroll
+   instead of being cut off and squeezing the table away */
+.shell-main > .card { flex: 1 1 auto; display: flex; flex-direction: column; }
+.tbl-area { flex: 1 1 auto; min-height: 240px; contain: size; display: flex; flex-direction: column; overflow: hidden; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 .tbl-area .table-responsive { flex: 1 1 auto; min-height: 0; overflow: auto; border-top: 0; }
 .tbl-area .pagination { flex: none; }
 .tbl-area .table-responsive:has(td.empty-cell) table { height: 100%; }

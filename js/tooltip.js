@@ -4,6 +4,8 @@
    there's no room), kept inside the window. Hides on leave / blur / press / scroll / Esc. One tooltip at a time.
    - A key hint at the end in brackets, e.g. "Previous file (↑)" or "Search (Enter)", shows as a key cap.
    - Long unbroken values (file names, IDs) get a wider box and wrap anywhere instead of at every hyphen.
+   - data-tooltip-if-icon: only while the element's own text label is hidden (a button that turns icon-only on a
+     narrow screen); text in .filters-count (a count badge) doesn't count as a label.
    Styles: css/components.css (.tooltip). */
 (() => {
   const tip = document.createElement('div');
@@ -19,9 +21,19 @@
     tip.classList.toggle('is-long', !/\s/.test(text) && text.length > 32);
     tip.innerHTML = key ? `<span>${esc(key[1])}</span><kbd>${esc(key[2])}</kbd>` : esc(text);
   }
+  // is any of the element's label text actually on screen? (hidden span / font-size 0 → width 0)
+  function labelShown(el) {
+    const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let n; (n = walk.nextNode());) {
+      if (!n.data.trim() || n.parentElement.closest('.filters-count')) continue;
+      const r = document.createRange(); r.selectNodeContents(n);
+      if (r.getBoundingClientRect().width > 0) return true;
+    }
+    return false;
+  }
   function show(el) {
     const text = el.dataset.tooltip;
-    if (!text) return;
+    if (!text || (el.hasAttribute('data-tooltip-if-icon') && labelShown(el))) return;
     if (!tip.isConnected) document.body.append(tip);
     owner = el;
     fill(text);

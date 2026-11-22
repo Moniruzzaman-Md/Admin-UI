@@ -75,14 +75,13 @@
 
   // a query in the real portal → skeleton first (saves / edits re-render directly)
   const load = () => TableLoading.run($('.tbl-area'), render);
-  let typing;
-  $('#f-q').addEventListener('input', e => { clearTimeout(typing); typing = setTimeout(() => { state.q = e.target.value; state.page = 1; load(); }, 300); });
-  cur.addEventListener('change', e => { state.currency = e.target.value; state.page = 1; load(); });
-  $('#f-status').addEventListener('change', e => { state.status = e.target.value; state.page = 1; load(); });
-  $('#f-clear').addEventListener('click', () => {
-    Object.assign(state, { q: '', currency: '', status: '', page: 1 });
-    $('#f-q').value = ''; cur.value = ''; $('#f-status').value = '';
-    load();
+  // shared filter bar: nothing filters until Search / Enter; count + chips cover the panel's dropdowns; Reset clears and reloads
+  const applyFilters = () => { Object.assign(state, { q: $('#f-q').value, currency: cur.value, status: $('#f-status').value, page: 1 }); load(); };
+  const pick = (label, sel) => ({ label, isSet: () => !!sel.value, text: () => sel.options[sel.selectedIndex]?.text || '', clear: () => { sel.value = ''; } });
+  FilterBar.init($('#filter-bar'), {
+    fields: [pick('Currency', cur), pick('Status', $('#f-status'))],
+    onSearch: applyFilters,
+    onReset: () => { $('#f-q').value = ''; cur.value = ''; $('#f-status').value = ''; applyFilters(); },
   });
   $('#pg-pages').addEventListener('click', e => { const b = e.target.closest('[data-pg]'); if (b) { state.page = +b.dataset.pg; load(); } });
   $('#pg-prev').addEventListener('click', () => { state.page--; load(); });

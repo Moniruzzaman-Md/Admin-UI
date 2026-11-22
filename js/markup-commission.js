@@ -215,14 +215,14 @@
   function runCheck() {
     const btn = $('#btn-check'), area = $('.tbl-area');
     if (btn.disabled) return;
-    btn.disabled = true; btn.lastChild.textContent = ' Checking…';
+    btn.disabled = true; btn.querySelector('.btn-label').textContent = 'Checking…';
     area.classList.add('is-loading'); area.setAttribute('aria-busy', 'true');
     setTimeout(() => {   // the server call (POST /api/markups/overlaps/check) in the real portal
       saved = {};
       rules.forEach(r => { const d = overlapData(r); if (d) saved[r.id] = d; });
       storeSaved();
       render();
-      btn.disabled = false; btn.lastChild.textContent = ' Check overlaps';
+      btn.disabled = false; btn.querySelector('.btn-label').textContent = 'Check overlaps';
       area.classList.remove('is-loading'); area.removeAttribute('aria-busy');
     }, 600);
   }

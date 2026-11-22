@@ -21,12 +21,13 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 
 ## Filters
 
-- **Search** replaces the "Select Api" dropdown. It matches Supplier name, Supplier code, reference code and short code (case-insensitive, contains).
-- **Currency**: "All currencies" + currency list.
-- **Status** (dropdown): All statuses / Active / Inactive (no counts).
+Shared filter bar (same as All Booking, Hotel API Logs, Hotel Logs, Default Markup).
+
+- **Search box** replaces the "Select Api" dropdown. It matches Supplier name, Supplier code, reference code and short code (case-insensitive, contains).
+- **Filters** panel: **Currency** (empty = any; currency list) and **Status** (empty = any / Active / Inactive, no counts). The Filters button counts the set dropdowns; while the panel is closed each one shows as a chip, and a chip's × clears it (applies on the next Search).
 - Every dropdown on the page (filters, form currency, rows per page) has a search box to type and narrow the options; arrow keys + Enter pick, Esc closes.
-- Filters apply as you type or change them. The separate search button is removed.
-- **Reset** (same button as the other lists, always shown) clears all three filters.
+- Nothing filters until **Search** (or Enter in the search box).
+- **Reset** clears the search box and both dropdowns and reloads the list.
 - Changing any filter goes back to page 1.
 - No results → the table's standard empty state.
 
@@ -141,3 +142,4 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 - 2026-11-22 — Consistency pass: table headers read API code · Reference code · Short code · Allow B2C · Hold booking (same words as the drawer; history says Allow B2C too). Toolbar dropdowns show "Currency" / "Status" while empty, like the other filters. API names must be unique (two suppliers with one name can't be told apart in a dropdown). The Make permanent confirm shows the form's values (name, codes) instead of the saved ones. Pager total uses thousands separators. Reset is in the sidebar (Reset Demo Data).
 - 2026-11-22 — Menu item **Api List** renamed **Supplier List** (tab title "Hotel Supplier List", page title "Supplier List"). Where the page meant a supplier it now says supplier: New supplier / Create supplier, drawer title "New supplier" / "Edit supplier · ‹name›" / "New temporary supplier", Supplier name, Supplier code (list header, drawer, history, Make permanent confirm), switch descriptions, "Another supplier already has this name."
 - 2026-11-22 — Reference code must be unique too: a code another supplier has shows "Already used by ‹supplier›" (red border + message), on save and on Make permanent.
+- 2026-11-23 — Filters use the shared filter bar, as on every other list page: search box (name or code) + **Search**, **Filters** and **Reset**; Currency and Status are in the Filters panel. Nothing filters until Search (or Enter in the search box); the Filters count and chips show the set dropdowns; a chip's × clears that dropdown (applies on the next Search); Reset clears everything and reloads.

@@ -8,6 +8,9 @@
    HotelApis.CURRENCIES currencies an API can have
    HotelApis.save()     write the list after any change (create, edit, make permanent)
    HotelApis.nextId()   id for a new API
+   Bookings.list        manual hotel bookings (All Booking list; the booking form creates + edits them). API bookings
+                        come from the suppliers, so the prototype can't show them: only manual bookings are listed.
+   Bookings.get(id) / Bookings.upsert(rec)   read one / add or replace one (saves)
    AdminData.reset()    clear everything saved and go back to the seed data */
 (function () {
   const PREFIX = 'admin-redesign:';
@@ -179,6 +182,99 @@
         const fresh = load('hotelApis') || seedHotelApis().apis;
         apis.splice(0, apis.length, ...fresh); fn();
       });
+    },
+  };
+  /* ---------- manual hotel bookings ----------
+     A record = { id, txn, createdAt, createdBy, updatedAt, updatedBy, payment, state }: state is the booking form's state as
+     saved (incl. its calculated prices), so the form reopens it as-is and the list reads its columns from it. */
+  function seedBookings() {
+    const pol = (agentTo, agentFee, supTo, supFee) => ({
+      essentialInformation: 'In Case Of Early Exit Or No Show 100% Of The Fee Shall Be Applicable',
+      agent: [{ fromDate: '2026-10-12T11:59:59', toDate: agentTo, cancellationPrice: 0 }, { fromDate: agentTo.replace(/58$/, '59'), toDate: '', cancellationPrice: agentFee }],
+      supplier: [{ fromDate: '2026-10-12T00:00:00', toDate: supTo, cancellationPrice: 0 }, { fromDate: supTo, toDate: '', cancellationPrice: supFee }],
+    });
+    const guest = (title, first, last, nat, extra) => ({ title, first_name: first, last_name: last, type: 'Adult', child_age: '', gender: title === 'Mr' ? 'Male' : 'Female', nationality: nat, is_lead: false, ...extra });
+    const room = (type, price, conv, mk, guests) => ({ room_type: type, price, _conv: conv, _mk: mk, _cust: Math.round((conv + mk) * 100) / 100, guests, cancellation: { essentialInformation: '', agent: [], supplier: [] } });
+    const base = { onePolicy: true, tz: { mode: 'Local', sign: '+', hours: '', mins: '00' }, special_request: '', contracting_comment: '', hotel_phone_number: '', hcn: '' };
+    return [
+      { id: 1, txn: 'NZH100000000012345', createdAt: '2026-10-12T11:30:00', createdBy: 'Ops Team', payment: 'Fully Paid', state: { ...base,
+        supplier_id: 1, supplier_currency: 'USD', platform: 'B2B', customer_id: 1034, customer_currency: 'MYR', market_id: 11,
+        hotel_name: 'Palm Grove Inn', address: '12 Jalan Example, Bukit Bintang', country_name: 'Malaysia', city: 'Kuala Lumpur',
+        hotel_phone_number: '+60 3 1234 5678', hcn: 'HCN-88213',
+        booking_date: '2026-10-12T11:30', cancellation_deadline_date: '2027-02-16T11:59', check_in: '2027-02-20', check_out: '2027-02-23',
+        star_rating: 4, status: 'CONFIRMED', lead_pax_name: 'Jane Sample',
+        guest_email: 'jane.sample@example.com', contact_dial: '+44', contact_mobile: '7700900123', meal: 'Room Only',
+        rooms: [room('Superior Twin Room', 138, 556.8, 55.68, [
+          guest('Ms', 'Jane', 'Sample', 'United Kingdom', { is_lead: true }),
+          guest('Mr', 'Tom', 'Sample', 'United Kingdom', { type: 'Child', child_age: 8 }),
+        ])],
+        reference_no: 'TBO-5521907',
+        ps: { supplier: 'TBO Holidays', supplierCurrency: 'USD', supplierPrice: 138, portalCurrency: 'MYR', conversionRate: 4.034783, reverseRate: 0.247844, convertedPrice: 556.8, markupType: 'Percent', markupRule: 10, markupAmount: 55.68, noOfRooms: 1, finalPrice: 612.48, issue: '' },
+        contracting_comment: '<p><strong>Breakfast not included.</strong></p><ul><li>Early check-in subject to availability.</li><li>Late check-out on request.</li></ul>', special_request: 'High floor, quiet room.',
+        cancellation_all: pol('2027-02-16T11:59:58', 612.48, '2027-02-18T00:00:00', 138),
+      } },
+      { id: 2, txn: 'NZH100000000012388', createdAt: '2026-11-18T15:05:00', createdBy: 'Rahim Uddin', payment: 'Unpaid', state: { ...base,
+        supplier_id: 2, supplier_currency: 'MYR', platform: 'B2B', customer_id: 1021, customer_currency: 'BDT', market_id: 21,
+        hotel_name: 'Lagoon Bay Resort', address: 'Pantai Cenang', country_name: 'Malaysia', city: 'Langkawi',
+        booking_date: '2026-11-18T15:00', cancellation_deadline_date: '2026-12-20T23:59', check_in: '2026-12-24', check_out: '2026-12-28',
+        star_rating: 5, status: 'CONFIRMED', lead_pax_name: 'Karim Ahmed',
+        guest_email: 'karim.ahmed@example.com', contact_dial: '+880', contact_mobile: '1711000222', meal: 'Breakfast',
+        rooms: [room('Deluxe Double Room', 420, 11130, 500, [
+          guest('Mr', 'Karim', 'Ahmed', 'Bangladesh', { is_lead: true }), guest('Mrs', 'Nusrat', 'Ahmed', 'Bangladesh'),
+        ])],
+        reference_no: 'DIDA-77810',
+        ps: { supplier: 'Dida', supplierCurrency: 'MYR', supplierPrice: 420, portalCurrency: 'BDT', conversionRate: 26.5, reverseRate: 0.037736, convertedPrice: 11130, markupType: 'Fixed', markupRule: 500, markupAmount: 500, noOfRooms: 1, finalPrice: 11630, issue: '' },
+        cancellation_all: pol('2026-12-20T23:59:58', 11630, '2026-12-21T00:00:00', 420),
+      } },
+      { id: 3, txn: 'NZH100000000012402', createdAt: '2026-11-20T10:42:00', createdBy: 'Super Admin', updatedAt: '2026-11-21T09:15:00', updatedBy: 'Ops Team', payment: 'Refunded', state: { ...base,
+        supplier_id: 9, supplier_currency: 'EUR', platform: 'B2B', customer_id: 1052, customer_currency: 'INR', market_id: 41,
+        hotel_name: 'Old Town Boutique Hotel', address: '5 Royal Mile', country_name: 'United Kingdom', city: 'Edinburgh',
+        booking_date: '2026-11-20T10:40', cancellation_deadline_date: '2027-01-05T23:59', check_in: '2027-01-10', check_out: '2027-01-13',
+        star_rating: 3, status: 'CANCELLED', lead_pax_name: 'Arjun Mehta',
+        guest_email: 'arjun.mehta@example.com', contact_dial: '+91', contact_mobile: '9820012345', meal: 'Half Board',
+        rooms: [
+          room('Superior Twin Room', 150, 14580, 1166.4, [guest('Mr', 'Arjun', 'Mehta', 'India', { is_lead: true }), guest('Mr', 'Rohan', 'Mehta', 'India')]),
+          room('Superior Twin Room', 150, 14580, 1166.4, [guest('Ms', 'Priya', 'Mehta', 'India'), guest('Ms', 'Anika', 'Mehta', 'India', { type: 'Child', child_age: 10 })]),
+        ],
+        reference_no: 'JNP-30071',
+        ps: { supplier: 'Juniper', supplierCurrency: 'EUR', supplierPrice: 300, portalCurrency: 'INR', conversionRate: 97.2, reverseRate: 0.010288, convertedPrice: 29160, markupType: 'Percent', markupRule: 8, markupAmount: 2332.8, noOfRooms: 2, finalPrice: 31492.8, issue: '' },
+        cancellation_all: pol('2027-01-05T23:59:58', 31492.8, '2027-01-06T00:00:00', 300),
+      } },
+      // made today (dates relative to the day the demo data is first loaded), so All Booking's default "today" list has a row
+      (() => {
+        const d = n => { const x = new Date(); x.setDate(x.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+        return { id: 4, txn: 'NZH100000000012419', createdAt: `${d(0)}T09:20:00`, createdBy: 'Ops Team', payment: 'Fully Paid', state: { ...base,
+          supplier_id: 5, supplier_currency: 'EUR', platform: 'B2B', customer_id: 1068, customer_currency: 'SGD', market_id: 101,
+          hotel_name: 'Seabreeze Residence', address: '88 Sentosa Gateway', country_name: 'Singapore', city: 'Singapore',
+          booking_date: `${d(0)}T09:15`, cancellation_deadline_date: `${d(25)}T23:59`, check_in: d(30), check_out: d(33),
+          star_rating: 4, status: 'CONFIRMED', lead_pax_name: 'Wei Ling Tan',
+          guest_email: 'weiling.tan@example.com', contact_dial: '+65', contact_mobile: '81234567', meal: 'Breakfast', hcn: 'HCN-55120',
+          rooms: [room('Family Suite', 260, 377, 37.7, [
+            guest('Ms', 'Wei Ling', 'Tan', 'Singapore', { is_lead: true }), guest('Mr', 'Jun', 'Tan', 'Singapore'),
+          ])],
+          reference_no: 'HB-118204',
+          ps: { supplier: 'Hotelbeds', supplierCurrency: 'EUR', supplierPrice: 260, portalCurrency: 'SGD', conversionRate: 1.45, reverseRate: 0.689655, convertedPrice: 377, markupType: 'Percent', markupRule: 10, markupAmount: 37.7, noOfRooms: 1, finalPrice: 414.7, issue: '' },
+          cancellation_all: pol(`${d(25)}T23:59:58`, 414.7, `${d(26)}T00:00:00`, 260),
+        } };
+      })(),
+    ];
+  }
+  const bookings = load('hotelBookings') || seedBookings();
+  window.Bookings = {
+    list: bookings,
+    get: id => bookings.find(b => b.id === Number(id)) || null,
+    // add a new booking (gets an id + transaction id, goes to the top) or replace the one with the same id; saves
+    upsert(rec) {
+      const i = bookings.findIndex(b => b.id === rec.id);
+      if (i >= 0) bookings[i] = rec;
+      else {
+        rec.id = bookings.reduce((m, b) => Math.max(m, b.id), 0) + 1;
+        const last = bookings.reduce((m, b) => Math.max(m, Number(b.txn.slice(3))), 0);
+        rec.txn = 'NZH' + (last + 1 + Math.floor(Math.random() * 40));
+        bookings.unshift(rec);
+      }
+      save('hotelBookings', bookings);
+      return rec;
     },
   };
   window.AdminData = { reset, load, save };

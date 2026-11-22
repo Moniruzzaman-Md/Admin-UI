@@ -9,17 +9,12 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
 <link rel="stylesheet" href="css/tokens.css?v=27">
 <link rel="stylesheet" href="css/shell.css?v=33">
-<link rel="stylesheet" href="css/components.css?v=55">
+<link rel="stylesheet" href="css/components.css?v=79">
 <link rel="stylesheet" href="css/skeleton.css?v=27">
-<link rel="stylesheet" href="css/table.css?v=77">
+<link rel="stylesheet" href="css/table.css?v=80">
 <link rel="stylesheet" href="css/select.css?v=27">
-<link rel="stylesheet" href="css/modal.css?v=3">
+<link rel="stylesheet" href="css/modal.css?v=7">
 <link rel="stylesheet" href="css/history.css?v=34">
-<style>
-  .toolbar .search-input { flex: 1 1 260px; max-width: 340px; }
-  .toolbar .searchable-select { width: 190px; }
-  .toolbar .spacer { flex: 1; }
-</style>
 </head>
 <body data-page="hotel-apis">
 
@@ -28,26 +23,38 @@
     <div>
       <h1 class="page-title">Supplier List</h1>
     </div>
-    <button class="btn btn-primary" id="btn-new" type="button">
+    <button class="btn btn-primary btn-new" id="btn-new" type="button" aria-label="New supplier" data-tooltip="New supplier" data-tooltip-if-icon>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      New supplier
+      <span class="btn-label">New supplier</span>
     </button>
   </div>
 
   <section class="card" aria-label="Supplier list">
-    <div class="toolbar">
+    <!-- shared filter bar (Map-UI style, as on every list page): applies on Search / Enter; Reset clears and reloads -->
+    <div class="filter-bar" id="filter-bar">
       <div class="search-input">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <input class="input" id="f-q" type="search" placeholder="Search name or code" aria-label="Search by supplier name or code">
+        <input class="input" id="f-q" type="search" placeholder="Search name or code" aria-label="Search by supplier name or code" autocomplete="off">
       </div>
-      <select class="input" id="f-currency" aria-label="Currency"><option value="">Currency</option></select>
-      <select class="input" id="f-status" aria-label="Status">
-        <option value="">Status</option><option value="active">Active</option><option value="inactive">Inactive</option>
-      </select>
-      <button class="btn btn-reset" id="f-clear" type="button">
+      <button class="btn btn-primary" type="button" data-filters-go data-tooltip="Search (Enter)" data-tooltip-if-icon>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4-4"/></svg>
+        Search
+      </button>
+      <button class="filters-toggle-btn" type="button" data-filters-toggle data-tooltip="Filters" data-tooltip-if-icon aria-expanded="false" aria-controls="filters-panel">
+        Filters <span class="filters-count" data-filters-count hidden></span>
+        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="btn btn-reset" type="button" data-filters-reset data-tooltip="Reset" data-tooltip-if-icon>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Reset
       </button>
+      <div class="filters-summary" data-filters-summary hidden></div>
+      <div class="filters-panel" id="filters-panel" data-filters-panel hidden>
+        <div class="filter-field"><label for="f-currency">Currency</label>
+          <select class="input" id="f-currency"><option value="" data-placeholder>Currency</option></select></div>
+        <div class="filter-field"><label for="f-status">Status</label>
+          <select class="input" id="f-status"><option value="" data-placeholder>Status</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+      </div>
     </div>
 
     <!-- Portal reusable table (css/table.css) — format fixed; only columns/cell content are page-specific -->
@@ -95,13 +102,14 @@
 <style>.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
 <script src="js/shell.js?v=38"></script>
 <script src="js/select.js?v=28"></script>
-<script src="js/tooltip.js?v=3"></script>
+<script src="js/filters.js?v=2"></script>
+<script src="js/tooltip.js?v=4"></script>
 <script src="js/modal.js?v=2"></script>
 <script src="js/history-legacy.js?v=4"></script>
-<script src="js/data.js?v=12"></script>
+<script src="js/data.js?v=14"></script>
 <script src="js/api-drawer.js?v=17"></script>
 <script src="js/empty-state.js?v=4"></script>
 <script src="js/table-loading.js?v=2"></script>
-<script src="js/hotel-apis.js?v=50"></script>
+<script src="js/hotel-apis.js?v=53"></script>
 </body>
 </html>

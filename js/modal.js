@@ -6,6 +6,7 @@
      message: 'Plain text, or HTML when html: true'
      details: [['Label', 'value html'], …]               (optional: a short label / value list of what it's about)
      note:    'This can't be undone.'                     (optional: a highlighted line, e.g. consequences)
+     noteTone: 'danger'                                   (optional: colour the note line on its own; default = the modal's tone)
      confirm: 'Delete'                                    (main button; omit for an info-only modal with one "OK")
      cancel:  'Cancel'                                    (default 'Cancel'; null = no cancel button)
    }) → Promise<boolean>  — true when the main button was pressed.
@@ -51,6 +52,7 @@
     dl.innerHTML = (o.details || []).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('');
     const note = q('.modal-note');
     note.hidden = !o.note;
+    note.dataset.tone = o.noteTone || '';
     note.innerHTML = o.note ? `${svg(ICONS.warning, 14)}<span>${esc(o.note)}</span>` : '';
     const ok = q('.modal-ok'), cancel = q('.modal-cancel');
     const infoOnly = !o.confirm;

@@ -1,45 +1,46 @@
 /* Shared modal (js/modal.js): confirm / info dialog used by every page.
    Tone sets the icon colour: danger (red), warning (amber), info (blue), success (green). */
 .modal {
-  --tone: var(--brand-accent); --tone-bg: #eceefd;
-  width: min(460px, calc(100vw - 32px)); padding: 0; border: 0; border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg); color: var(--text); background: var(--surface, #fff); overflow: hidden;
+  --tone: var(--brand-accent); --tone-bg: #eceefd; --tone-ring: rgba(26, 63, 209, .07);
+  width: min(460px, calc(100vw - 32px)); padding: 0; border: 0; border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(16, 24, 64, .22), 0 2px 8px rgba(16, 24, 64, .08); color: var(--text); background: var(--surface, #fff); overflow: hidden;
 }
-.modal[data-tone="danger"]  { --tone: var(--red); --tone-bg: #fdecee; }
-.modal[data-tone="warning"] { --tone: #a8620a; --tone-bg: #fff3dc; }
-.modal[data-tone="success"] { --tone: var(--green); --tone-bg: #e6f4ec; }
-.modal::backdrop { background: rgba(13, 13, 60, .38); }
-.modal[open] { animation: modal-in .16s ease-out; }
-@keyframes modal-in { from { opacity: 0; transform: translateY(6px) scale(.985); } }
+/* a thin bar in the tone colour along the top */
+.modal::before { content: ""; display: block; height: 4px; background: var(--tone); }
+.modal[data-tone="danger"]  { --tone: var(--red); --tone-bg: #fdecee; --tone-ring: rgba(198, 47, 58, .07); }
+.modal[data-tone="warning"] { --tone: #b26a00; --tone-bg: #fff3dc; --tone-ring: rgba(178, 106, 0, .08); }
+.modal[data-tone="success"] { --tone: var(--green); --tone-bg: #e6f4ec; --tone-ring: rgba(15, 138, 85, .07); }
+.modal::backdrop { background: rgba(13, 13, 60, .42); backdrop-filter: blur(2px); }
+.modal[open] { animation: modal-in .2s cubic-bezier(.2, .8, .3, 1); }
+@keyframes modal-in { from { opacity: 0; transform: translateY(10px) scale(.97); } }
 @media (prefers-reduced-motion: reduce) { .modal[open] { animation: none; } }
 
-.modal-x { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-3); cursor: pointer; }
+.modal-x { position: absolute; top: 18px; right: 16px; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-3); cursor: pointer; }
 .modal-x:hover { background: var(--surface-2); color: var(--text); }
 .modal-x:focus-visible { outline: 2px solid var(--brand-accent); outline-offset: 1px; }
 
-.modal-head { display: flex; align-items: center; gap: 12px; padding: 22px 52px 0 22px; }
-.modal-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--tone-bg); color: var(--tone); }
-.modal-head h2 { margin: 0; font-size: var(--fs-lg); line-height: 1.35; font-weight: 600; }
+.modal-head { display: flex; align-items: center; gap: 14px; padding: 22px 56px 0 24px; }
+.modal-icon { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--tone-bg); color: var(--tone); box-shadow: 0 0 0 6px var(--tone-ring); }
+.modal-head h2 { margin: 0; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; }
 
-.modal-body { padding: 12px 22px 20px 74px; }
-.modal-body > p { margin: 0; font-size: var(--fs-md); line-height: 1.5; color: var(--text-2); }
+.modal-body { padding: 18px 24px 22px; }
+.modal-body > p { margin: 0; font-size: var(--fs-md); line-height: 1.6; color: var(--text-2); }
 .modal-body > [hidden] { display: none; }
 
 /* what it's about: compact label / value list */
-.modal-details { display: grid; grid-template-columns: max-content minmax(0, 1fr); margin: 14px 0 0; border: 1px solid #e4e4f0; border-radius: 8px; background: #fbfbfe; overflow: hidden; }
-.modal-details > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 16px; padding: 7px 12px; }
-.modal-details > div + div { border-top: 1px solid #e4e4f0; }
-.modal-details dt { font-size: 11px; line-height: 20px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; color: var(--text-3); }
-.modal-details dd { margin: 0; font-size: 13px; line-height: 20px; font-weight: 600; color: #1c1c33; }
+.modal-details { display: grid; grid-template-columns: max-content minmax(0, 1fr); margin: 16px 0 0; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); overflow: hidden; }
+.modal-details > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 20px; padding: 10px 14px; }
+.modal-details > div + div { border-top: 1px solid var(--border); }
+.modal-details dt { font-size: 11px; line-height: 20px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--text-3); }
+.modal-details dd { margin: 0; font-size: 13px; line-height: 20px; font-weight: 600; color: var(--text); }
 
 /* consequence line */
-.modal-note { display: flex; align-items: flex-start; gap: 7px; margin-top: 12px !important; padding: 8px 10px; border-radius: 6px; background: var(--tone-bg); color: var(--tone) !important; font-size: var(--fs-sm) !important; font-weight: 500; }
-.modal-note svg { flex: none; margin-top: 2px; }
+.modal-note { display: flex; align-items: flex-start; gap: 9px; margin-top: 14px !important; padding: 10px 12px; border-left: 3px solid var(--tone); border-radius: 4px 8px 8px 4px; background: var(--tone-bg); color: var(--tone) !important; font-size: var(--fs-sm) !important; line-height: 1.55 !important; font-weight: 500; }
+.modal-note svg { flex: none; margin-top: 3px; }
+.modal-note[data-tone="danger"] { border-left-color: var(--red); background: #fdecee; color: var(--red) !important; }
 
-.modal-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px; border-top: 1px solid var(--border); background: var(--surface-2, #f7f8fb); }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--border); background: var(--surface-2, #f7f8fb); }
+.modal-foot .btn { min-width: 96px; justify-content: center; }
 .modal-foot [hidden] { display: none; }
 
-@media (max-width: 480px) {
-  .modal-body { padding-left: 22px; }
-}
 .modal-details .hf-code { padding: 1px 7px; border-radius: 5px; background: #ececfa; color: #10108a; font-size: 12px; font-weight: 700; letter-spacing: .4px; }

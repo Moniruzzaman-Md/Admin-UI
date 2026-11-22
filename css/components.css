@@ -2,7 +2,15 @@
 [hidden] { display: none !important; }
 
 /* page header */
-.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; padding: 0 8px; }
+.page-head { display: flex; align-items: center; min-height: 38px; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; padding: 0 8px; container-type: inline-size; }
+/* every page's head is the same height (38px = the tallest control in a head, the status switcher), content centred.
+   title block takes the free space (never below 180px), so the actions stay beside it as long as they fit */
+.page-head > :first-child { flex: 1 1 0; min-width: 180px; }
+/* page actions next to the title: <div class="page-actions"> (e.g. Check overlaps + New markup).
+   The "New …" button (.btn-new) and any other action marked .btn-shrink (label in .btn-label) become icon-only
+   when the head is 640px or narrower (hover / screen reader = their name via data-tooltip-if-icon + aria-label) */
+.page-actions { display: flex; align-items: center; gap: 12px; }
+@container (max-width: 640px) { .page-head :is(.btn-new, .btn-shrink) { width: 36px; padding: 0; gap: 0; flex-shrink: 0; } .page-head :is(.btn-new, .btn-shrink) .btn-label { display: none; } .page-actions { gap: 8px; } }
 /* history drawer header: the record's name after the title, muted (Map-UI) */
 .hist-name { color: var(--text-3); font-weight: 600; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -201,12 +209,6 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
 .cv-state.is-error .btn { margin-top: 10px; height: 32px; }
 .code-view-bar .meta .skeleton-bar { display: inline-block; vertical-align: middle; width: 44px; height: 9px; border-radius: 999px; background: linear-gradient(90deg, #e4e6f7 25%, #f3f4fc 40%, #e4e6f7 60%); background-size: 300% 100%; animation: skeleton-shimmer 1.3s ease-in-out infinite; }
 
-/* simple list toolbar (Hotel Api List): instant filters */
-.toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-.toolbar .searchable-select { width: 170px; }
-.toolbar .spacer { flex: 1; }
-/* Reset in the simple toolbar = same button as the filter bar's (same size) */
-.toolbar > .btn-reset { width: 130px; height: 38px; padding: 0 10px; }
 .inline-switch { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 500; color: var(--text-2); cursor: pointer; white-space: nowrap; }
 
 /* FILTER BAR — Map-UI style (D:/Office/Design/hotel-system.html), behaviour in js/filters.js.
@@ -218,11 +220,20 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
 /* Search / Filters / Reset share one fixed width, so the count appearing never moves the row */
 .filter-bar > [data-filters-go], .filter-bar > [data-filters-toggle], .filter-bar > [data-filters-reset] { width: 130px; min-width: 0; padding: 0 10px; }
 .filter-bar > .push-right { margin-left: auto; }
-@media (max-width: 640px) {
-  .filter-bar { gap: 10px; padding: 12px; }
-  .filter-bar > .search-input { width: 100%; }
-  .filter-bar > .push-right { flex: 1 1 100%; margin-left: 0; }
-  .filter-bar > [data-filters-go], .filter-bar > [data-filters-toggle], .filter-bar > [data-filters-reset] { flex: 1 1 0; width: auto; padding: 0 6px; }
+/* narrow card (container query on the card; 800px = where the full row stops fitting): one line of search + Search,
+   Filters, Reset and any page action (.push-right, e.g. Check overlaps) as 38px icon buttons — names stay for screen
+   readers; Filters' count = badge on its funnel icon; chips / panel below as usual */
+.card:has(> .filter-bar) { container-type: inline-size; }
+@container (max-width: 800px) {
+  .card .filter-bar { gap: 8px; padding: 12px; }
+  .card .filter-bar > .search-input { flex: 1 1 0; width: auto; min-width: 0; }
+  .filter-bar > [data-filters-go], .filter-bar > [data-filters-toggle], .filter-bar > [data-filters-reset], .card .filter-bar > .push-right { position: relative; flex: 0 0 38px; width: 38px; min-width: 0; padding: 0; gap: 0; font-size: 0; margin-left: 0; }
+  .filter-bar > [data-filters-toggle] .chevron { display: none; }
+  .filter-bar > [data-filters-toggle]::before { content: ''; width: 16px; height: 16px; background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M4 5h16l-6 7.5V19l-4-2v-4.5L4 5z'/%3E%3C/svg%3E") center / contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M4 5h16l-6 7.5V19l-4-2v-4.5L4 5z'/%3E%3C/svg%3E") center / contain no-repeat; }
+  .filter-bar > [data-filters-toggle] .filters-count { position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px; padding: 0 5px; font-size: 10px; line-height: 18px; }
+  .filter-bar > [data-filters-toggle].open { background: #ececfa; border-color: var(--brand-accent); color: var(--brand-accent); }
 }
 .filters-toggle-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
@@ -239,8 +250,20 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
 .filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px 5px 10px; border-radius: 999px; background: rgba(43, 62, 209, .08); color: #1c1c33; font-size: 12px; font-weight: 600; }
 .filter-chip button { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 0; background: rgba(43, 62, 209, .15); color: var(--brand-accent); font-size: 12px; line-height: 1; cursor: pointer; padding: 0; }
 .filter-chip button:hover { background: var(--brand-accent); color: #fff; }
-.filters-panel { flex-basis: 100%; display: grid; grid-template-columns: repeat(auto-fill, 190px); gap: 16px; padding: 16px; background: #ececfa; border-radius: var(--radius-sm); }
+.filters-panel { flex-basis: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; padding: 16px; background: #ececfa; border-radius: var(--radius-sm); container-type: inline-size; }
+/* columns: as many 190px-or-wider as fit, stretched to fill the row, so fields grow and shrink with the page */
 .filter-field { min-width: 0; }
+/* a section's own fields after its heading: <div class="filter-fields">. auto-fit: when they all fit on one row they
+   stretch to fill it (no empty slot at the end); otherwise they wrap into columns of at least 190px. */
+.filter-fields { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+/* From / To date pairs: <div class="filter-pairs"> of <div class="filter-pair"> (From cell + To cell).
+   A full-width row of its own; pairs per row = 4, 2 or 1 by the panel width, so the rows always split evenly
+   (never 3 + 1). Each pair's From and To share it equally; when the panel fits one column, To goes under From. */
+.filter-pairs { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr; gap: 16px; }
+.filter-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@container (min-width: 688px) { .filter-pairs { grid-template-columns: repeat(2, 1fr); } }    /* 2 pairs = 4 date fields of 160px+ */
+@container (min-width: 1392px) { .filter-pairs { grid-template-columns: repeat(4, 1fr); } }   /* 4 pairs = 8 date fields of 160px+ (a filled date + × needs ~155px) */
+@container (max-width: 395px) { .filter-pair { grid-template-columns: 1fr; } }
 .filter-field > label:not(.inline-switch) { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--text-3); }
 .filter-field .input, .filter-field .search-input, .filter-field .date-input { width: 100%; }
 .filter-field .searchable-select { display: flex; width: 100%; }
@@ -248,6 +271,15 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
 .filter-field--toggle .inline-switch { height: 38px; color: #1c1c33; }
 .filters-section-label { grid-column: 1 / -1; padding-top: 12px; margin-top: 4px; border-top: 1px solid #d9d9ee; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
 .filters-section-label:first-child { padding-top: 0; margin-top: 0; border-top: 0; }
+/* related fields side by side under their own heading: <div class="filter-groups"> of <div class="filter-group"> (heading + .filter-pair).
+   One group per row, then 2 per row once each field gets 160px+ (same width as 2 date pairs). Stacked groups keep the divider. */
+.filter-groups { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr; gap: 16px; }
+.filter-group { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.filter-group + .filter-group > .filters-section-label { padding-top: 12px; margin-top: 4px; border-top: 1px solid #d9d9ee; }
+@container (min-width: 688px) {
+  .filter-groups { grid-template-columns: repeat(2, 1fr); }
+  .filter-group + .filter-group > .filters-section-label { padding-top: 0; margin-top: 0; border-top: 0; }
+}
 
 /* hotel API create / edit drawer (Hotel Api List; booking form → "Other — add temporary supplier") */
 /* hold booking options (shown when Hold booking is on) */

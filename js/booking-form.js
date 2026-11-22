@@ -79,40 +79,14 @@ const blankState = () => ({
   contracting_comment: '', special_request: '',
   onePolicy: true, cancellation_all: emptyScope(),
   tz: { mode: 'Local', sign: '+', hours: '', mins: '00' },
+  /* client policies calculated from the supplier ones: same steps, times moved earlier by clientHours, fee converted + marked up */
+  clientAuto: true, clientHours: '36',   /* the system's set hours */
+  clientNow: '',   /* "now" for an empty supplier From: live until the booking is saved, then kept */
 });
-const sampleState = () => ({
-  ...blankState(),
-  unique_trans_id: 'NZH100000000012345',
-  supplier_id: 1, supplier_currency: 'USD', platform: 'B2B', customer_id: 1034, customer_currency: 'MYR', market_id: 11,
-  hotel_name: 'Palm Grove Hotel', address: '12 Jalan Example, Bukit Bintang', country_name: 'Malaysia', city: 'Kuala Lumpur',
-  hotel_phone_number: '+60 3 1234 5678', hcn: 'HCN-88213',
-  booking_date: '2026-10-12T11:30', cancellation_deadline_date: '2027-02-16T11:59', check_in: '2027-02-20', check_out: '2027-02-23',
-  star_rating: 4, status: 'CONFIRMED',
-  guest_email: 'jane.sample@example.com', contact_dial: '+44', contact_mobile: '7700900123',
-  meal: 'Room Only',
-  rooms: [{
-    room_type: 'Superior Double Room', price: 138, cancellation: emptyScope(),
-    guests: [
-      { title: 'Ms', first_name: 'Jane', last_name: 'Sample', type: 'Adult', child_age: '', gender: 'Female', nationality: 'United Kingdom', is_lead: true },
-      { title: 'Mr', first_name: 'Tom', last_name: 'Sample', type: 'Child', child_age: 8, gender: 'Male', nationality: 'United Kingdom', is_lead: false },
-    ],
-  }],
-  reference_no: 'TBO-5521907',
-  ps: { supplier: '', supplierCurrency: 'USD', supplierPrice: 138, portalCurrency: 'MYR', conversionRate: 4.034783, reverseRate: 0.247844, convertedPrice: '', markupType: 'Percent', markupRule: 10, markupAmount: '', noOfRooms: 1, finalPrice: '', issue: '' },
-  contracting_comment: '<p><strong>Breakfast not included.</strong></p><ul><li>Early check-in subject to availability.</li><li>Late check-out on request.</li></ul>', special_request: 'High floor, quiet room.',
-  onePolicy: true,
-  cancellation_all: {
-    essentialInformation: 'In Case Of Early Exit Or No Show 100% Of The Fee Shall Be Applicable',
-    agent: [
-      { fromDate: '2026-10-12T11:59:59', toDate: '2027-02-16T11:59:58', cancellationPrice: 0, timeFormat: 'Local' },
-      { fromDate: '2027-02-16T11:59:59', toDate: '', cancellationPrice: 612.48, timeFormat: 'Local' },
-    ],
-    supplier: [
-      { fromDate: '2026-10-12T00:00:00', toDate: '2027-02-18T00:00:00', cancellationPrice: 0, timeFormat: 'Local' },
-      { fromDate: '2027-02-18T00:00:00', toDate: '', cancellationPrice: 138, timeFormat: 'Local' },
-    ],
-  },
-});
+/* a saved booking (js/data.js Bookings) opened for editing: its saved state on top of a blank one */
+let record = null;
+/* bookings saved before the calculate option keep their typed client policies (option off) */
+const savedState = rec => ({ ...blankState(), clientAuto: false, ...JSON.parse(JSON.stringify(rec.state)), unique_trans_id: rec.txn });
 
 const get = p => p.split('.').reduce((o, k) => (o == null ? o : o[k]), state);
 const set = (p, v) => { const k = p.split('.'); let o = state; k.slice(0, -1).forEach(x => o = o[x]); o[k.at(-1)] = v; };
@@ -189,8 +163,8 @@ const money = (label, bind, val, curPath, fb, req) =>
 const stepper = (label, bind, val, min, max, fb, req) =>
   `<div class="field"><label class="lbl${req ? ' req' : ''}">${label}</label><div class="ig stepper"><button type="button" data-action="step" data-d="-1" aria-label="Decrease">−</button><input type="text" inputmode="numeric" placeholder="${min}" data-int data-bind="${bind}" data-min="${min}" data-max="${max}" ${req ? 'data-required' : ''} value="${esc(val)}"><button type="button" data-action="step" data-d="1" aria-label="Increase">+</button></div>${fbHTML(fb)}</div>`;
 const CAL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>';
-const dateField = (label, bind, val, kind, placeholder) =>
-  `<div class="field"><label class="lbl">${label}</label><div class="dp">${CAL_ICON}<input type="text" data-date="${kind}" data-bind="${bind}" value="${esc(val)}" placeholder="${placeholder}"><button type="button" class="dp-clear" data-action="dp-clear" aria-label="Clear">×</button></div></div>`;
+const dateField = (label, bind, val, kind, placeholder, fb) =>
+  `<div class="field"><label class="lbl">${label}</label><div class="dp">${CAL_ICON}<input type="text" data-date="${kind}" data-bind="${bind}" value="${esc(val)}" placeholder="${placeholder}"><button type="button" class="dp-clear" data-action="dp-clear" aria-label="Clear">×</button></div>${fbHTML(fb)}</div>`;
 
 /* ---------- date picker ---------- */
 const DP = {
@@ -199,10 +173,18 @@ const DP = {
   datetimesec: { dateFormat: 'Y-m-d\\TH:i:S',  altFormat: 'd-M-Y  ·  h:i:S K', enableTime: true, enableSeconds: true },
 };
 /* policy dates: next From = previous To + 1 second */
-const plusOneSec = v => {
+const addSecs = (v, s) => {
   const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/); if (!m) return '';
-  const d = new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0) + 1), p2 = n => String(n).padStart(2, '0');
+  const d = new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0) + s), p2 = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}T${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
+};
+const plusOneSec = v => addSecs(v, 1);
+const nowStr = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19); };   /* local time */
+/* shown like the date pickers: 16-Feb-2027 · 11:59:58 AM */
+const fmtDT = v => {
+  const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/); if (!m) return '';
+  const h = +m[4], mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m[2] - 1];
+  return `${m[3]}-${mon}-${m[1]}  ·  ${String(h % 12 || 12).padStart(2, '0')}:${m[5]}:${m[6]} ${h < 12 ? 'AM' : 'PM'}`;
 };
 /* a From the user picks stops following; a To change moves the next policy's From while that From is still auto-filled */
 function chainPolicyDates(bind, str) {
@@ -294,13 +276,33 @@ function policyRows(scopePath, kind, rows) {
       <div class="pol-head"><span>Policy ${i + 1}</span>${rmBtn('rm-policy', i, `data-scope="${scopePath}" data-kind="${kind}"`)}</div>
       <div class="row c2">
         ${dateField('From <span class="hint">· empty = until</span>', `${scopePath}.${kind}.${i}.fromDate`, p.fromDate, 'datetimesec', 'Until')}
-        ${dateField('To <span class="hint">· empty = onwards</span>', `${scopePath}.${kind}.${i}.toDate`, p.toDate, 'datetimesec', 'Onwards')}
+        ${dateField('To <span class="hint">· empty = onwards</span>', `${scopePath}.${kind}.${i}.toDate`, p.toDate, 'datetimesec', 'Onwards', "To can't be before From.")}
       </div>
       <div class="row c2 mt">
         ${money('Cancellation fee', `${scopePath}.${kind}.${i}.cancellationPrice`, p.cancellationPrice, kind === 'agent' ? 'ps.portalCurrency' : 'ps.supplierCurrency', 'Fee is required and must be 0 or more.', true)}
       </div>
     </div>`).join('');
 }
+/* client policies while "Auto calculate client policy" is on: read-only, one per supplier policy */
+function derivedRows(scopePath) {
+  const sc = get(scopePath), cc = state.ps.portalCurrency;
+  if (!sc.supplier.length) return '<div class="ro is-empty">Add a supplier policy</div>';
+  const ro = (v, empty) => `<div class="ro${v ? '' : ' is-empty'}">${v || empty}</div>`;
+  return sc.agent.map((p, i) => `
+    <div class="pol">
+      <div class="pol-head"><span>Policy ${i + 1}</span></div>
+      <div class="row c2">
+        <div class="field dt"><label class="lbl">From</label>${ro(fmtDT(p.fromDate), 'Until')}</div>
+        <div class="field dt"><label class="lbl">To</label>${ro(fmtDT(p.toDate), 'Onwards')}</div>
+      </div>
+      <div class="row c2 mt">
+        <div class="field"><label class="lbl lbl-calc"><span>Cancellation fee</span><span class="calc-mini">${esc(p._calc || '')}</span></label>
+          <div class="ro money cust${p.cancellationPrice === '' ? ' is-empty' : ''}">${p.cancellationPrice === '' ? p._need :`<span class="ccy">${esc(cc)}</span>${fmtN(p.cancellationPrice)}`}</div></div>
+      </div>
+    </div>`).join('');
+}
+/* client and supplier columns share rows (side by side): title, one row per policy pair, add button — so pairs line up at the same height */
+const scopeRows = sc => 1 + Math.max(state.clientAuto ? Math.max(sc.supplier.length, 1) : sc.agent.length + 1, sc.supplier.length + 1);
 function scopeHTML(scopePath, title) {
   const sc = get(scopePath);
   const kinds = [['agent', `${custLabel()} cancellation policies`, ''], ['supplier', 'Supplier cancellation policies', 'sup']];
@@ -308,7 +310,9 @@ function scopeHTML(scopePath, title) {
     <div class="box-head"><span class="box-title">${esc(title)}</span></div>
     <div class="box-body">
       <div class="field" style="margin-bottom:16px"><label class="lbl">Essential information</label><input type="text" placeholder="Enter essential information" data-bind="${scopePath}.essentialInformation" value="${esc(sc.essentialInformation)}"></div>
-      <div class="scope-groups">${kinds.map(([k, label, cls]) => `<div class="group"><div class="sec-title"><span class="dot ${cls}"></span>${label}</div>${policyRows(scopePath, k, sc[k])}<button type="button" class="btn btn-add" data-action="add-policy" data-scope="${scopePath}" data-kind="${k}">+ Add ${k === 'agent' ? custLabel().toLowerCase() : 'supplier'} policy</button></div>`).join('')}</div>
+      <div class="scope-groups" style="--rows:${scopeRows(sc)}">${kinds.map(([k, label, cls]) => k === 'agent' && state.clientAuto
+        ? `<div class="group derived"><div class="sec-title"><span class="dot ${cls}"></span>${label}</div><div data-derived="${scopePath}">${derivedRows(scopePath)}</div></div>`
+        : `<div class="group"><div class="sec-title"><span class="dot ${cls}"></span>${label}</div>${policyRows(scopePath, k, sc[k])}<button type="button" class="btn btn-add" data-action="add-policy" data-scope="${scopePath}" data-kind="${k}">+ Add ${k === 'agent' ? custLabel().toLowerCase() : 'supplier'} policy</button></div>`).join('')}</div>
     </div>
   </div>`;
 }
@@ -350,6 +354,40 @@ function derive() {
   ps.convertedPrice = done ? sum('_conv') : '';
   ps.markupAmount = done ? sum('_mk') : '';
   ps.finalPrice = done ? sum('_cust') : '';
+
+  /* client policies from supplier — same as Hotel_API (APICommonHelper.ConvertCancellationPolicy + HotelMapperManager.CalculateCancellationPrice):
+     From = supplier From − hours − 1 s, To = supplier To − hours − 2 s;
+     fee = supplier fee × rate + the markup of the rooms the policy covers (percent of their converted price, or fixed × rooms);
+     a free (0) step gets no markup */
+  if (state.clientAuto) {
+    const secs = -(Number(state.clientHours) || 0) * 3600;
+    const scopes = state.onePolicy ? [[state.cancellation_all, ps.convertedPrice, rooms.length]] : rooms.map(rm => [rm.cancellation, rm._conv, 1]);
+    scopes.forEach(([sc, base, n]) => {
+      const mkAmt = mt === 'Fixed' ? round2(rule * n) : mt === 'Percent' ? (base === '' ? '' : round2(base * rule / 100)) : 0;
+      sc.agent = sc.supplier.map(p => {
+        const has = p.cancellationPrice !== '' && p.cancellationPrice != null, f = Number(p.cancellationPrice);
+        const conv = has && rateOk ? round2(f * r) : '';
+        const mk = !f ? 0 : mkAmt;
+        const fee = conv === '' || mk === '' ? '' : round2(conv + mk);
+        return {
+          /* empty supplier From → now − hours (as Hotel_API) */
+          fromDate: p.fromDate ? addSecs(p.fromDate, secs - 1) : addSecs(state.clientNow || nowStr(), secs), toDate: addSecs(p.toDate, secs - 2),
+          cancellationPrice: fee,
+          _need: !has ? 'Enter supplier fee' : conv === '' ? 'Needs conversion rate' : mk === '' ? (state.onePolicy ? 'Needs every room price' : 'Needs room price') : '',
+          _calc: fee === '' || !f ? '' : `${fmtN(f)} × ${fmtRate(r)} = ${fmtN(conv)}${mk ? ` + ${fmtN(mk)} markup` : ''}`,
+        };
+      });
+    });
+  }
+
+  /* deadline — as Hotel_API (BookCHelper.GetEarliestPaidCancellationDate): the earliest From of a client policy with a fee above 0,
+     across all rooms; only free policies → now − hours. Waits while there's no client policy or a client fee isn't known yet. */
+  const clientPols = (state.onePolicy ? [state.cancellation_all] : rooms.map(rm => rm.cancellation)).flatMap(sc => sc.agent);
+  if (!clientPols.length || clientPols.some(p => p.cancellationPrice === '' || p.cancellationPrice == null)) state.cancellation_deadline_date = '';
+  else {
+    const froms = clientPols.filter(p => Number(p.cancellationPrice) > 0 && p.fromDate).map(p => addSecs(p.fromDate, 0)).filter(Boolean).sort();
+    state.cancellation_deadline_date = froms[0] || addSecs(state.clientNow || nowStr(), -(Number(state.clientHours) || 0) * 3600);
+  }
 }
 
 /* push state -> DOM inputs (skips the focused one) */
@@ -503,8 +541,75 @@ function refresh() {
   document.getElementById('f-tz').classList.toggle('is-empty', !!tzLive && tz.hours === '');
   document.getElementById('tzPrev').textContent = tzString() || `UTC${tz.sign}?`;
 
+  /* deadline (from the client policies) */
+  const dl = document.getElementById('deadlineRo');
+  dl.textContent = state.cancellation_deadline_date ? fmtDT(state.cancellation_deadline_date) : (state.onePolicy ? [state.cancellation_all] : state.rooms.map(r => r.cancellation)).some(sc => sc.agent.length) ? 'Waiting for client policy fees' : 'Waiting for client policy';
+  dl.classList.toggle('is-empty', !state.cancellation_deadline_date);
+
+  /* policies (and auto calculate) wait for what the client policy is calculated from */
+  const pn = policyNeed(), lock = document.getElementById('polLock'), needBtn = document.getElementById('polNeed');
+  lock.classList.toggle('locked', !!pn); lock.inert = !!pn;
+  needBtn.hidden = !pn;
+  if (pn) { needBtn.dataset.needPath = pn[0]; needBtn.querySelector('span').textContent = pn[1]; }
+
+  /* client policies calculated from supplier */
+  document.getElementById('clientHoursWrap').hidden = !state.clientAuto;
+  document.querySelectorAll('[data-derived]').forEach(el => { el.innerHTML = derivedRows(el.dataset.derived); });
+
   renderSummary();
-  if (submitted) validate();
+  if (submitted) validate(); else checkPolicyDates();
+}
+
+/* policy dates: a To can't be before its From (the To picker starts at the From; a From moved past the To is flagged at once) */
+function checkPolicyDates() {
+  const errs = [], norm = v => addSecs(v, 0);
+  const scopes = state.onePolicy ? ['cancellation_all'] : state.rooms.map((r, i) => `rooms.${i}.cancellation`);
+  scopes.forEach(sp => ['supplier', ...(state.clientAuto ? [] : ['agent'])].forEach(kind => (get(sp)[kind] || []).forEach((p, i) => {
+    const bind = `${sp}.${kind}.${i}.toDate`, el = document.querySelector(`[data-bind="${bind}"]`); if (!el) return;
+    const from = norm(p.fromDate), bad = !!from && !!norm(p.toDate) && norm(p.toDate) < from;
+    /* the picker's limit only while the To is valid: a limit past the current To would blank it, hiding what's wrong */
+    const min = bad ? '' : from;
+    if (el._fp && el._fp._min !== min) { el._fp._min = min; el._fp.set('minDate', min || null); }
+    if (el._fp && bad && !el._fp.selectedDates.length) el._fp.setDate(p.toDate, false);
+    el.closest('.field').classList.toggle('is-invalid', bad);
+    if (bad) errs.push(bind);
+  })));
+  return errs;
+}
+
+/* the first thing the client policy still needs: [field to go to, what to say] — supplier, client currency, rate, markup amount, room prices (Percent markup) */
+function policyNeed() {
+  const ps = state.ps;
+  if (state.supplier_id == null) return ['supplier_id', 'Select supplier first'];
+  if (!state.platform) return ['platform', 'Select platform type first'];
+  if (state.customer_id == null) return ['customer_id', 'Select client first'];
+  if (!ps.portalCurrency) return ['customer_currency', 'Select client currency first'];
+  if (!(Number(ps.conversionRate) > 0)) return ['ps.conversionRate', 'Enter conversion rate first'];
+  if (ps.markupType && ps.markupRule === '') return ['ps.markupRule', 'Enter markup amount first'];
+  if (ps.markupType === 'Percent') { const i = state.rooms.findIndex(r => r.price === '' || r.price == null); if (i >= 0) return [`rooms.${i}.price`, state.rooms.length > 1 ? `Enter room ${i + 1} price first` : 'Enter room price first']; }
+  return null;
+}
+
+/* turning auto calculate off: explain why it should stay on; off only on "Turn off" */
+async function confirmAutoOff() {
+  const h = Number(state.clientHours) || 0, cl = custLabel().toLowerCase();
+  const pending = Modal.open({
+    tone: 'warning',
+    title: 'Turn off auto calculate?',
+    message: `Auto calculate is the preferred way. It builds ${cl} policies from the supplier's, like API bookings, so the ${cl} always cancels before the supplier.`,
+    details: [
+      ['Times', `${h} h before the supplier's`],
+      ['Fees', 'Supplier fee × rate + markup'],
+    ],
+    note: `If off, you enter ${cl} policies yourself. They won't update when supplier policies, rate or markup change.`,
+    noteTone: 'danger',
+    confirm: 'Turn off',
+    cancel: 'Keep on',
+  });
+  document.querySelector('dialog.modal .modal-cancel')?.focus();   /* the safe choice */
+  if (!(await pending)) return;
+  state.clientAuto = false;
+  derive(); renderPolicies(); refresh();
 }
 
 /* ---------- validation ---------- */
@@ -549,6 +654,8 @@ function validate() {
   });
   if (allGuests().filter(g => g.is_lead).length !== 1) errors.push('lead_guest');
   if (mark(document.getElementById('f-tz'), !!tzError(), state.tz.hours === '')) errors.push('time_format');
+  need('f-clientHours', state.clientAuto && state.clientHours === '', 'client_policy_hours');
+  errors.push(...checkPolicyDates());
   document.querySelectorAll('.lead-check').forEach(l => l.classList.toggle('need', !allGuests().some(g => g.is_lead)));
   return errors;
 }
@@ -591,6 +698,7 @@ function buildPayload() {
     contracting_comment: s.contracting_comment ? JSON.stringify([s.contracting_comment]) : null,
     special_request: s.special_request,
     cancellation_time_format: tzString() || null,
+    client_policy_from_supplier: !!s.clientAuto, client_policy_hours_before: s.clientAuto ? num(s.clientHours) : null,
     cancellationPolicyResponse: policies,
   };
 }
@@ -599,6 +707,8 @@ function buildPayload() {
 document.addEventListener('input', e => {
   if (e.target.dataset && e.target.dataset.tz === 'hours') { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 2); state.tz.hours = e.target.value; refresh(); return; }
   const el = e.target, path = el.dataset && el.dataset.bind; if (!path || el._fp) return;
+  /* auto calculate is the preferred way: switching it off asks first */
+  if (path === 'clientAuto' && !el.checked) { el.checked = true; confirmAutoOff(); return; }
   if (el.dataset.money !== undefined) el.value = cleanMoney(el.value);
   if (el.dataset.int !== undefined) {
     el.value = el.value.replace(/\D/g, '');
@@ -610,7 +720,8 @@ document.addEventListener('input', e => {
     const v = Number(el.value), other = path === 'ps.conversionRate' ? 'ps.reverseRate' : 'ps.conversionRate';
     set(other, el.value !== '' && v > 0 ? 1 / v : '');
   }
-  if (path === 'onePolicy') renderPolicies();
+  /* switching the calculation off keeps the calculated client policies as an editable start */
+  if (path === 'onePolicy' || path === 'clientAuto') { derive(); renderPolicies(); }
   if (el.hasAttribute('data-policy-title') && !state.onePolicy) renderPolicies();
   refresh();
 });
@@ -628,7 +739,7 @@ document.addEventListener('focusout', e => {
 });
 document.addEventListener('click', e => {
   const head = e.target.closest('[data-toggle]'); if (head) { head.parentElement.classList.toggle('closed'); return; }
-  const lk = e.target.closest('.ig.locked, .ss.locked');
+  const lk = e.target.closest('.ig.locked, .ss.locked, .sec-need');
   if (lk) {
     const p = lk.dataset.needPath, sel = { supplier_id: 'ss-supplier', customer_id: 'ss-customer', supplier_currency: 'ss-supCur', customer_currency: 'ss-custCur', 'ps.supplierCurrency': 'ss-supCur', 'ps.portalCurrency': 'ss-custCur', country_name: 'ss-country', platform: 'ss-platform', 'ps.markupType': 'ss-markup' }[p];
     const t = sel ? selects[sel].input : document.querySelector(`[data-bind="${p}"]`);
@@ -661,6 +772,15 @@ document.addEventListener('click', e => {
   if (a === 'save') {
     submitted = true;
     const errs = validate(), box = document.getElementById('payload');
+    /* valid: saved to the shared booking list (All Booking shows it), then back to the list */
+    if (!errs.length) {
+      if (!state.clientNow) { state.clientNow = nowStr(); derive(); }
+      const { unique_trans_id, ...saved } = JSON.parse(JSON.stringify(state));
+      const d = new Date(), now = new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19), by = 'Super Admin';   /* local time */
+      const rec = Bookings.upsert(record ? { ...record, updatedAt: now, updatedBy: by, state: saved } : { createdAt: now, createdBy: by, payment: 'Unpaid', state: saved });
+      location.href = `${backTo}?saved=${rec.id}&how=${record ? 'edit' : 'new'}`;
+      return;
+    }
     box.style.display = 'block';
     document.getElementById('payloadErrs').textContent = errs.length ? `Not saved – ${errs.length} field(s) need attention (shown in red). The payload below is a preview only.` : '';
     document.getElementById('payloadJson').textContent = JSON.stringify(buildPayload(), null, 2);
@@ -677,7 +797,7 @@ document.querySelectorAll('[data-required]').forEach(el => { const l = el.closes
 function load(m) {
   mode = m;
   lastNationality = '';
-  state = m === 'edit' ? sampleState() : blankState();
+  state = m === 'edit' ? savedState(record) : blankState();
   /* the supplier's name comes from the shared list (a rename on Supplier List shows here) */
   if (state.supplier_id != null) {
     const api = HotelApis.list.find(a => a.id === state.supplier_id) || {};
@@ -754,8 +874,11 @@ ccEditor.on('text-change', () => { state.contracting_comment = ccEditor.getText(
 const qs = new URLSearchParams(location.search);
 const backTo = /^[\w-]+\.html$/.test(qs.get('returnUrl') || '') ? qs.get('returnUrl') : 'hotel-bookings.html';
 document.querySelector('.bf-head .back').addEventListener('click', () => { location.href = backTo; });
-const startMode = qs.get('mode') === 'edit' ? 'edit' : 'add';
+/* ?id=N edits that saved booking (All Booking › Edit); ?mode=edit opens the newest one; otherwise Add */
+record = Bookings.get(qs.get('id')) || (qs.get('mode') === 'edit' ? Bookings.list[0] || null : null);
+const startMode = record ? 'edit' : 'add';
 const proto = document.getElementById('protoMode');
+proto.hidden = !Bookings.list.length && startMode === 'add';
 proto.textContent = startMode === 'edit' ? 'Open Add form' : 'Open edit sample';
 proto.href = startMode === 'edit' ? 'booking-form.html' : 'booking-form.html?mode=edit';
 load(startMode);
