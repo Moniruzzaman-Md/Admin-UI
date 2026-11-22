@@ -390,10 +390,11 @@ function derive() {
   }
 }
 
-/* push state -> DOM inputs (skips the focused one) */
+/* push state -> DOM inputs (skips the focused text field, so typing isn't overwritten; checkboxes always follow state —
+   a switch keeps focus after a confirm dialog closes, and skipping it left it showing the old value) */
 function syncInputs() {
   document.querySelectorAll('[data-bind]').forEach(el => {
-    if (el === document.activeElement) return;
+    if (el === document.activeElement && el.type !== 'checkbox') return;
     const v = get(el.dataset.bind);
     if (el._fp) { if (el.value !== String(v ?? '')) v ? el._fp.setDate(v, false) : el._fp.clear(false); return; }
     const shown = el.dataset.money !== undefined ? fmtMoney(v) : el.dataset.rate !== undefined ? fmtRate(v) : String(v ?? '');

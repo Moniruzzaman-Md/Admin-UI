@@ -64,3 +64,4 @@ Prototype only (not part of the design): the dashed **Open edit sample / Open Ad
 - 2026-11-23 — Cancellation policies (and auto calculate) locked until supplier, client, client currency, conversion rate, markup amount and (Percent) room prices are set; the line above says what's missing and goes to it.
 - 2026-11-23 — Switching Auto calculate client policy off now asks for confirmation and explains why it should stay on.
 - 2026-11-23 — Client and supplier policy columns line up when side by side: Policy N on both sides starts at the same line and has the same height (the taller one sets it), and both columns are the same height. Stacked (narrow) layout unchanged.
+- 2026-11-23 — Fix: after confirming **Turn off** in the Auto calculate dialog, the switch kept showing on (the setting was off) and clicking it again only reopened the dialog. It now shows off.
