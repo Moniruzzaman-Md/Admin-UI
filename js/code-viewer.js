@@ -10,7 +10,10 @@
    loading(): skeleton over the editor while the file is being fetched (also shown while Monaco itself loads).
    error(message, onRetry): message + "Try again" in place of the content.
    Read-only, folding, no minimap, VS Code find (Ctrl+F or find()), word wrap via setWrap().
-   collapseAll() folds every block but the outermost; expandAll() unfolds everything. */
+   collapseAll() folds every block but the outermost; expandAll() unfolds everything.
+   Right-click (or the Menu key / Shift+F10) opens a small menu: Copy (the selection, when there is one) and, for JSON,
+   Copy value — the value of the property under the pointer: a string without its quotes, a number / true / false / null
+   as written, an object or array as indented JSON. On a key it copies that key's value. */
 (function () {
   const VS = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs';
   let loading = null;
@@ -70,6 +73,57 @@
   const ICON_WARN = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>';
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
+  /* ---------- JSON value at an offset (for Copy value) ----------
+     A small JSON scanner that keeps each value's start / end offset in the text; valueAt returns the innermost value
+     at the offset (on a key: that property's value), or null when the text isn't JSON. */
+  function jsonTree(text) {
+    let i = 0;
+    const ws = () => { while (i < text.length && ' \t\n\r'.includes(text[i])) i++; };
+    const str = () => { const a = i++; while (i < text.length && text[i] !== '"') i += text[i] === '\\' ? 2 : 1; i++; return { start: a, end: i, type: 'string' }; };
+    function val() {
+      ws(); const a = i, c = text[i];
+      if (c === '"') return str();
+      if (c === '{' || c === '[') {
+        const obj = c === '{', node = { start: a, type: obj ? 'object' : 'array', items: [] }; i++; ws();
+        while (i < text.length && text[i] !== (obj ? '}' : ']')) {
+          if (obj) { ws(); const key = str(); ws(); i++; node.items.push({ key, value: val() }); }
+          else node.items.push({ value: val() });
+          ws(); if (text[i] === ',') i++; ws();
+        }
+        i++; node.end = i; return node;
+      }
+      while (i < text.length && !',}] \t\n\r'.includes(text[i])) i++;
+      if (i === a) throw new Error('bad JSON');
+      return { start: a, end: i, type: 'literal' };
+    }
+    const root = val(); ws();
+    if (i < text.length) throw new Error('bad JSON');
+    return root;
+  }
+  function valueAt(node, off) {
+    if (off < node.start || off > node.end) return null;
+    // anywhere from a key to the end of its value (key, colon, value) = that property; deeper values win
+    for (const it of node.items || []) {
+      if (off < (it.key || it.value).start || off > it.value.end) continue;
+      const inner = valueAt(it.value, off);
+      if (inner && inner.node !== it.value) return inner;
+      return { node: it.value, key: it.key ? JSON.parse(text_(it.key)) : null };
+    }
+    return { node };
+  }
+  let text_ = () => '';   // set per lookup: the text of a node
+  function copyText(text, node) {
+    const t = text.slice(node.start, node.end);
+    if (node.type === 'string') return JSON.parse(t);
+    if (node.type === 'literal') return t;
+    return JSON.stringify(JSON.parse(t), null, 2);
+  }
+  function writeClipboard(t) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+    const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); return Promise.resolve();
+  }
+
   function create(host) {
     let editor = null, model = null, wrap = false, pending = null, current = { text: '' }, raw = '';
     let mode = 'loading', err = null, overlay = null;   // mode: 'loading' | 'error' | null (content showing)
@@ -100,8 +154,13 @@
     function ensure() {
       return loadMonaco().then(monaco => {
         if (editor) return;
+        // light theme on the portal's soft grey (tokens.css --surface-2); text colours stay VS Code's
+        monaco.editor.defineTheme('portal', { base: 'vs', inherit: true, rules: [], colors: {
+          'editor.background': '#f9fafc', 'editorGutter.background': '#f9fafc', 'editorStickyScroll.background': '#f9fafc',
+          'editorLineNumber.foreground': '#9aa1b4', 'editorLineNumber.activeForeground': '#4a5268',
+        } });
         editor = monaco.editor.create(host, {
-          readOnly: true, domReadOnly: true, theme: 'vs', automaticLayout: true,
+          readOnly: true, domReadOnly: true, theme: 'portal', automaticLayout: true,
           // VS Code's own defaults (font stack, 14px); css/components.css protects this font from the portal's *{font-family}
           fontFamily: "Consolas, 'Courier New', Menlo, Monaco, 'Droid Sans Mono', monospace", fontSize: 14, lineNumbersMinChars: 4, scrollBeyondLastLine: false, renderLineHighlight: 'none',
           minimap: { enabled: false }, folding: true, showFoldingControls: 'always',
@@ -109,9 +168,62 @@
           overviewRulerBorder: false, padding: { top: 8 },
         });
         monaco.editor.remeasureFonts();   // measure again now that the code font applies
+        // own right-click menu (Monaco's is off): Copy + Copy value
+        editor.onContextMenu(e => { const ev = e.event.browserEvent; ev.preventDefault(); openMenu(e.target.position, ev.clientX, ev.clientY); });
+        editor.onKeyDown(e => {
+          const k = e.browserEvent;
+          if (k.key !== 'ContextMenu' && !(k.shiftKey && k.key === 'F10')) return;
+          e.preventDefault(); e.stopPropagation();
+          const pos = editor.getPosition(), at = editor.getScrolledVisiblePosition(pos), box = editor.getDomNode().getBoundingClientRect();
+          openMenu(pos, box.left + at.left, box.top + at.top + at.height);
+        });
         apply(); paint();
       });
     }
+    /* ---------- right-click menu ---------- */
+    let menu = null, flashIds = [];
+    function closeMenu() { if (menu) { menu.remove(); menu = null; document.removeEventListener('mousedown', outside, true); document.removeEventListener('keydown', escKey, true); } }
+    const outside = e => { if (menu && !menu.contains(e.target)) closeMenu(); };
+    // Esc closes the menu (wherever focus is) and nothing else — not the drawer, not the find box
+    const escKey = e => { if (e.key === 'Escape' && menu) { e.preventDefault(); e.stopPropagation(); closeMenu(); editor.focus(); } };
+    function valueUnder(pos) {
+      if (current.format !== 'JSON' || !pos || !model) return null;
+      const text = model.getValue();
+      try { text_ = n => text.slice(n.start, n.end); const hit = valueAt(jsonTree(text), model.getOffsetAt(pos)); return hit && { ...hit, text }; }
+      catch (e) { return null; }
+    }
+    function flash(node) {   // the copied value lights up for a moment
+      const a = model.getPositionAt(node.start), b = model.getPositionAt(node.end);
+      flashIds = editor.deltaDecorations(flashIds, [{ range: new window.monaco.Range(a.lineNumber, a.column, b.lineNumber, b.column), options: { inlineClassName: 'cv-flash' } }]);
+      setTimeout(() => { flashIds = editor.deltaDecorations(flashIds, []); }, 700);
+    }
+    function openMenu(pos, x, y) {
+      closeMenu();
+      const sel = editor.getSelection(), selText = sel && !sel.isEmpty() ? model.getValueInRange(sel) : '';
+      const hit = valueUnder(pos);
+      const items = [];
+      if (selText) items.push(['Copy', 'Ctrl+C', () => writeClipboard(selText)]);
+      if (hit) items.push([hit.key != null ? `Copy value of “${hit.key.length > 24 ? hit.key.slice(0, 24) + '…' : hit.key}”` : 'Copy value', '',
+        () => writeClipboard(copyText(hit.text, hit.node)).then(() => flash(hit.node))]);
+      if (!items.length) return;
+      menu = document.createElement('div');
+      menu.className = 'cv-menu'; menu.setAttribute('role', 'menu');
+      menu.innerHTML = items.map(([label, key], i) => `<button type="button" role="menuitem" data-i="${i}"><span>${esc(label)}</span>${key ? `<kbd>${key}</kbd>` : ''}</button>`).join('');
+      document.body.appendChild(menu);
+      const w = menu.offsetWidth, h = menu.offsetHeight;
+      menu.style.left = Math.min(x, innerWidth - w - 8) + 'px';
+      menu.style.top = (y + h > innerHeight - 8 ? y - h : y) + 'px';
+      menu.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b) return; items[b.dataset.i][2](); closeMenu(); editor.focus(); });
+      menu.addEventListener('keydown', e => {
+        const bs = [...menu.querySelectorAll('button')], at = bs.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); bs[(at + (e.key === 'ArrowDown' ? 1 : bs.length - 1)) % bs.length].focus(); }
+      });
+      document.addEventListener('mousedown', outside, true);
+      document.addEventListener('keydown', escKey, true);
+      setTimeout(() => menu && menu.querySelector('button').focus(), 0);   // after the right-click's own focus change
+    }
+    host.addEventListener('wheel', closeMenu, { passive: true });
+
     return {
       show(content) {
         raw = content; current = detect(raw);
@@ -139,6 +251,9 @@
       },
       expandAll() { return editor ? editor.getAction('editor.unfoldAll').run() : Promise.resolve(); },
       focus() { if (editor) editor.focus(); },
+      // true while the right-click menu is open (Esc closes it first)
+      menuOpen() { return !!menu; },
+      closeMenu,
       // true while Monaco's own find box is open (Esc should close that, not the drawer)
       findOpen() { return !!host.querySelector('.find-widget.visible'); },
       get text() { return current.text; },

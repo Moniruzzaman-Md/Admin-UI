@@ -397,7 +397,7 @@
     lastFocus?.focus?.();
   }
   document.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeDrawer(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panes.some(p => p.viewer.findOpen()) && !document.querySelector('.searchable-select.open, .flatpickr-calendar.open')) closeDrawer(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panes.some(p => p.viewer.findOpen()) && !document.querySelector('.cv-menu') && !document.querySelector('.searchable-select.open, .flatpickr-calendar.open')) closeDrawer(); });
 
   SearchableSelect.init();
   load();
