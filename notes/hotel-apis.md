@@ -1,4 +1,4 @@
-# Hotel APIs — dev notes
+# Supplier List — dev notes
 
 Page: `hotel-apis.html` · Live portal: Hotel Management › Hotel API List (`/admin/hotel-management/apis`)
 Scope: whole page redesigned (list, filters, create/edit, history). Header and sidebar are the existing shell, unchanged.
@@ -13,15 +13,15 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - **#** is the row's position in the whole filtered result, not within the page (first row on page 2 at 20 per page is 21). It follows the filters and is not an ID.
 - **Auto Issue is removed** from the page entirely — no list column, no form switch, not shown in history.
 - Hold Booking cell: Enabled + the hold amount (`20%` for Percent, `50 MYR` for Fixed — amount + the API's currency); Disabled otherwise.
-- Cell values as today: Active / Inactive, Enabled / Disabled. API code and short code show as code badges. Actions: edit, history (each button names itself on hover).
+- Cell values as today: Active / Inactive, Enabled / Disabled. Supplier code and short code show as code badges. Actions: edit, history (each button names itself on hover).
 - **Temporary suppliers**: a small amber "Temp" pill after the name (hover: "Temporary supplier"; screen readers hear "Temporary"). Needs a new field on the API (e.g. `is_temporary`) in the list response.
-- No column sorting (the reusable table has none) — rows keep the API's order.
-- No rows → the table's standard empty state ("No hotel APIs found"); pagination stays, showing 0.
+- Sorted newest first (highest ID first, so an API just created — incl. a temporary supplier from the booking form — is row 1). No column sorting (the reusable table has none).
+- No rows → the table's standard empty state ("No Data Found"); pagination stays, showing 0.
 - The list takes the screen's remaining height: rows scroll inside the table, the header row and pagination always stay in view. With few rows the table is only as tall as its rows.
 
 ## Filters
 
-- **Search** replaces the "Select Api" dropdown. It matches API name, API code, reference code and short code (case-insensitive, contains).
+- **Search** replaces the "Select Api" dropdown. It matches Supplier name, Supplier code, reference code and short code (case-insensitive, contains).
 - **Currency**: "All currencies" + currency list.
 - **Status** (dropdown): All statuses / Active / Inactive (no counts).
 - Every dropdown on the page (filters, form currency, rows per page) has a search box to type and narrow the options; arrow keys + Enter pick, Esc closes.
@@ -36,7 +36,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 
 ## Create / edit (drawer)
 
-- Same fields as before: API name, API code, Reference code, Short code, Currency — all required.
+- Same fields as before: Supplier name, Supplier code, Reference code, Short code, Currency — all required.
 - The radio pairs become switches: Active, Allow B2C, Hold booking. (Default and Auto issue are no longer on the form.)
 - **Hold booking on → two more fields appear** under it (as in the portal, `hold_amount_type` + `hold_amount`); hidden while it's off:
   - **Amount type** — Percent / Fixed. Required. Turning Hold booking on picks Percent if nothing is set.
@@ -44,10 +44,10 @@ Uses the **reusable table** (same component as every list; redesigned look, port
   - Percent can't be more than 100 ("A percent can't be more than 100.").
   - Turning Hold booking off clears both values on save (sent as empty).
   - Both show in history like any other field (e.g. Hold amount 50 → 15).
-- New API defaults: Active on, everything else off. *(Assumption — confirm the current form's defaults.)*
-- Edit pre-fills every field. Title: "Edit hotel API · ‹name›", no subtitle; button says "Save changes" (create: "Create API").
-- Validation on submit: each required field shows its own message.
-- **API code and Short code must be unique** (case-insensitive) — the message names the API already using it. *(Assumption — confirm the backend enforces this.)*
+- New supplier defaults: Active on, everything else off. *(Assumption — confirm the current form's defaults.)*
+- Edit pre-fills every field. Title: "Edit supplier · ‹name›", no subtitle; button says "Save changes" (create: "Create supplier").
+- Validation on submit: an empty required field gets a red border only (no message); a filled but wrong value says why ("Already used by ‹supplier›", "Another supplier already has this name"). Supplier name, Supplier code, Reference code and Short code are unique (not case-sensitive).
+- **Supplier code and Short code must be unique** (case-insensitive) — the message names the API already using it. *(Assumption — confirm the backend enforces this.)*
 - Saving with no changes doesn't write a history entry.
 - Success → drawer closes, toast "‹name› created / updated".
 - Esc, Cancel, ✕ or clicking outside closes without saving.
@@ -56,9 +56,12 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 
 - Only for temporary suppliers, from the edit drawer: a "Temporary supplier" notice at the top with a **Make permanent** button. (No row action.)
 - Asks to confirm first ("Make ‹name› permanent?"). Cancel / Esc / clicking outside does nothing.
-- On confirm: the supplier is permanent right away (no need to save the form), the Temp pill and the notice disappear, toast "‹name› is now permanent", and history gets "Type: Temporary → Permanent".
+- Temporary APIs are only created from the booking form and hold only what its form asks (Supplier name, Supplier code, Currency, Hold booking; Active and Allow B2C on). Editing a temporary API here shows only those fields; Reference code, Short code, Active and Allow B2C are hidden and stay as they are (empty / on). Empty values show as — in the list.
+- **Make permanent** first shows Reference code, Short code, Active and Allow B2C in the drawer, then checks it against the permanent rules: every field required (incl. Reference code and Short code), Supplier code / Short code not already used, hold rules. Missing or wrong fields are marked and nothing happens; once they pass, the confirm opens.
+- The confirm shows what is in the form: Supplier name, Supplier code, Reference code, Short code.
+- On confirm: the drawer's values are saved, the supplier is permanent right away, the drawer closes, toast "‹name› is now permanent". History: one Edit entry with the filled fields (— → value) and Type Temporary → Permanent.
 - One-way: a permanent supplier can't be made temporary from this page. *(Assumption.)*
-- New APIs are created permanent; the form has no Temporary option. *(Assumption — how do temporary suppliers get created?)*
+- New suppliers created here are permanent. Temporary suppliers are created only from the booking form (Supplier › Other — add temporary supplier).
 
 ## History (drawer)
 
@@ -67,9 +70,9 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 - One card per entry, newest first, each labelled "Entry N of M".
 - Each card: user name + email, date (DD-Mon-YYYY) + time (hh:mm AM/PM), then an **operation** and a **description**.
 - Operations:
-  - **Create** — no summary text, just the starting values as a labelled grid: API name, API code, Short code, Reference code, Currency, Status, Type (Permanent / Temporary), B2C (Enabled / Disabled), Hold booking (Disabled, or Enabled + amount, e.g. "Enabled · 20%" / "Enabled · 50 MYR").
+  - **Create** — no summary text, just the starting values as a labelled grid: Supplier name, Supplier code, Short code, Reference code, Currency, Status, Type (Permanent / Temporary), Allow B2C (Enabled / Disabled), Hold booking (Disabled, or Enabled + amount, e.g. "Enabled · 20%" / "Enabled · 50 MYR"). A temporary supplier's Create shows only its form's fields: Supplier name, Supplier code, Currency, Type, Hold booking.
   - **Status Change** — only Status changed. No summary text: old → new status pill, then what it means: "Used for search and booking again." / "No longer used for search or booking." (If Status changes together with other fields in one save, it is an Edit row instead.)
-  - **Edit** — everything else. No summary text: one row per changed field: label, old value (struck through) → new value. One save = one entry. Hold booking, amount type and amount show as one "Hold booking" row (e.g. "Enabled · 50 MYR → Enabled · 15%"). Making a temporary supplier permanent is an Edit with one row: TYPE  Temporary → Permanent.
+  - **Edit** — everything else. No summary text: one row per changed field: label, old value (struck through) → new value. One save = one entry. Hold booking, amount type and amount show as one "Hold booking" row (e.g. "Enabled · 50 MYR → Enabled · 15%"). Making a temporary supplier permanent is one Edit: the filled Reference code / Short code (— → value) and Type Temporary → Permanent.
   - Values in every entry use the list's wording: Active / Inactive, Enabled / Disabled, Permanent / Temporary, codes as code chips.
 - Saving with no changes writes nothing.
 - Needs per entry: operation, the changed fields with old + new values (or the full snapshot for Create), user name, user email, timestamp.
@@ -89,7 +92,7 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 1. Descriptions under each switch are my reading of the field — please confirm wording (especially Hold booking).
 2. Hold amount: the portal pre-fills 0 — is 0 a valid hold amount, or should it be more than 0? Can Fixed go above the booking value? Is the Fixed amount in the API's currency?
 
-3. Temporary suppliers: how are they created, and should an admin also be able to mark one temporary (or back)? Is there anything else that changes for a temporary supplier (e.g. hidden from B2C, expiry date) that the list should show?
+3. Temporary suppliers: should an admin also be able to mark one temporary again? Is there anything else that changes for a temporary supplier (e.g. hidden from B2C, expiry date) that the list should show?
 
 ## Changelog
 
@@ -120,3 +123,21 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 - 2026-11-19 — Status Change ("Activated" / "Deactivated") and Edit ("N fields changed") summary text removed.
 - 2026-11-19 — "Earliest recorded settings" removed too: no summary text on any history entry.
 - 2026-11-20 — "Clear filters" replaced by the Reset button used on the other lists (always shown).
+- 2026-11-22 — The API list is shared with the booking form and saved in the browser: an API created or changed here or from the booking form (Supplier / API › "Other — add temporary supplier") shows on both and survives a reload. Home › Reset demo data restores the seed list. Create / edit drawer is the shared one (js/api-drawer.js).
+- 2026-11-22 — The Temporary supplier notice shows only when editing a temporary API (not in the booking form's New temporary hotel API drawer).
+- 2026-11-22 — Temporary APIs may have no Reference code (seed temporary examples cleared to match); Make permanent requires it and saves the drawer's values.
+- 2026-11-22 — Temporary APIs may have no Short code either (seed temporary examples cleared); Make permanent requires it.
+- 2026-11-22 — A temporary API is created Active with Allow B2C on (not asked in the booking form's drawer); seed temporary examples match. Both stay editable here.
+- 2026-11-22 — "ALL" removed from the Currency list: an API (supplier) has exactly one currency. Manual Contracts seed now MYR.
+- 2026-11-22 — Currency list = the system's currencies from the shared reference data (12); history emails from the shared admin users.
+- 2026-11-22 — API code and Short code take capital letters only: lower case typed or pasted turns upper case as you type.
+- 2026-11-22 — API code and Short code: capital letters A–Z and digits 0–9 only; lower case turns upper case, other characters (spaces, hyphens, symbols) are dropped as typed or pasted.
+- 2026-11-22 — Editing a temporary API shows only the temporary form's fields; Make permanent reveals Reference code, Short code, Active, Allow B2C and requires the codes before the confirm. Pressing Save instead keeps the API temporary without those values.
+- 2026-11-22 — An empty required field shows only a red border (no "Enter …" / "… is required" message); messages stay for a filled but wrong value.
+- 2026-11-22 — History: a temporary supplier's Create entry says "Created from Manual Booking" and shows only its form's fields (API name, API code, Currency, Type, Hold booking). Make permanent is one Edit entry: the filled Reference code / Short code (— → value) + Type Temporary → Permanent. Seed temporary suppliers match (Create entry, no old-system rows, no Active / B2C edits).
+- 2026-11-22 — List is latest first: the newest API (created last, incl. temporary suppliers from the booking form) is row 1. Filters keep that order.
+- 2026-11-22 — Removed the "Created from Manual Booking" line from the Create history entry (and its stored source).
+- 2026-11-22 — Make permanent is two steps in the drawer: the notice's **Make permanent** shows Reference code, Short code, Active, Allow B2C (empty codes marked red) and turns the footer button into **Make permanent** (the notice's button hides); the footer button checks the permanent rules, asks to confirm, saves and closes the drawer. Cancelling the confirm keeps the drawer in that step. (Before, pressing Save changes after filling the codes kept the API temporary and dropped them.)
+- 2026-11-22 — Consistency pass: table headers read API code · Reference code · Short code · Allow B2C · Hold booking (same words as the drawer; history says Allow B2C too). Toolbar dropdowns show "Currency" / "Status" while empty, like the other filters. API names must be unique (two suppliers with one name can't be told apart in a dropdown). The Make permanent confirm shows the form's values (name, codes) instead of the saved ones. Pager total uses thousands separators. Reset is in the sidebar (Reset Demo Data).
+- 2026-11-22 — Menu item **Api List** renamed **Supplier List** (tab title "Hotel Supplier List", page title "Supplier List"). Where the page meant a supplier it now says supplier: New supplier / Create supplier, drawer title "New supplier" / "Edit supplier · ‹name›" / "New temporary supplier", Supplier name, Supplier code (list header, drawer, history, Make permanent confirm), switch descriptions, "Another supplier already has this name."
+- 2026-11-22 — Reference code must be unique too: a code another supplier has shows "Already used by ‹supplier›" (red border + message), on save and on Make permanent.

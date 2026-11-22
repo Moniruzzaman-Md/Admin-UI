@@ -12,12 +12,16 @@
   const digits = n => Array.from({ length: n }, () => Math.floor(rnd() * 10)).join('');
   const hex = n => Array.from({ length: n }, () => '0123456789abcdef'[Math.floor(rnd() * 16)]).join('');
   const uuid = () => `${hex(8)}-${hex(4)}-4${hex(3)}-${'89ab'[Math.floor(rnd() * 4)]}${hex(3)}-${hex(12)}`;
-  const AGENTS = [['Blue Lagoon Travels', '26040001'], ['Skyway Holidays', '26100506'], ['Agent Demo QA', '26070199'], ['Northstar Tours', '25100137'], ['Coral Coast Trips', '26020044']];
+  // shared lists: js/data.js RefData. Client = a Partner: a row keeps its id; name and SL No. are looked up when drawn
+  const AGENTS = RefData.partners.map(p => p.id);
+  const PARTNER = Object.fromEntries(RefData.partners.map(p => [p.id, p]));
+  const agName = id => PARTNER[id].name, agSl = id => PARTNER[id].slNo;
   const IPS = ['203.0.113.24', '203.0.113.190', '198.51.100.17', '198.51.100.186', '192.0.2.74'];
-  const HOTELS = ['Harbour View Hostel', 'Lagoon Bay Resort', 'Old Town Boutique Hotel', 'Riverside Suites', 'Palm Grove Inn', 'Skyline City Hotel', 'Garden Court Hotel', 'Seabreeze Residence'];
-  const CITIES = [['Phuket', 'Thailand', 'TH'], ['Kuala Lumpur', 'Malaysia', 'MY'], ['Bali', 'Indonesia', 'ID'], ['Bangkok', 'Thailand', 'TH']];
-  const PORTALS = ['B2B', 'B2B', 'B2C', 'B2C APP', 'API'];   // where the transaction came from (weighted)
-  const ROOMS = ['Dormitory - Female Only', 'Deluxe Double Room', 'Superior Twin Room', 'Family Suite'];
+  const HOTELS = RefData.hotels;
+  // [city, country, country code] for the cities the dummy calls use
+  const CITIES = ['Phuket', 'Kuala Lumpur', 'Bali', 'Bangkok'].map(city => { const c = RefData.countries.find(x => (x.cities || []).includes(city)); return [city, c.name, c.code]; });
+  const PORTALS = ['B2B', ...RefData.portals];   // where the transaction came from (B2B weighted double)
+  const ROOMS = RefData.roomTypes;
   // the operations as the live log names them; the system's own calls (booking_details) have no agent and come from 127.0.0.1
   const OPS = ['search', 'paginated_search', 'availability', 'reprice', 'cancellation_policy', 'prebook', 'booking', 'booking_details', 'v2_cancellation_charges', 'v2_cancel_booking'];
 
@@ -66,7 +70,7 @@
     const key = () => btoa(String(l.id) + hex(40)).replace(/=+$/, '');
     const reqTs = new Date(+l.date - 2500).toISOString().replace('Z', '000Z');
     const rooms = [{ adults: 2, childAges: [] }];
-    const room = (price) => ({ roomType: c.room, price, mealInfo: { mealCode: 'RO', fullMealDetails: 'Room Only' }, refundable: true, rateKey: key() });
+    const room = (price) => ({ roomType: c.room, price, mealInfo: { mealCode: 'RO', fullMealDetails: RefData.mealName('RO') }, refundable: true, rateKey: key() });
     let data;
     if (kind === 'Request') {
       data = ({
@@ -113,13 +117,13 @@
   const state = Object.assign(DEFAULTS(), { page: 1, size: 20 });
   const fOp = $('#f-op'), fAgent = $('#f-client'), fPortal = $('#f-portal');
   OPS.forEach(o => fOp.add(new Option(o, o)));
-  ['B2B', 'B2C', 'B2C APP', 'API'].forEach(p => fPortal.add(new Option(p, p)));
+  RefData.portals.forEach(p => fPortal.add(new Option(p, p)));
 
   const filtered = () => {
     const from = +state.from, to = +state.to + 864e5 - 1, q = state.txn.trim().toUpperCase(), ag = state.agent.trim().toLowerCase();
     return logs.filter(l => l.date >= from && l.date <= to
       && (!q || l.txn.includes(q))
-      && (!ag || (l.agent && (l.agent[0].toLowerCase().includes(ag) || l.agent[1].includes(ag))))
+      && (!ag || (l.agent && (agName(l.agent).toLowerCase().includes(ag) || agSl(l.agent).includes(ag))))
       && (!state.op || l.type === state.op)
       && (!state.portal || l.ctx.portal === state.portal));
   };
@@ -145,8 +149,8 @@
         <td class="tbl-num">${start + i + 1}</td>
         <td><span class="tbl-stack"><span>${fDate(l.date)}</span><small>${fTime(l.date)}</small></span></td>
         <td>${esc(l.ctx.portal)}</td>
-        <td>${l.agent ? esc(l.agent[0]) : '<span class="tbl-muted">—</span>'}</td>
-        <td>${l.agent ? l.agent[1] : '<span class="tbl-muted">—</span>'}</td>
+        <td>${l.agent ? esc(agName(l.agent)) : '<span class="tbl-muted">—</span>'}</td>
+        <td>${l.agent ? agSl(l.agent) : '<span class="tbl-muted">—</span>'}</td>
         <td>${txnBadge(l.txn)}</td>
         <td><span class="tbl-strong">${esc(l.type)}</span></td>
         <td>${l.ip}</td>
@@ -184,7 +188,7 @@
     fields: [
       { label: 'From', isSet: () => +draft.from !== +today, text: () => fmtDay(draft.from), clear: () => { draft.from = new Date(today); fromField.set(draft.from); toField.setMin(draft.from); } },
       { label: 'To', isSet: () => +draft.to !== +today, text: () => fmtDay(draft.to), clear: () => { draft.to = new Date(today); toField.set(draft.to); fromField.setMax(draft.to); } },
-      { label: 'Portal', isSet: () => !!fPortal.value, text: () => fPortal.value, clear: () => { fPortal.value = ''; } },
+      { label: 'Platform type', isSet: () => !!fPortal.value, text: () => fPortal.value, clear: () => { fPortal.value = ''; } },
       { label: 'Client', isSet: () => !!fAgent.value.trim(), text: () => fAgent.value.trim(), clear: () => { fAgent.value = ''; } },
       { label: 'Operation type', isSet: () => !!fOp.value, text: () => fOp.value, clear: () => { fOp.value = ''; } },
     ],
@@ -270,7 +274,7 @@
 
     $('#log-title').textContent = l.type;
     $('#lm-txn').innerHTML = txnBadge(l.txn);
-    $('#lm-agent').innerHTML = l.agent ? `${esc(l.agent[0])}<small>${l.agent[1]}</small>` : '<span class="tbl-muted">No client</span>';
+    $('#lm-agent').innerHTML = l.agent ? `${esc(agName(l.agent))}<small>${agSl(l.agent)}</small>` : '<span class="tbl-muted">No client</span>';
     $('#lm-ip').textContent = l.ip;
     $('#sw-kind').hidden = false;
     $('#sw-kind').innerHTML = ['Request', 'Response', 'Both'].map(k => {

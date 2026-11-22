@@ -14,8 +14,11 @@
   // When a new screen is redesigned, add its group (if new) and its entry.
   const MENU = [
     { label: 'Hotel Management', icon: 'users', items: [
-      { label: 'Api List', icon: 'list-alt', page: 'hotel-apis', href: 'hotel-apis.html' },
+      { label: 'Supplier List', icon: 'list-alt', page: 'hotel-apis', href: 'hotel-apis.html' },
       { label: 'Markup', icon: 'sliders-h', page: 'markup-commission', href: 'markup-commission.html' },
+    ] },
+    { label: 'Booking Management (Hotel)', icon: 'tags', items: [
+      { label: 'All Booking', icon: 'calendar', page: 'hotel-bookings', href: 'hotel-bookings.html' },
     ] },
     { label: 'Logs', icon: 'user-lock', items: [
       { label: 'Hotel', icon: 'address-book', page: 'hotel-logs', href: 'hotel-logs.html' },
@@ -77,7 +80,13 @@
 
   const sidebar = `<div class="shell-sidebar" aria-label="Main menu">
       <ul class="full-list">${fullList}</ul>
-      <ul class="slim-list">${slimList}</ul></div>`;
+      <ul class="slim-list">${slimList}</ul>
+      <div class="sidebar-footer">
+        <button type="button" class="reset-demo-btn" id="resetDemoDataBtn" aria-label="Reset Demo Data" title="Reset Demo Data">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Reset Demo Data</span>
+        </button>
+      </div></div>`;
 
   const main = document.querySelector('.shell-main');
   document.body.insertAdjacentHTML('afterbegin', header + `<div class="shell-row">${sidebar}<div class="shell-content"></div></div>`);
@@ -133,4 +142,11 @@
   document.addEventListener('click', e => { if (!e.target.closest('.dd-menu, .profile-dropdown, .slim-flyout')) closeAll(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
   $('.shell-sidebar').addEventListener('scroll', () => closeAll());
+
+  // Reset Demo Data (as in Map-UI): clear everything the pages saved (js/data.js, prefix admin-redesign:) and reload with the seed data
+  $('#resetDemoDataBtn').addEventListener('click', () => {
+    if (window.AdminData) AdminData.reset();   // the one place that knows the prefix
+    else try { Object.keys(localStorage).filter(k => k.startsWith('admin-redesign:')).forEach(k => localStorage.removeItem(k)); } catch (e) { /* page without js/data.js */ }
+    location.reload();
+  });
 })();

@@ -19,7 +19,7 @@
     const api = { set(f, t) { opts.from = f; opts.to = t; if (fp) fp.setDate([f, t], false); } };
     load().then(() => {
       fp = flatpickr(input, {
-        mode: 'range', dateFormat: 'd M Y', maxDate: 'today', defaultDate: [opts.from, opts.to], disableMobile: true,
+        mode: 'range', dateFormat: 'd-M-Y', maxDate: 'today', defaultDate: [opts.from, opts.to], disableMobile: true,
         locale: { rangeSeparator: ' – ', firstDayOfWeek: 1 },
         onClose(sel) {
           if (sel.length === 1) fp.setDate([sel[0], sel[0]], false);
@@ -41,7 +41,7 @@
     return api;
   }
   /* Single date: DateField.init(input, { date, min, max, onChange(date) }) -> { set(date), setMin(date), setMax(date) }
-     Field shows "20 Nov 2026". No future dates unless max says otherwise. Never left empty. */
+     Field shows "20-Nov-2026" (the project's date format). No future dates unless max says otherwise. Never left empty. */
   function single(input, opts) {
     let fp = null;
     const api = {
@@ -51,7 +51,7 @@
     };
     load().then(() => {
       fp = flatpickr(input, {
-        dateFormat: 'd M Y', defaultDate: opts.date, minDate: opts.min || null, maxDate: opts.max || 'today', disableMobile: true,
+        dateFormat: 'd-M-Y', defaultDate: opts.date, minDate: opts.min || null, maxDate: opts.max || 'today', disableMobile: true,
         locale: { firstDayOfWeek: 1 },
         onChange(sel) { if (sel[0]) { opts.date = sel[0]; opts.onChange && opts.onChange(sel[0]); } },
         onClose(sel) { if (!sel.length) fp.setDate(opts.date, false); },

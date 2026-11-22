@@ -1,21 +1,25 @@
 /* Default Markup (Hotel) page prototype. Dummy data only. */
 (function () {
-  // market name + currency (the portal lists markets as "NAME (CUR)")
-  const MARKETS = [
-    ['bd', 'Bangladesh', 'BDT'], ['in', 'India', 'INR'], ['id', 'Indonesia', 'IDR'], ['my', 'Malaysia', 'MYR'],
-    ['mv', 'Maldives', 'MVR'], ['np', 'Nepal', 'NPR'], ['pt', 'Portugal', 'EUR'], ['sg', 'Singapore', 'SGD'],
-    ['th', 'Thailand', 'THB'], ['ae', 'United Arab Emirates', 'AED'], ['us', 'United States', 'USD'],
-  ].map(([id, name, cur]) => ({ id, name, cur }));
+  // markets: shared list (js/data.js RefData), listed as "NAME (CUR)". Rules store market ids.
+  const MARKETS = RefData.markets.map(m => ({ id: m.id, name: m.name, cur: m.currency }));
+  // the seed below names markets by short keys for readability: their ids
+  const SEED_MK = { bd: 21, in: 41, id: 31, my: 11, mv: 61, np: 81, pt: 91, sg: 101, th: 111, ae: 121, us: 131 };
+  const mk = keys => keys.map(k => SEED_MK[k]);
   const MK = Object.fromEntries(MARKETS.map(m => [m.id, m]));
-  const APIS = ['Dida', 'Hotelbeds', 'RateHawk', 'TBO Holidays', 'WebBeds', 'WhitinEarth'];
-  // B2B agents = the portal's Partners (Partner Management > Partner List). Dummy data.
-  // Partner code as in the portal: 2-letter country + "P" + running number. Disabled partners can't be picked for a new rule.
-  const AGENTS = [
-    ['a1', 'Skyline Travels', 'BDP118', true], ['a2', 'Bluewave Holidays', 'MYP117', true], ['a3', 'Northstar Tours', 'BDP116', true],
-    ['a4', 'Green Leaf Travel', 'INP115', true], ['a5', 'Coral Bay Trips', 'SGP114', true], ['a6', 'Sunrise Journeys', 'BDP113', false],
-  ].map(([id, name, code, enabled]) => ({ id, name, code, enabled }));
+  // suppliers = the shared hotel API list (js/data.js, same as Supplier List), permanent APIs only — temporary suppliers are
+  // only offered in the booking form. A rule stores API ids; names are looked up for display, so a rename on Supplier List shows here.
+  const APIS = HotelApis.list.filter(a => !a.temporary).sort((a, b) => a.name.localeCompare(b.name));
+  const API_NAME = Object.fromEntries(HotelApis.list.map(a => [a.id, a.name]));
+  const apiNm = id => API_NAME[id] || `Supplier #${id}`;
+  // the seed below is written with the seed API names for readability: turned into their ids (js/data.js seed) here,
+  // so a later rename on Supplier List doesn't break it
+  const SEED_API_ID = { 'TBO Holidays': 1, Dida: 2, RateHawk: 3, WhitinEarth: 4, Hotelbeds: 5, WebBeds: 6 };
+  const apiId = name => SEED_API_ID[name];
+  // B2B agents = the portal's Partners: shared list (js/data.js RefData). Disabled partners can't be picked for a new rule.
+  const AGENTS = RefData.partners;
+  const SEED_AG = { a1: 1021, a2: 1034, a3: 1047, a4: 1052, a5: 1068, a6: 1075 };   // seed keys → partner ids
   const AG = Object.fromEntries(AGENTS.map(a => [a.id, a]));
-  const ALL = '*'; // api = ['*'] -> All suppliers (client-specific rules only). Otherwise api = the picked API names.
+  const ALL = '*'; // api = ['*'] -> All suppliers (client-specific rules only). Otherwise api = the picked API ids.
   // Portals that can have their own markup. Only B2B for now; its clients are the B2B partners.
   // A rule with portal = null applies to all portals (today's default markup) and has no client.
   const PORTALS = [{ id: 'b2b', name: 'B2B', clients: 'B2B clients' }];
@@ -56,20 +60,20 @@
     ['b2b', null, ['bd'], 'Dida', 'percent', '4', 1],
   ];
   const arr = a => Array.isArray(a) ? a : [a];
-  const rules = PORTAL_SEED.map(r => ({ id: nextId++, portal: r[0], agent: r[1], markets: r[2], api: arr(r[3]), type: r[4], amount: r[5], active: !!r[6], history: [] }))
-    .concat(SEED.map(r => ({ id: nextId++, portal: null, agent: null, markets: r[0], api: arr(r[1]), type: r[2], amount: r[3], active: !!r[4], history: [] })));
+  const toApiIds = a => arr(a).map(n => n === ALL ? ALL : apiId(n));
+  const seedRules = PORTAL_SEED.map(r => ({ id: nextId++, portal: r[0], agent: r[1] ? SEED_AG[r[1]] : null, markets: mk(r[2]), api: toApiIds(r[3]), type: r[4], amount: r[5], active: !!r[6], history: [] }))
+    .concat(SEED.map(r => ({ id: nextId++, portal: null, agent: null, markets: mk(r[0]), api: toApiIds(r[1]), type: r[2], amount: r[3], active: !!r[4], history: [] })));
   // dummy IDs like the API's: newest rule (listed first) has the highest ID, not 1..N, so ID and # differ
-  rules.forEach((r, i) => { r.id = 1180 - i * 7; });
-  nextId = 1181;
+  seedRules.forEach((r, i) => { r.id = 1180 - i * 7; });
 
   // dummy history: created + a couple of edits (changes: [field, old, new])
-  rules.forEach((r, i) => {
+  seedRules.forEach((r, i) => {
     // all-portal rules created before the new history have old-system rows instead of a Create entry (added below)
     r.legacy = !r.portal && r.api.length === 1 && i % 5 !== 2;
     if (!r.legacy) r.history.push({ by: 'Super Admin', at: new Date(2026, 7, 10 + i, 11, 20), created: true });
     if (i % 3 === 0) r.history.unshift({ by: 'Ops Team', at: new Date(2026, 9, 3 + i, 15, 6), changes: [['amount', String(+r.amount + 2), r.amount]] });
     if (i % 4 === 1) r.history.unshift({ by: 'Super Admin', at: new Date(2026, 10, 2 + i, 10, 41), changes: [['active', !r.active, r.active]] });
-    if (i === 9) r.history.unshift({ by: 'Ops Team', at: new Date(2026, 10, 14, 9, 12), changes: [['markets', ['mv', 'my', 'us', 'in'], r.markets], ['type', r.type === 'percent' ? 'fixed' : 'percent', r.type]] });
+    if (i === 9) r.history.unshift({ by: 'Ops Team', at: new Date(2026, 10, 14, 9, 12), changes: [['markets', mk(['mv', 'my', 'us', 'in']), r.markets], ['type', r.type === 'percent' ? 'fixed' : 'percent', r.type]] });
   });
 
   /* dummy legacy history (old system): one row per save = the full rule AFTER that save, newest first, no create row.
@@ -77,8 +81,8 @@
      HistoryLegacy.toEntries (js/history-legacy.js) turns it into normal Edit / Status Change entries. "commission" stands for
      the dropped commission fields: a save that only changed them shows nothing. */
   const LEGACY_KEYS = ['markets', 'api', 'type', 'amount', 'active'];
-  const LEGACY_BY = ['Super Admin', 'Ops Team', 'Rahim Uddin'];
-  rules.forEach(r => {
+  const LEGACY_BY = RefData.users.map(u => u.name);
+  seedRules.forEach(r => {
     if (!r.legacy) return;
     const v = { commission: null }; LEGACY_KEYS.forEach(k => v[k] = r[k]);
     r.history.forEach(h => (h.changes || []).forEach(([f, o]) => { v[f] = o; })); // state before the current entries
@@ -87,7 +91,7 @@
       s => { s.type = s.type === 'percent' ? 'fixed' : 'percent'; s.amount = s.type === 'percent' ? '5' : '500'; },
       s => { s.active = !s.active; },
       s => { s.commission = '0.00'; },                                  // only commission → no entry
-      s => { s.markets = s.markets.length > 1 ? s.markets.slice(1) : s.markets.concat(s.markets[0] === 'in' ? 'np' : 'in'); },
+      s => { s.markets = s.markets.length > 1 ? s.markets.slice(1) : s.markets.concat(s.markets[0] === SEED_MK.in ? SEED_MK.np : SEED_MK.in); },
     ];
     const n = 3 + (r.id % 3), rows = [];
     let s = { ...v };
@@ -98,6 +102,12 @@
     r.history.push(...HistoryLegacy.toEntries(rows, LEGACY_KEYS));
   });
 
+  // the rules are saved in js/data.js storage (prefix admin-redesign:, cleared by Reset Demo Data): create / edit / delete survive a reload
+  const RULES_KEY = 'markupRules';
+  const rules = AdminData.load(RULES_KEY) || seedRules;
+  const storeRules = () => AdminData.save(RULES_KEY, rules);
+  nextId = rules.reduce((m, r) => Math.max(m, r.id), 0) + 1;   // a new rule always gets a new ID
+
   /* ---------- helpers ---------- */
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -107,19 +117,17 @@
   const WARN = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l10 18H2L12 3z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 10v5M12 18v.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
   // list: a rule newer ones beat → red "Blocked" (nothing of it applies) / amber "Partial" (some still applies);
   // a rule that beats older ones → blue "Overrides". One rule → "#ID", several → "· N rules". Hover lists them.
-  // pills come from the rule's stored overlap (written by "Check overlaps"); liveTag works them out
-  const overlapTag = r => saved[r.id] || '';
-  const liveTag = r => {
-    const o = overlapsOf(r, r);
+  // pills come from the rule's stored overlap (written by "Check overlaps"). It is saved as data — rule IDs, API ids,
+  // market ids — and the text is built when drawn, so a rename on Supplier List shows here too
+  const tagHtml = d => {
+    if (!d || typeof d !== 'object') return '';
     const out = [];
-    if (o.by.length) {
-      const blocked = coverage(r, o.by).blocked;
-      out.push(`<span class="tbl-warn${blocked ? ' danger' : ''}" tabindex="0" data-tooltip="${esc(byMsg(r, o.by))}">${WARN}${pillText(blocked ? 'Blocked' : 'Partial', o.by)}</span>`);
-    }
+    if (d.by.length) out.push(`<span class="tbl-warn${d.blocked ? ' danger' : ''}" tabindex="0" data-tooltip="${esc(byMsg(d.blocked, d.left, d.by))}">${WARN}${pillText(d.blocked ? 'Blocked' : 'Partial', d.by)}</span>`);
     // a rule can be blocked in part and still override older ones: both pills show
-    if (o.over.length) out.push(`<span class="tbl-note" tabindex="0" data-tooltip="${esc(overMsg(o.over))}">${pillText('Overrides', o.over)}</span>`);
+    if (d.over.length) out.push(`<span class="tbl-note" tabindex="0" data-tooltip="${esc(overMsg(d.over))}">${pillText('Overrides', d.over)}</span>`);
     return out.join('');
   };
+  const overlapTag = r => tagHtml(saved[r.id]);
   const num = v => Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const markupText = r => r.type === 'percent' ? `${num(r.amount)}%` : num(r.amount);
   const markupWords = r => r.type === 'percent' ? markupText(r) : `${markupText(r)} fixed`;
@@ -142,9 +150,9 @@
     : none ? allChip(none, icon) : '';
   const marketsCell = ids => chipsCell(marketChips(ids), 'All markets', 'globe');
   const isAllApis = a => a.includes(ALL);
-  const apiName = a => isAllApis(a) ? 'All suppliers' : a.join(', ');
+  const apiName = a => isAllApis(a) ? 'All suppliers' : a.map(apiNm).join(', ');
   // short form for titles: up to 3 names, then "+N more"
-  const apiShort = a => isAllApis(a) ? 'All suppliers' : a.length > 3 ? `${a.slice(0, 3).join(', ')} +${a.length - 3} more` : a.join(', ');
+  const apiShort = a => isAllApis(a) ? 'All suppliers' : a.length > 3 ? `${a.slice(0, 3).map(apiNm).join(', ')} +${a.length - 3} more` : apiName(a);
   const agentText = id => id ? AG[id].name : 'All clients';
   const portalText = id => id ? PT[id].name : 'All';
   const portalCell = id => id ? `<span class="tbl-code">${esc(PT[id].name)}</span>` : '<span class="tbl-muted">All</span>';
@@ -162,7 +170,7 @@
       : `<div class="tbl-group">${label}<span class="tbl-muted">All clients</span></div>`;
   };
   const agentOpt = a => `${a.code} · ${a.name}${a.enabled ? '' : ' (Disabled)'}`;
-  const apiCell = a => isAllApis(a) ? allChip('All suppliers', 'layer-group') : chipsCell(a, '');
+  const apiCell = a => isAllApis(a) ? allChip('All suppliers', 'layer-group') : chipsCell(a.map(apiNm), '');
   // "B2B · Skyline Travels · RateHawk · Bangladesh" / "All · Dida · All markets" for titles and dialogs
   const whoText = r => r.portal ? `${PT[r.portal].name} · ${agentText(r.agent)}` : 'All';
   const ruleLabel = r => `${whoText(r)} · ${apiShort(r.api)} · ${marketsShort(r.markets)}`;
@@ -174,8 +182,8 @@
   PORTALS.forEach(p => { fPortal.add(new Option(p.name, p.id)); ePortal.add(new Option(p.name, p.id)); });
   const fAgent = $('#f-agent'), fMarket = $('#f-market'), fApi = $('#f-api'), eApi = $('#e-api'), eMarkets = $('#e-markets'), eAgent = $('#e-agent');
   AGENTS.forEach(a => { fAgent.add(new Option(agentOpt(a), a.id)); eAgent.add(new Option(agentOpt(a), a.id)); });
-  MARKETS.forEach(m => { fMarket.add(new Option(`${m.name} (${m.cur})`, m.id)); eMarkets.add(new Option(`${m.name} (${m.cur})`, m.id)); });
-  APIS.forEach(a => { fApi.add(new Option(a, a)); eApi.add(new Option(a, a)); });
+  RefData.markets.forEach(m => { fMarket.add(new Option(RefData.marketLabel(m), m.id)); eMarkets.add(new Option(RefData.marketLabel(m), m.id)); });
+  APIS.forEach(a => { fApi.add(new Option(HotelApis.label(a), a.id)); eApi.add(new Option(HotelApis.label(a), a.id)); });
 
   // ID: rules whose ID starts with what's typed ("#" ignored).
   // Portal filter: "All (default)" = rules without a portal; a portal = that portal's rules.
@@ -183,9 +191,9 @@
   // Market / Supplier: the rules that cover it — they name it, or apply to All markets / All suppliers.
   const matchesMA = r => (!state.id || String(r.id).startsWith(state.id))
     && (!state.portal || (state.portal === '*' ? !r.portal : r.portal === state.portal))
-    && (!state.agent || (state.agent === '*' ? !r.agent : r.agent === state.agent))
-    && (!state.market || !r.markets.length || r.markets.includes(state.market))
-    && (!state.api || isAllApis(r.api) || r.api.includes(state.api));
+    && (!state.agent || (state.agent === '*' ? !r.agent : r.agent === +state.agent))
+    && (!state.market || !r.markets.length || r.markets.includes(+state.market))
+    && (!state.api || isAllApis(r.api) || r.api.includes(+state.api));
   // latest first
   const filtered = () => rules
     .filter(r => matchesMA(r) && (!state.status || (state.status === 'active') === r.active))
@@ -193,14 +201,14 @@
 
   /* ---------- Check overlaps: works out every rule's overlap and saves it on the rule (the `overlap` column).
      It stays until the next check; saving a rule doesn't recalculate it. (Prototype: kept in this browser.) ---------- */
-  const SAVE_KEY = 'markup-overlap-v1';
+  const SAVE_KEY = 'markup-overlap-v2';   // { ruleId: { by, over, blocked, left } }
   let saved = {};
-  try { saved = JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { saved = {}; }
-  const storeSaved = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(saved)); } catch (e) {} };
+  saved = AdminData.load(SAVE_KEY) || {};   // js/data.js storage (prefix admin-redesign:, cleared by Reset Demo Data)
+  const storeSaved = () => AdminData.save(SAVE_KEY, saved);
   // one rule's overlap, saved with that rule (used by Save with "Check for overlaps" ticked)
   function saveOverlap(r) {
-    const t = liveTag(r);
-    if (t) saved[r.id] = t; else delete saved[r.id];
+    const d = overlapData(r);
+    if (d) saved[r.id] = d; else delete saved[r.id];
     storeSaved();
   }
   // calculates, then reloads only the list that was showing: same filters, same page (overlaps don't change paging)
@@ -211,7 +219,7 @@
     area.classList.add('is-loading'); area.setAttribute('aria-busy', 'true');
     setTimeout(() => {   // the server call (POST /api/markups/overlaps/check) in the real portal
       saved = {};
-      rules.forEach(r => { const t = liveTag(r); if (t) saved[r.id] = t; });
+      rules.forEach(r => { const d = overlapData(r); if (d) saved[r.id] = d; });
       storeSaved();
       render();
       btn.disabled = false; btn.lastChild.textContent = ' Check overlaps';
@@ -259,7 +267,7 @@
       : EmptyState.row(8);
 
     $('#pg-range').textContent = list.length ? `${start + 1}–${start + slice.length}` : '0';
-    $('#pg-total').textContent = list.length;
+    $('#pg-total').textContent = list.length.toLocaleString('en-US');
     $('#pg-mobile').textContent = `Page ${state.page} of ${pages}`;
     $('#pg-prev').disabled = state.page === 1;
     $('#pg-next').disabled = state.page === pages;
@@ -274,7 +282,7 @@
     fAgent.disabled = !on;
     // a disabled button gets no hover events, so the tooltip sits on the dropdown's wrapper
     const wrap = fAgent.closest('.searchable-select') || fAgent;
-    if (on) delete wrap.dataset.tooltip; else wrap.dataset.tooltip = 'Pick a portal first';
+    if (on) delete wrap.dataset.tooltip; else wrap.dataset.tooltip = 'Pick a platform type first';
     if (!on && fAgent.value) { fAgent.value = ''; fAgent._searchableRefresh?.(); }
   }
   // fields apply only on Search (or Enter in ID); Reset clears every field and reloads
@@ -294,7 +302,7 @@
   const optText = sel => sel.options[sel.selectedIndex]?.text || '';
   const pick = (label, sel, after) => ({ label, isSet: () => !!sel.value, text: () => optText(sel), clear: () => { sel.value = ''; if (after) after(); } });
   FilterBar.init($('#filter-bar'), {
-    fields: [pick('Portal', fPortal, syncClientFilter), pick('Client', fAgent), pick('Market', fMarket), pick('Supplier', fApi), pick('Status', $('#f-status'))],
+    fields: [pick('Platform type', fPortal, syncClientFilter), pick('Client', fAgent), pick('Market', fMarket), pick('Supplier', fApi), pick('Status', $('#f-status'))],
     onSearch: applyFilters,
     onReset: () => {
       $('#f-id').value = ''; fPortal.value = ''; syncClientFilter(); fAgent.value = ''; fMarket.value = ''; fApi.value = ''; $('#f-status').value = '';
@@ -318,9 +326,10 @@
   let editing = null;
   const type = () => form.querySelector('[name=type]:checked')?.value || 'percent';
   // Markets in the form: nothing picked by default; "All markets" is an explicit option, only for client rules (like All suppliers)
-  const selMarketOpts = () => [...eMarkets.selectedOptions].map(o => o.value);
+  // option values are strings: rules keep numeric market ids (and ALL)
+  const selMarketOpts = () => [...eMarkets.selectedOptions].map(o => o.value === ALL ? ALL : +o.value);
   const selMarkets = () => selMarketOpts().filter(v => v !== ALL);
-  const setMarkets = list => { [...eMarkets.options].forEach(o => o.selected = list.includes(o.value)); eMarkets._searchableRefresh?.(); };
+  const setMarkets = list => { const v = list.map(String); [...eMarkets.options].forEach(o => o.selected = v.includes(o.value)); eMarkets._searchableRefresh?.(); };
   // "All" options don't mix with named ones: picking All clears the named ones, picking a named one clears All
   function exclusiveAll(select, get, set) {
     let prev = get();
@@ -336,8 +345,9 @@
   const allOpt = eApi.querySelector(`option[value="${ALL}"]`);
   const allMkOpt = eMarkets.querySelector(`option[value="${ALL}"]`);
   const mkF = eMarkets.closest('.field'), mkMsg = mkF.querySelector('[data-msg]');
-  const selApis = () => [...eApi.selectedOptions].map(o => o.value);
-  const setApis = list => { [...eApi.options].forEach(o => o.selected = list.includes(o.value)); eApi._searchableRefresh?.(); };
+  // option values are strings: the rule keeps numeric API ids (and ALL)
+  const selApis = () => [...eApi.selectedOptions].map(o => o.value === ALL ? ALL : +o.value);
+  const setApis = list => { const v = list.map(String); [...eApi.options].forEach(o => o.selected = v.includes(o.value)); eApi._searchableRefresh?.(); };
   const resetApisPrev = exclusiveAll(eApi, selApis, setApis);
   const apiF = eApi.closest('.field'), apiMsg = apiF.querySelector('[data-msg]');
 
@@ -350,17 +360,17 @@
     const client = !!(portal && eAgent.value);
     allOpt.disabled = !client; // the dropdown hides disabled options
     allMkOpt.disabled = !client;
-    $('#e-api-hint').textContent = client ? 'Pick All suppliers to cover every hotel API.' : '';
+    $('#e-api-hint').textContent = client ? 'Pick All suppliers to cover every supplier.' : '';
     // disabled partners: only the rule's current client stays pickable (so an existing rule can still be edited)
-    [...eAgent.options].forEach(o => { if (o.value) o.disabled = !AG[o.value].enabled && o.value !== (editing?.agent || ''); });
+    [...eAgent.options].forEach(o => { if (o.value) o.disabled = !AG[o.value].enabled && o.value !== String(editing?.agent || ''); });
     if (!client && selApis().includes(ALL)) {
       setApis([]); resetApisPrev();
-      apiMsg.textContent = 'All suppliers needs a portal and a client. Select an API.';
+      apiMsg.textContent = 'All suppliers needs a platform type and a client. Select a supplier.';
       apiF.classList.add('invalid');
     }
     if (!client && selMarketOpts().includes(ALL)) {
       setMarkets([]); resetMarketsPrev();
-      mkMsg.textContent = 'All markets needs a portal and a client. Select a market.';
+      mkMsg.textContent = 'All markets needs a platform type and a client. Select a market.';
       mkF.classList.add('invalid');
     }
     eMarkets._searchableRefresh?.(); eApi._searchableRefresh?.();
@@ -390,7 +400,7 @@
     editing = rule || null;
     form.reset();
     form.querySelectorAll('.field').forEach(f => f.classList.remove('invalid'));
-    $('#edit-title').textContent = rule ? `Edit markup #${rule.id}` : 'New markup';
+    $('#edit-title').textContent = rule ? `Edit markup · #${rule.id}` : 'New markup';
     $('#edit-submit').textContent = rule ? 'Save changes' : 'Create markup';
     const v = rule || { portal: null, agent: null, markets: [], api: [], type: 'percent', amount: '', active: true };
     ePortal.value = v.portal || '';
@@ -412,10 +422,10 @@
     if (!a.active || !b.active || (a.portal || null) !== (b.portal || null) || (a.agent || null) !== (b.agent || null)) return null;
     const apis = a.api.filter(x => b.api.includes(x));
     if (!apis.length) return null;
-    const allApis = apis.length === a.api.length;
-    if (!a.markets.length && !b.markets.length) return { apis, where: 'all markets', full: allApis };
+    // where: the shared market ids, or null when both apply to All markets
+    if (!a.markets.length && !b.markets.length) return { apis, where: null };
     const shared = a.markets.filter(m => b.markets.includes(m));
-    return shared.length ? { apis, where: shared.map(mName).join(', '), full: allApis && shared.length === a.markets.length } : null;
+    return shared.length ? { apis, where: shared } : null;
   }
   // priority: the latest rule wins where rules overlap. Latest = highest ID (a rule not saved yet is the latest).
   const rank = d => d.id ?? Infinity;
@@ -432,28 +442,40 @@
   // (All markets is one cell of its own), and it's Blocked when every cell is taken by some newer rule.
   const cellsOf = d => d.api.flatMap(a => (d.markets.length ? d.markets : [null]).map(m => [a, m]));
   const covers = (b, [a, m]) => b.api.includes(a) && (m === null ? !b.markets.length : b.markets.includes(m));
+  // left = the [api, market] cells no newer rule takes
   function coverage(d, by) {
-    const rest = cellsOf(d).filter(c => !by.some(o => covers(o.rule, c)));
-    // what still applies, grouped by supplier: "Dida in India; Hotelbeds in Malaysia"
-    const bySup = new Map();
-    rest.forEach(([a, m]) => { if (!bySup.has(a)) bySup.set(a, []); bySup.get(a).push(m); });
-    const left = [...bySup].map(([a, ms]) => `${a === ALL ? 'All suppliers' : a} in ${ms[0] === null ? 'all markets' : ms.map(mName).join(', ')}`).join('; ');
-    return { blocked: !rest.length, left };
+    const left = cellsOf(d).filter(c => !by.some(o => covers(o.rule, c)));
+    return { blocked: !left.length, left };
   }
-  const lines = list => list.map(o => `#${o.rule.id}: ${apiName(o.apis)} in ${o.where}`).join('\n');
-  const byMsg = (d, by) => {
-    const c = coverage(d, by), many = by.length > 1;
-    return c.blocked
+  // what still applies, grouped by supplier: "Dida in India; Hotelbeds in Malaysia"
+  const leftText = cells => {
+    const bySup = new Map();
+    cells.forEach(([a, m]) => { if (!bySup.has(a)) bySup.set(a, []); bySup.get(a).push(m); });
+    return [...bySup].map(([a, ms]) => `${a === ALL ? 'All suppliers' : apiNm(a)} in ${ms[0] === null ? 'all markets' : ms.map(mName).join(', ')}`).join('; ');
+  };
+  // one overlap as saved data: the other rule's ID, the shared API ids and market ids (null = all markets)
+  const entry = o => ({ id: o.rule.id, apis: o.apis, where: o.where });
+  function overlapData(r) {
+    const o = overlapsOf(r, r);
+    if (!o.by.length && !o.over.length) return null;
+    const c = coverage(r, o.by);
+    return { by: o.by.map(entry), over: o.over.map(entry), blocked: !!o.by.length && c.blocked, left: c.left };
+  }
+  const whereText = w => w ? w.map(mName).join(', ') : 'all markets';
+  const lines = list => list.map(e => `#${e.id}: ${apiName(e.apis)} in ${whereText(e.where)}`).join('\n');
+  const byMsg = (blocked, left, by) => {
+    const many = by.length > 1;
+    return blocked
       ? `Not applied: newer markup${many ? 's take' : ' takes'} priority everywhere it applies.
 ${lines(by)}`
       : `Partly applied: newer markup${many ? 's take' : ' takes'} priority for
 ${lines(by)}
-Still applies: ${c.left}.`;
+Still applies: ${leftText(left)}.`;
   };
   const overMsg = over => `Takes priority over older markup${over.length > 1 ? 's' : ''}:
 ${lines(over)}`;
   // pill text: one rule → its ID; several → a count (the tooltip lists them)
-  const pillText = (word, list) => list.length === 1 ? `${word} #${list[0].rule.id}` : `${word} · ${list.length} rules`;
+  const pillText = (word, list) => list.length === 1 ? `${word} #${list[0].id}` : `${word} · ${list.length} rules`;
 
   // optional overlap screen on Save ("Check for overlaps" ticked): information, not an error — saving is allowed
   const draftOverlaps = data => data.active ? overlapsOf({ id: editing?.id, ...data }, editing) : { by: [], over: [] };   // inactive rules never overlap
@@ -462,8 +484,8 @@ ${lines(over)}`;
     const scope = { id: editing?.id, ...data };
     // one box per message, coloured by what it means: red = blocked, amber = partly applied, blue = overrides others
     const msgs = [];
-    if (o.by.length) msgs.push([coverage(scope, o.by).blocked ? 'danger' : 'warn', byMsg(scope, o.by)]);
-    if (o.over.length) msgs.push(['info', overMsg(o.over)]);
+    if (o.by.length) { const c = coverage(scope, o.by); msgs.push([c.blocked ? 'danger' : 'warn', byMsg(c.blocked, c.left, o.by.map(entry))]); }
+    if (o.over.length) msgs.push(['info', overMsg(o.over.map(entry))]);
     const n = new Set([...o.by, ...o.over].map(x => x.rule)).size;
     return Modal.open({
       tone: 'warning',
@@ -482,20 +504,20 @@ ${lines(over)}`;
     const amtMsg = amtF.querySelector('[data-msg]'), mkMsg = mkF.querySelector('[data-msg]');
     const raw = form.elements.amount.value.trim(), n = Number(raw);
     let amtBad = true;
-    if (!raw) amtMsg.textContent = 'Enter a markup amount.';
+    if (!raw) amtMsg.textContent = '';   // empty → red border only
     else if (!/^\d+(\.\d{1,2})?$/.test(raw)) amtMsg.textContent = 'Enter a number, up to 2 decimals.';
     else amtBad = false;
-    const portal = ePortal.value || null, agent = portal ? (eAgent.value || null) : null;
+    const portal = ePortal.value || null, agent = portal ? (+eAgent.value || null) : null;
     // All suppliers needs a portal + client (the backend must enforce this too)
     const apis = selApis();
     const apiBad = !apis.length || (apis.includes(ALL) && !agent);
-    if (apiBad) apiMsg.textContent = apis.includes(ALL) ? 'All suppliers needs a portal and a client. Select an API.' : agent ? 'Select at least one API, or All suppliers.' : 'Select at least one API.';
+    if (apiBad) apiMsg.textContent = apis.includes(ALL) ? 'All suppliers needs a platform type and a client. Select a supplier.' : '';
     apiF.classList.toggle('invalid', apiBad);
     amtF.classList.toggle('invalid', amtBad);
 
     const mkBad = !selMarketOpts().length || (selMarketOpts().includes(ALL) && !agent);
     const data = { portal, agent, markets: selMarkets(), api: apis, type: type(), amount: amtBad ? '' : String(n), active: form.elements.active.checked };
-    if (mkBad) mkMsg.textContent = selMarketOpts().includes(ALL) ? 'All markets needs a portal and a client. Select a market.' : agent ? 'Select at least one market, or All markets.' : 'Select at least one market.';
+    if (mkBad) mkMsg.textContent = selMarketOpts().includes(ALL) ? 'All markets needs a platform type and a client. Select a market.' : '';
     mkF.classList.toggle('invalid', mkBad);
     if (apiBad || mkBad || amtBad) {
       (apiBad ? $('#e-api-btn') : mkBad ? $('#e-markets-btn') : form.elements.amount)?.focus();
@@ -529,6 +551,7 @@ ${lines(over)}`;
       const rule = editing || rules[0];
       new Set([rule, ...before, ...partners(rule)]).forEach(saveOverlap);
     }
+    storeRules();
     closeDrawers();
     render();
   });
@@ -542,7 +565,7 @@ ${lines(over)}`;
       title: `Delete markup #${rule.id}?`,
       message: `It stops being added to hotel prices right away.${fallback ? ' ' + fallback : ''}${over.length ? ` ${ids(over)} ${over.length === 1 ? 'applies' : 'apply'} again where this one overrode ${over.length === 1 ? 'it' : 'them'}.` : ''}`,
       details: [
-        ['Portal / Client', esc(whoText(rule))],
+        ['Platform type / Client', esc(whoText(rule))],
         ['Markets', rule.markets.length ? marketItems(rule.markets) : 'All markets'],
         ['Suppliers', esc(apiName(rule.api))],
         ['Markup', `${esc(markupText(rule))} · ${rule.type === 'percent' ? 'Percent' : 'Fixed'}`],
@@ -552,15 +575,20 @@ ${lines(over)}`;
       confirm: 'Delete markup',
     });
     if (!ok) return;
+    // rules whose saved overlap names this one: worked out again, so no pill points at a deleted rule
+    const named = rules.filter(r => { const d = saved[r.id]; return d && [...d.by, ...d.over].some(x => x.id === rule.id); });
+    delete saved[rule.id];
     rules.splice(rules.indexOf(rule), 1);
+    named.forEach(saveOverlap);
+    storeSaved(); storeRules();
     toast(`Markup #${rule.id} deleted`);
     render();
   }
 
-  /* ---------- history: same card design and rules as Hotel APIs ----------
+  /* ---------- history: same card design and rules as Supplier List ----------
      Create = the values the rule was created with. Edit = one row per changed field, old value → new value;
      Markets and Suppliers show only what was removed / added. Status Change = old → new status and what it means. Newest first. */
-  const USERS = { 'Super Admin': 'superadmin@mynztrip.com', 'Ops Team': 'ops@mynztrip.com', 'Rahim Uddin': 'rahim@mynztrip.com' };
+  const userEmail = RefData.userEmail;   // admin users: js/data.js
   const OP_CLASS = { Create: 'success', Edit: 'info', 'Status Change': 'neutral' };
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dateOnly = d => `${String(d.getDate()).padStart(2, '0')}-${MONTHS[d.getMonth()]}-${d.getFullYear()}`;
@@ -571,7 +599,7 @@ ${lines(over)}`;
   const marketItem = id => MK[id] ? `<span class="hist-item">${esc(MK[id].name)} <span class="tbl-pill">${esc(MK[id].cur)}</span></span>` : esc(id);
   const marketItems = ids => ids.map(marketItem).join('<span class="hist-sep">,</span> ');
   const SHOW = [
-    ['portal', 'Portal', v => esc(portalText(v.portal))],
+    ['portal', 'Platform type', v => esc(portalText(v.portal))],
     ['agent', 'Client', v => v.agent ? `<span class="hf-code">${esc(AG[v.agent].code)}</span> ${esc(AG[v.agent].name)}` : 'All clients'],
     // each market with its currency, as in the list: "Bangladesh BDT, India INR"
     ['markets', 'Markets', v => v.markets.length ? marketItems(v.markets) : 'All markets', true],
@@ -587,7 +615,7 @@ ${lines(over)}`;
     const rm = o.filter(x => !n.includes(x)), add = n.filter(x => !o.includes(x));
     return `<div class="hc-list">${rm.length ? `<div class="hc-line"><span class="hc-tag rm">Removed</span><span class="hc-items rm">${items(rm)}</span></div>` : ''}${add.length ? `<div class="hc-line"><span class="hc-tag add">Added</span><span class="hc-items add">${items(add)}</span></div>` : ''}</div>`;
   }
-  const supplierItems = list => list.map(a => `<span class="hist-item">${esc(a)}</span>`).join('<span class="hist-sep">,</span> ');
+  const supplierItems = list => list.map(a => `<span class="hist-item">${esc(apiNm(a))}</span>`).join('<span class="hist-sep">,</span> ');
 
   function historyEntries(rule) {
     let after = {}; SNAPSHOT.forEach(k => after[k] = rule[k]);
@@ -624,7 +652,7 @@ ${lines(over)}`;
         <div class="history-card">
           <div class="history-who">
             <span class="history-user" data-tooltip="${esc(h.by)}">${esc(h.by)}</span><span class="history-date">${dateOnly(h.at)}</span>
-            <span class="history-email" data-tooltip="${esc(h.email || USERS[h.by] || '')}">${esc(h.email || USERS[h.by] || '')}</span><span class="history-time">${timeOnly(h.at)}</span>
+            <span class="history-email" data-tooltip="${esc(h.email || userEmail(h.by))}">${esc(h.email || userEmail(h.by))}</span><span class="history-time">${timeOnly(h.at)}</span>
           </div>
           <div class="history-op-line"><span class="pill operation-pill ${OP_CLASS[h.op]}">${h.op}</span>
             ${h.summary ? `<div class="history-desc">${h.summary}</div>` : ''}</div>

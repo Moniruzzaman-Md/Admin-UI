@@ -84,7 +84,7 @@ button { font: inherit; }
 /* ---------- body row ---------- */
 .shell-row { display: flex; height: calc(100vh - 64px); }
 .shell-sidebar {
-  width: 304px; flex: none; overflow-y: scroll; padding: 0 0 16px;
+  width: 304px; flex: none; display: flex; flex-direction: column; overflow-y: scroll; padding: 0;
   background: linear-gradient(180deg, #000088, #000055); color: #f0f4ff;
   box-shadow: rgba(255, 255, 255, .06) -1px 0 inset; transition: width .25s; scrollbar-width: thin;
 }
@@ -150,6 +150,18 @@ body.sidebar-slim .slim-list { display: block; }
 }
 .slim-submenu-item:hover { background: rgba(255, 255, 255, .08); color: #fff; }
 .slim-submenu-item .side-ico { width: 22px; font-size: 15px; }
+
+/* Reset Demo Data, pinned to the bottom of the sidebar (as in Map-UI) */
+.sidebar-footer { margin-top: auto; padding: 16px 22px; border-top: 1px solid rgba(255, 255, 255, .1); }
+.reset-demo-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 0; border: 0; background: transparent;
+  color: rgba(255, 255, 255, .55); font: inherit; font-size: 12.5px; text-align: left; cursor: pointer; transition: color .2s ease-in-out;
+}
+.reset-demo-btn:hover { color: #fff; }
+.reset-demo-btn svg { flex: none; }
+body.sidebar-slim .sidebar-footer { padding: 16px 0; }
+body.sidebar-slim .reset-demo-btn { justify-content: center; }
+body.sidebar-slim .reset-demo-btn span { display: none; }
 
 /* ---------- content column ---------- */
 .shell-content { flex: 1; min-width: 0; overflow: auto; background: #f8fafc; }

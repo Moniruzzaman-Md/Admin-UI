@@ -68,7 +68,7 @@ CREATE TABLE markup_rule_supplier (
   PRIMARY KEY (rule_id, supplier_id),
   KEY ix_supplier (supplier_id, rule_id),
   CONSTRAINT fk_rs_rule FOREIGN KEY (rule_id) REFERENCES markup_rule(id) ON DELETE CASCADE
-  -- + FK supplier_id → hotel_api
+  -- + FK supplier_id → hotel_api; the API must be permanent (hotel_api.is_temporary = 0): check on create / update
 ) ENGINE=InnoDB;
 
 CREATE TABLE markup_rule_history (
@@ -333,3 +333,4 @@ Searches run this for every result, so keep the active rules **in memory** and r
      `created_at` = `updated_at` (UTC, keep it UTC).
    - Check: each rule's newest old row should equal the rule as copied in step 1. Log the ones that don't.
    - Keep the old log table read-only until the result has been checked.
+- 2026-11-22 — Suppliers of a rule must be permanent: reject a temporary supplier (`hotel_api.is_temporary = 1`) on create / update, same as the screen, which never lists them.

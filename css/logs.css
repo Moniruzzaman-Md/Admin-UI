@@ -1,0 +1,62 @@
+/* Shared by the two log pages (hotel-logs.html, hotel-api-logs.html): the log viewer drawer and the phone card list.
+   Each page keeps only its own columns / info line in its <style>. */
+
+/* log viewer drawer: compact, everything but the file content fits in the header + one info line */
+#log-drawer .drawer-head { align-items: center; padding: 12px 16px 12px 20px; }
+#log-drawer .drawer-head .head-main { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
+#log-drawer .drawer-head h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 3em; }
+#log-drawer .seg button { height: 26px; padding: 0 10px; }
+#log-drawer .drawer-body { display: flex; flex-direction: column; gap: 10px; overflow: hidden; padding: 12px 20px 16px; }
+/* the info line: values separated by dividers */
+.log-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 0; font-size: var(--fs-sm); color: var(--text-2); }
+.log-meta > * + * { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--border-strong); }
+#log-drawer .code-view-bar { padding: 6px 8px; }
+.cv-panes { flex: 1; min-height: 0; display: flex; gap: 12px; }
+#log-drawer .code-view { flex: 1 1 0; min-width: 0; }
+#log-drawer .code-view[hidden], .cv-kind[hidden] { display: none; }
+.cv-editor { flex: 1; min-height: 0; }
+/* side by side: wider drawer, Request left, Response right; it grows / shrinks smoothly only while open */
+#log-drawer.is-split { width: min(1480px, 100vw); }
+#log-drawer.open.can-resize { transition: transform .25s ease, width .32s cubic-bezier(.2, .8, .2, 1); }
+#log-drawer.can-resize .code-view.is-entering { animation: cv-pane-in .32s cubic-bezier(.2, .8, .2, 1); }
+@keyframes cv-pane-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { #log-drawer.open.can-resize { transition: transform .25s ease; } #log-drawer .code-view.is-entering { animation: none; } }
+.cv-kind { font-size: var(--fs-sm); font-weight: 700; margin-right: 2px; cursor: default; }
+.cv-kind.is-request { color: #1d4ed8; } .cv-kind.is-response { color: var(--green); }
+@media (max-width: 1099.98px) { #sw-kind .sw-both { display: none; } }
+.code-view-bar .searchable-select:has(.cv-format) { width: 96px; }
+.code-view-bar .searchable-select:has(.cv-format) .input { height: 32px; font-size: var(--fs-sm); font-weight: 600; }
+.ph-only { display: none; }
+/* viewer Copy: on success a tick replaces the label (width unchanged) and the button turns green */
+.cv-copy { position: relative; }
+.cv-copy .cv-ok { display: none; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.cv-copy.is-copied, .cv-copy.is-copied:hover { color: var(--green); border-color: #86c79b; background: var(--green-bg); }
+.cv-copy.is-copied .cv-ok { display: block; }
+.cv-copy.is-copied .btn-label, .cv-copy.is-copied .ph-only { visibility: hidden; }
+
+/* ---------- phones (<= 640px): the page scrolls; each row is a card (the page sets its grid areas) ---------- */
+@media (max-width: 640px) {
+  .shell-main { height: auto; }
+  .tbl-area, .tbl-area .table-responsive { flex: none; overflow: visible; }
+  .table.log-table, .log-table tbody, .log-table tr { display: block; border: 0; }
+  .log-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .table.log-table tbody tr > td { display: block; padding: 0; border: 0; background: none !important; box-shadow: none !important; white-space: normal !important; }
+  .table.log-table tbody tr.is-last-opened { background: var(--brand-soft); box-shadow: inset 3px 0 0 var(--brand-accent); }
+  .log-table td.tbl-num { display: none !important; }
+  .table.log-table tbody tr:has(td.empty-cell) { display: block; padding: 0; border: 0; }
+  .skeleton .log-table tbody td { height: auto; }
+
+  #log-drawer .drawer-head { flex-wrap: wrap; row-gap: 8px; padding: 10px 10px 10px 16px; }
+  #log-drawer .drawer-body { padding: 10px 12px 12px; gap: 8px; }
+  #log-drawer .drawer-head .head-main { display: contents; }
+  #log-title { order: 1; flex: 1 1 calc(100% - 48px); }
+  #log-drawer .drawer-head [data-close] { order: 2; }
+  #sw-kind { order: 3; }
+  #log-drawer .code-view-bar { gap: 4px; padding: 6px; flex-wrap: nowrap; }
+  .code-view-bar .searchable-select:has(.cv-format) { width: 76px; flex: none; }
+  .code-view-bar .searchable-select:has(.cv-format) .searchable-select-trigger { padding: 0 6px 0 9px; gap: 2px; }
+  #log-drawer .code-view-bar .inline-switch { gap: 6px; }
+  .ph-only { display: inline; }
+  .cv-find, .cv-fold, .cv-copy, .cv-download { width: 32px; min-width: 0; padding: 0; justify-content: center; }
+  .cv-find .btn-label, .cv-fold .btn-label, .cv-copy .btn-label, .cv-download .btn-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}

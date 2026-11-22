@@ -7,67 +7,27 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png?v=2">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png?v=2">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
-<link rel="stylesheet" href="css/tokens.css?v=26">
-<link rel="stylesheet" href="css/shell.css?v=30">
-<link rel="stylesheet" href="css/components.css?v=48">
-<link rel="stylesheet" href="css/skeleton.css?v=26">
-<link rel="stylesheet" href="css/table.css?v=76">
-<link rel="stylesheet" href="css/select.css?v=26">
-<link rel="stylesheet" href="css/datepicker.css?v=2">
+<link rel="stylesheet" href="css/tokens.css?v=27">
+<link rel="stylesheet" href="css/shell.css?v=33">
+<link rel="stylesheet" href="css/components.css?v=51">
+<link rel="stylesheet" href="css/skeleton.css?v=27">
+<link rel="stylesheet" href="css/table.css?v=77">
+<link rel="stylesheet" href="css/logs.css?v=1">
+<link rel="stylesheet" href="css/select.css?v=27">
+<link rel="stylesheet" href="css/datepicker.css?v=3">
 <style>
-  .page-head { padding: 0 8px; }
-
-  /* log viewer drawer: compact, everything but the file content fits in the header + one info line */
-  #log-drawer .drawer-head { align-items: center; padding: 12px 16px 12px 20px; }
-  #log-drawer .drawer-head .head-main { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
-  #log-drawer .drawer-head h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 3em; }
-  #log-drawer .seg button { height: 26px; padding: 0 10px; }
-  #log-drawer .drawer-body { display: flex; flex-direction: column; gap: 10px; overflow: hidden; padding: 12px 20px 16px; }
-  /* one line: Transaction ID | Client | IP */
-  .log-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 0; font-size: var(--fs-sm); color: var(--text-2); }
-  .log-meta > * + * { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--border-strong); }
+  /* shared viewer drawer + phone card list: css/logs.css. This page: its info line and columns. */
+  /* info line: Transaction ID | Client | IP */
   .log-meta .lm-agent { color: var(--text); font-weight: 600; white-space: nowrap; }
   .log-meta .lm-agent small { font-weight: 400; color: var(--text-2); margin-left: 6px; font-size: inherit; }
-  #log-drawer .code-view-bar { padding: 6px 8px; }
-  .cv-panes { flex: 1; min-height: 0; display: flex; gap: 12px; }
-  #log-drawer .code-view { flex: 1 1 0; min-width: 0; }
-  #log-drawer .code-view[hidden], .cv-kind[hidden] { display: none; }
-  .cv-editor { flex: 1; min-height: 0; }
-  /* side by side: wider drawer, Request left, Response right */
-  #log-drawer.is-split { width: min(1480px, 100vw); }
-  #log-drawer.open.can-resize { transition: transform .25s ease, width .32s cubic-bezier(.2, .8, .2, 1); }
-  #log-drawer.can-resize .code-view.is-entering { animation: cv-pane-in .32s cubic-bezier(.2, .8, .2, 1); }
-  @keyframes cv-pane-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) { #log-drawer.open.can-resize { transition: transform .25s ease; } #log-drawer .code-view.is-entering { animation: none; } }
-  .cv-kind { font-size: var(--fs-sm); font-weight: 700; margin-right: 2px; cursor: default; }
-  .cv-kind.is-request { color: #1d4ed8; } .cv-kind.is-response { color: #15803d; }
-  @media (max-width: 1099.98px) { #sw-kind .sw-both { display: none; } }
-  .code-view-bar .searchable-select:has(.cv-format) { width: 96px; }
-  .code-view-bar .searchable-select:has(.cv-format) .input { height: 32px; font-size: var(--fs-sm); font-weight: 600; }
-  .ph-only { display: none; }
-  /* viewer Copy: on success a tick replaces the label (width unchanged) and the button turns green */
-  .cv-copy { position: relative; }
-  .cv-copy .cv-ok { display: none; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-  .cv-copy.is-copied, .cv-copy.is-copied:hover { color: #15803d; border-color: #86c79b; background: #f0faf3; }
-  .cv-copy.is-copied .cv-ok { display: block; }
-  .cv-copy.is-copied .btn-label, .cv-copy.is-copied .ph-only { visibility: hidden; }
   .tbl-muted { color: var(--text-2); }
   /* single-line rows (desktop + tablet): each cell's two values side by side instead of stacked */
   @media (min-width: 641px) {
     .log-table .tbl-stack { flex-direction: row; align-items: center; gap: 8px; white-space: nowrap; }
   }
-
-  /* ---------- phones (<= 640px) ---------- */
+  /* phones: each row is a card: operation + IP / transaction ID + platform type / client name + client ID / date, time */
   @media (max-width: 640px) {
-    /* list: the page scrolls; each row is a card: operation + IP / transaction ID + portal / client name + client ID / date, time */
-    .shell-main { height: auto; }
-    .tbl-area, .tbl-area .table-responsive { flex: none; overflow: visible; }
-    .table.log-table, .log-table tbody, .log-table tr { display: block; border: 0; }
-    .log-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     .table.log-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "op ip" "txn portal" "agent sl" "date date"; gap: 6px 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
-    .table.log-table tbody tr > td { display: block; padding: 0; border: 0; background: none !important; box-shadow: none !important; white-space: normal !important; }
-    .table.log-table tbody tr.is-last-opened { background: #eef0ff; box-shadow: inset 3px 0 0 #2b3ed1; }
-    .log-table td.tbl-num { display: none !important; }
     .log-table td:nth-child(2) { grid-area: date; }
     .log-table td:nth-child(3) { grid-area: portal; align-self: center; text-align: right; font-size: 13px; color: var(--text-2); }
     .log-table td:nth-child(4) { grid-area: agent; }
@@ -76,22 +36,6 @@
     .log-table td:nth-child(7) { grid-area: op; }
     .log-table td:nth-child(8) { grid-area: ip; text-align: right; font-size: 13px; color: var(--text-2); }
     .log-table td:nth-child(2) .tbl-stack { flex-direction: row; gap: 8px; font-size: 13px; color: var(--text-2); }
-    .table.log-table tbody tr:has(td.empty-cell) { display: block; padding: 0; border: 0; }
-    .skeleton .log-table tbody td { height: auto; }
-
-    #log-drawer .drawer-head { flex-wrap: wrap; row-gap: 8px; padding: 10px 10px 10px 16px; }
-    #log-drawer .drawer-body { padding: 10px 12px 12px; gap: 8px; }
-    #log-drawer .drawer-head .head-main { display: contents; }
-    #log-title { order: 1; flex: 1 1 calc(100% - 48px); }
-    #log-drawer .drawer-head [data-close] { order: 2; }
-    #sw-kind { order: 3; }
-    #log-drawer .code-view-bar { gap: 4px; padding: 6px; flex-wrap: nowrap; }
-    .code-view-bar .searchable-select:has(.cv-format) { width: 76px; flex: none; }
-    .code-view-bar .searchable-select:has(.cv-format) .searchable-select-trigger { padding: 0 6px 0 9px; gap: 2px; }
-    #log-drawer .code-view-bar .inline-switch { gap: 6px; }
-    .ph-only { display: inline; }
-    .cv-find, .cv-fold, .cv-copy, .cv-download { width: 32px; min-width: 0; padding: 0; justify-content: center; }
-    .cv-find .btn-label, .cv-fold .btn-label, .cv-copy .btn-label, .cv-download .btn-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   }
 </style>
 </head>
@@ -128,8 +72,8 @@
           <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-from" type="text" readonly></div></div>
         <div class="filter-field"><label for="f-to">To date</label>
           <div class="date-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><input class="input" id="f-to" type="text" readonly></div></div>
-        <div class="filter-field"><label for="f-portal">Portal</label>
-          <select class="input" id="f-portal"><option value="" data-placeholder>Portal</option></select></div>
+        <div class="filter-field"><label for="f-portal">Platform type</label>
+          <select class="input" id="f-portal"><option value="" data-placeholder>Platform type</option></select></div>
         <div class="filter-field"><label for="f-client">Client</label>
           <input class="input" id="f-client" type="text" placeholder="Client name or ID" autocomplete="off" spellcheck="false"></div>
         <div class="filter-field"><label for="f-op">Operation type</label>
@@ -143,8 +87,8 @@
         <table class="table log-table table-hover table-striped table-bordered f-14 text-nowrap">
           <thead>
             <tr class="text-uppercase">
-              <th class="tbl-num" scope="col">#</th><th class="text-start">Date &amp; Time</th><th class="text-start">Portal</th><th class="text-start">Client Name</th><th class="text-start">Client ID</th><th class="text-start">Transaction ID</th>
-              <th class="text-start tbl-grow">Operation</th><th class="text-start">IP Address</th>
+              <th class="tbl-num" scope="col">#</th><th class="text-start">Date &amp; time</th><th class="text-start">Platform type</th><th class="text-start">Client name</th><th class="text-start">Client ID</th><th class="text-start">Transaction ID</th>
+              <th class="text-start tbl-grow">Operation</th><th class="text-start">IP address</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -189,14 +133,16 @@
 
 <div class="toast" id="toast" role="status"></div>
 
-<script src="js/shell.js?v=32"></script>
-<script src="js/select.js?v=27"></script>
-<script src="js/tooltip.js?v=2"></script>
-<script src="js/datepicker.js?v=2"></script>
-<script src="js/filters.js?v=1"></script>
-<script src="js/empty-state.js?v=3"></script>
-<script src="js/table-loading.js?v=1"></script>
-<script src="js/code-viewer.js?v=7"></script>
-<script src="js/hotel-logs.js?v=7"></script>
+<script src="js/shell.js?v=38"></script>
+<script src="js/select.js?v=28"></script>
+<script src="js/tooltip.js?v=3"></script>
+<script src="js/datepicker.js?v=3"></script>
+<script src="js/filters.js?v=2"></script>
+<script src="js/empty-state.js?v=4"></script>
+<script src="js/table-loading.js?v=2"></script>
+<script src="js/code-viewer.js?v=8"></script>
+<script src="js/history-legacy.js?v=4"></script>
+<script src="js/data.js?v=12"></script>
+<script src="js/hotel-logs.js?v=10"></script>
 </body>
 </html>

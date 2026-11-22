@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hotel Booking Form · Admin Redesign</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png?v=2">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
+<link rel="stylesheet" href="css/tokens.css?v=27">
+<link rel="stylesheet" href="css/shell.css?v=33">
+<link rel="stylesheet" href="css/components.css?v=51">
+<link rel="stylesheet" href="css/select.css?v=27">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
+<link rel="stylesheet" href="css/booking-form.css?v=12">
+<style>
+  /* prototype-only switch between the Add form and the edit sample (not part of the design) */
+  .proto-btn { align-self: center; font-size: 12px; font-weight: 500; color: var(--text-2); border: 1px dashed var(--border-strong); border-radius: 6px; padding: 3px 10px; text-decoration: none; white-space: nowrap; }
+  .proto-btn:hover { color: var(--brand); border-color: var(--brand); }
+</style>
+</head>
+<body data-page="hotel-bookings">
+
+<main class="shell-main">
+  <div class="adm-wrap">
+  <div class="page-head bf-head">
+    <div class="bf-title">
+      <button class="icon-btn back" type="button" aria-label="Back to the booking list">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <h1 class="page-title" id="pageTitle">Add New Booking</h1>
+    </div>
+    <a class="proto-btn" id="protoMode" href="booking-form.html?mode=edit">Open edit sample</a>
+  </div>
+
+  <!-- ============ Booking Source & Pricing ============ -->
+  <div class="card" id="sourceCard">
+    <div class="card-header" data-toggle><span>Booking source &amp; pricing</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+    <div class="card-body"><div class="src-grid">
+      <section class="src-pane">
+        <div class="pane-title"><span class="dot"></span>Supplier</div>
+        <div class="row">
+          <div class="field" id="f-supplier"><label class="lbl req">Supplier</label><div class="ss" id="ss-supplier"></div><div class="fb">Supplier is required.</div></div>
+        </div>
+        <div class="row c2 mt">
+          <div class="field" id="f-supCur"><label class="lbl req">Supplier currency</label><div class="ss" id="ss-supCur"></div><div class="fb">Supplier currency is required.</div></div>
+          <div class="field"><label class="lbl">Supplier reference no.</label><input type="text" placeholder="Enter supplier reference no." data-bind="reference_no" data-required><div class="fb">Supplier reference no is required.</div></div>
+        </div>
+        <div class="row c2 mt" id="f-rate">
+          <div class="field"><label class="lbl req">Conversion rate</label><div class="ig rate-ig"><span class="pre rate-pre" data-rate-pre="ps.supplierCurrency"></span><input type="text" inputmode="decimal" placeholder="Enter rate" data-rate data-bind="ps.conversionRate"><span class="suf" data-adorn="ps.portalCurrency"></span></div><div class="fb">Conversion rate is required and must be more than 0.</div></div>
+          <div class="field"><label class="lbl req">Reverse rate</label><div class="ig rate-ig"><span class="pre rate-pre" data-rate-pre="ps.portalCurrency"></span><input type="text" inputmode="decimal" placeholder="Enter rate" data-rate data-bind="ps.reverseRate"><span class="suf" data-adorn="ps.supplierCurrency"></span></div><div class="fb">Enter either rate.</div></div>
+        </div>
+      </section>
+
+      <section class="src-pane">
+        <div class="pane-title"><span class="dot cust"></span><span data-cust-label>Client</span></div>
+        <div class="row c2">
+          <div class="field" id="f-platform"><label class="lbl req">Platform type</label><div class="ss" id="ss-platform"></div><div class="fb">Platform type is required.</div></div>
+          <div class="field" id="f-customer"><label class="lbl req" data-cust-label>Client</label><div class="ss" id="ss-customer" data-need-path="platform"></div><div class="fb"><span data-cust-label>Client</span> is required.</div></div>
+        </div>
+        <div class="row c2 mt">
+          <div class="field" id="f-custCur"><label class="lbl req"><span data-cust-label>Client</span> currency</label><div class="ss" id="ss-custCur"></div><div class="fb">Currency is required.</div></div>
+          <div class="field" id="f-market"><label class="lbl req">Market</label><div class="ss" id="ss-market"></div><div class="fb">Market is required.</div></div>
+        </div>
+        <div class="row c2 mt">
+          <div class="field"><label class="lbl">Markup type</label><div class="ss" id="ss-markup"></div></div>
+          <div class="field" id="f-markupRule"><label class="lbl">Markup amount</label><div class="ig"><input type="text" inputmode="decimal" placeholder="0.00" data-money data-bind="ps.markupRule" data-min="0"><span class="suf" data-adorn-markup></span></div><div class="fb">Required when a markup type is selected.</div></div>
+        </div>
+      </section>
+    </div></div>
+  </div>
+
+  <div class="grid two">
+    <!-- LEFT COLUMN -->
+    <div class="col">
+      <div class="card">
+        <div class="card-header" data-toggle><span>Hotel details<span class="hint" id="txnHint"></span></span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+        <div class="card-body"><div class="row c2">
+          <div class="field"><label class="lbl">Hotel name</label><input type="text" placeholder="Enter hotel name" data-bind="hotel_name" data-required><div class="fb">Hotel name is required.</div></div>
+          <div class="field"><label class="lbl">Address</label><input type="text" placeholder="Enter address" data-bind="address"></div>
+          <div class="field"><label class="lbl">Country</label><div class="ss" id="ss-country"></div></div>
+          <div class="field"><label class="lbl">City</label><div class="ss" id="ss-city" data-need-path="country_name"></div></div>
+          <div class="field"><label class="lbl">Telephone</label><input type="text" placeholder="Enter telephone" data-bind="hotel_phone_number"></div>
+          <div class="field"><label class="lbl">HCN</label><input type="text" placeholder="Enter HCN" data-bind="hcn"></div>
+          <div class="field" id="f-bookdate"><label class="lbl">Booking date</label><div class="dp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><input type="text" data-date="datetime" data-bind="booking_date" placeholder="Select date &amp; time"><button type="button" class="dp-clear" data-action="dp-clear" aria-label="Clear">×</button></div><div class="fb">Booking date can't be in the future.</div></div>
+          <div class="field"><label class="lbl">Deadline date &amp; time</label><div class="dp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><input type="text" data-date="datetime" data-bind="cancellation_deadline_date" placeholder="Select date &amp; time"><button type="button" class="dp-clear" data-action="dp-clear" aria-label="Clear">×</button></div></div>
+          <div class="field"><label class="lbl">Check-in date</label><div class="dp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><input type="text" data-date="date" data-bind="check_in" data-required placeholder="Select date"><button type="button" class="dp-clear" data-action="dp-clear" aria-label="Clear">×</button></div><div class="fb">Check-in date is required.</div></div>
+          <div class="field" id="f-checkout"><label class="lbl">Check-out date <span class="hint" id="nightsHint"></span></label><div class="dp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><input type="text" data-date="date" data-bind="check_out" data-required placeholder="Select date"><button type="button" class="dp-clear" data-action="dp-clear" aria-label="Clear">×</button></div><div class="fb" id="checkoutMsg">Check-out date is required.</div></div>
+          <div class="field"><label class="lbl">Category <span class="hint">(star rating)</span></label>
+            <div class="stars">
+              <input type="hidden" data-bind="star_rating">
+              <div class="stars-btns"><button type="button" class="star" data-action="star" data-v="1" aria-label="1 star"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button><button type="button" class="star" data-action="star" data-v="2" aria-label="2 stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button><button type="button" class="star" data-action="star" data-v="3" aria-label="3 stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button><button type="button" class="star" data-action="star" data-v="4" aria-label="4 stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button><button type="button" class="star" data-action="star" data-v="5" aria-label="5 stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button></div>
+              <button type="button" class="stars-clear" data-action="star" data-v="" id="starClear" aria-label="Clear rating" data-tooltip="Clear rating">×</button>
+            </div></div>
+          <div class="field"><label class="lbl">Booking status</label><div class="ss" id="ss-status"></div></div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col">
+      <div class="card">
+        <div class="card-header" data-toggle><span>Contact details</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+        <div class="card-body">
+          <div class="row">
+            <div class="field"><label class="lbl">Email</label><input type="text" placeholder="name@example.com" data-bind="guest_email" data-email data-required><div class="fb">Enter a valid email.</div></div>
+          </div>
+          <div class="row phone-row mt">
+            <div class="field" id="f-dial"><label class="lbl req">Country code</label><div class="ss" id="ss-dial"></div><div class="fb">Select a country code.</div></div>
+            <div class="field" id="f-mobile"><label class="lbl req">Mobile number</label><input type="text" inputmode="numeric" maxlength="15" placeholder="Enter mobile number" data-int data-bind="contact_mobile"><div class="fb">Enter 6–15 digits.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" data-toggle><span>Contracting comment &amp; special requests</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+        <div class="card-body"><div class="row">
+          <div class="field"><label class="lbl">Contracting comment</label><div class="rte"><div id="ccEditor"></div></div></div>
+          <div class="field"><label class="lbl">Special requests</label><textarea rows="3" placeholder="Enter special requests" data-bind="special_request"></textarea></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Rooms & Guests ============ -->
+  <div class="card">
+    <div class="card-header" data-toggle><span>Rooms &amp; guests</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+    <div class="card-body">
+      <div class="field" style="margin-bottom:16px"><label class="lbl">Meal</label><div class="ss" id="ss-meal"></div></div>
+      <div id="rooms"></div>
+      <button type="button" class="btn btn-add" data-action="add-room">+ Add room</button>
+    </div>
+  </div>
+
+  <!-- ============ Cancellation Policies ============ -->
+  <div class="card">
+    <div class="card-header" data-toggle><span>Cancellation policies</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+    <div class="card-body">
+      <div class="tz-row" id="f-tz">
+        <span class="tz-lbl">Time format</span>
+        <label class="tz-opt"><input type="radio" name="tzmode" value="Local" data-tz="mode"> Local</label>
+        <label class="tz-opt"><input type="radio" name="tzmode" value="UTC" data-tz="mode"> UTC</label>
+        <span class="tz-utc" id="tzUtc">
+          <span class="seg2" role="group" aria-label="UTC offset sign"><button type="button" data-tz-sign="-" aria-label="Minus">−</button><button type="button" data-tz-sign="+" aria-label="Plus">+</button></span>
+          <span class="ig tz-h"><input type="text" inputmode="numeric" maxlength="2" placeholder="0" data-tz="hours" aria-label="Hours"><span class="suf">h</span></span>
+          <span class="ss tz-m" id="ss-tzm"></span>
+          <span class="tz-prev" id="tzPrev"></span>
+        </span>
+        <div class="fb" id="tzMsg"></div>
+      </div>
+      <div class="switch-row">
+        <label class="switch-label"><span class="switch"><input type="checkbox" data-bind="onePolicy"><span></span></span>One policy for all rooms</label>
+      </div>
+      <div id="policies"></div>
+    </div>
+  </div>
+
+  <!-- ============ Price Summary ============ -->
+  <div class="card" id="sumCard">
+    <div class="card-header" data-toggle><span>Price summary</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+    <div class="card-body" id="sumBody"></div>
+  </div>
+
+  <div class="footer">
+    <button type="button" class="btn btn-secondary" data-action="back">Cancel</button>
+    <button type="button" class="btn btn-primary" id="saveBtn" data-action="save">Create booking</button>
+  </div>
+
+  <div class="payload" id="payload">
+    <h2>Payload preview</h2>
+    <p>This is what the form would send to the backend on save (the real endpoints are not connected yet).</p>
+    <div class="errs" id="payloadErrs"></div>
+    <pre id="payloadJson"></pre>
+  </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+<script src="js/shell.js?v=38"></script>
+<script src="js/select.js?v=28"></script>
+<script src="js/tooltip.js?v=3"></script>
+<script src="js/history-legacy.js?v=4"></script>
+<script src="js/data.js?v=12"></script>
+<script src="js/api-drawer.js?v=17"></script>
+<script src="js/booking-form.js?v=19"></script>
+</body>
+</html>

@@ -33,7 +33,15 @@ admin-portal/
     empty-state.js    shared empty table state: EmptyState.row(colspan) — illustration + "No Data Found"
     filters.js        shared filter bar: FilterBar.init(root, {fields, onSearch, onReset}) — count, chips, panel toggle, Search/Reset
     modal.js          shared confirm / info modal: Modal.open({tone, title, message, details, note, confirm}) → Promise<boolean> (css/modal.css)
-    <screen>.js       page prototype logic + dummy data
+    data.js           THE single data source. RefData = read-only master lists (currencies, portals, admin users, partners,
+                      markets, countries + cities + dial codes, meals, hotels, room types); HotelApis = the saved API list.
+                      A page never keeps its own copy of data another page also shows — read it from here. Only data that
+                      belongs to one page alone (its own records, enums like booking statuses) lives in the page script.
+                      SHARED, SAVED prototype data (localStorage, prefix admin-redesign:) — HotelApis.list etc.; every page reads/writes the same records (Map-UI model). Reset: "Reset Demo Data" at the bottom of the sidebar (js/shell.js → AdminData.reset()).
+                      Every supplier dropdown lists HotelApis.list, labelled HotelApis.label(api) = "Name - SHORT" (Supplier List, booking form, Hotel API Logs, Default Markup); temporary suppliers only in the booking form. Markets: RefData.marketLabel = "Name (CUR)".
+                      Saved keys: hotelApis, markupRules, markup-overlap-v2 — all through AdminData, so Reset clears everything.
+    api-drawer.js     shared hotel API create / edit drawer: ApiDrawer.open({api, temporary, name, onSaved, onMakePermanent}) — Supplier List + booking form
+    <screen>.js       page prototype logic (+ page-only dummy data)
   notes/<screen>.md   dev notes (behaviour only) + changelog
   notes/<screen>-backend.md   optional backend guide for a screen (schema, queries, API) — e.g. markup-commission-backend.md
   <screen>-backend.html       shows that guide as a page; the screen links to it with a small dashed "Backend guide" button (prototype only). It reads the .md when served, and carries a copy of it (GUIDE:START…END) so it also opens from disk — refresh that copy after editing the .md
@@ -53,9 +61,12 @@ admin-portal/
 - Confirms and info messages use the shared modal (`Modal.open`, `js/modal.js` + `css/modal.css`), never a page-made `<dialog>`. Tone: `danger` (delete), `warning` (can't-undo changes), `info`, `success`. Put what it's about in `details`, the consequence in `note`.
 - Tooltips: use `data-tooltip="…"` (`js/tooltip.js`), never `title=""` — the native one is slow and unstyled. Make non-focusable elements `tabindex="0"` so keyboard users get it. Table action buttons keep their `data-tip` CSS tooltip.
 - The Action column is always the last column and right-aligned (header and buttons): `<th class="tbl-action-col">` / `<td class="tbl-action-col">`.
-- **Same element, same look, on every page** (standing rule). Build UI from the shared components; never restyle one for a single page.
-- List filters use the shared **filter bar** (Map-UI hotel-system style): `.filter-bar` in `css/components.css` + `js/filters.js` (`FilterBar.init`). Row: main search box · Search · Filters (count) · Reset (· page actions with `.push-right`); the rest in a collapsible labelled `.filters-panel`; chips of set filters while it's closed. Fields apply only on Search / Enter; Reset restores defaults and reloads. Used by Hotel Api Logs and Markup (Hotel Api List still has the simple instant `.toolbar`).
+- **Same element, same look, on every page** (standing rule). Build UI from the shared components; never restyle one for a single page. Colours come from `css/tokens.css` (no hard-coded hex for brand / red / green / muted).
+- **Same words on every page**: sentence case for labels, buttons, headers and messages (page titles in Title Case; sidebar labels and browser-tab titles copy the live portal, see the shell rules); Supplier (the Supplier List page itself says API), Client, Platform type, Percent / Fixed; Create ‹thing› / Save changes; Cancel closes or goes back. Dates: 22-Nov-2026, times 02:15 PM.
+- Log pages share `css/logs.css` (viewer drawer + phone cards).
+- List filters use the shared **filter bar** (Map-UI hotel-system style): `.filter-bar` in `css/components.css` + `js/filters.js` (`FilterBar.init`). Row: main search box · Search · Filters (count) · Reset (· page actions with `.push-right`); the rest in a collapsible labelled `.filters-panel`; chips of set filters while it's closed. Fields apply only on Search / Enter; Reset restores defaults and reloads. Used by Hotel Logs, Hotel API Logs and Default Markup (Supplier List keeps the simple instant `.toolbar`).
 - Every dropdown is the searchable dropdown (`css/select.css` + `js/select.js`, call `SearchableSelect.init()` after filling options). Write a normal `<select>`; don't opt out of search. `<select multiple>` gives the multi-select version, which stays open while picking (closes on outside click, Esc or Tab); single selects close on a pick.
+- Data that more than one page uses lives in `js/data.js` and is saved in the browser (localStorage), so a change on one page shows on the others and survives a reload (same as Map-UI). Save after every change (`HotelApis.save()`, `AdminData.save(key, value)`). Sidebar › Reset Demo Data clears it (every screen except Home, which has no sidebar). Seed data stays dummy.
 - Header and sidebar copy the live portal exactly; the sidebar shows only screens that have been redesigned.
 - Tag each handoff: `git tag <screen>-handoff-<n>`.
 
@@ -74,7 +85,9 @@ Use dummy data only in published pages - no real customer names, booking refs, e
 
 | Screen | Sections redesigned | Status | Last change |
 |---|---|---|---|
-| [Hotel APIs](hotel-apis.html) | Whole page (list, filters, create/edit, history) | Draft | 2026-11-17 |
+| [Supplier List](hotel-apis.html) | Whole page (list, filters, create/edit, history) | Draft | 2026-11-17 |
 | [Default Markup (Hotel)](markup-commission.html) | Whole page (list, filters, create/edit, delete, history) | Draft | 2026-11-18 |
 | [Hotel Logs](hotel-logs.html) | Whole page (filters, list, log viewer) | Draft | 2026-11-20 |
 | [Hotel Api Logs](hotel-api-logs.html) | Whole page (filters, list, log viewer) | Draft | 2026-11-20 |
+| [Hotel All Booking](hotel-bookings.html) | None yet (skeleton); + Add New opens the booking form | Draft | 2026-11-22 |
+| [Hotel Booking Form](booking-form.html) | Whole page (manual Add / Edit booking) — own CSS/JS (`css/booking-form.css`, `js/booking-form.js`), not yet on the shared components | Draft | 2026-11-22 |

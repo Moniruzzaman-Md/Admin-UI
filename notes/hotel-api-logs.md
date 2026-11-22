@@ -15,7 +15,7 @@ Shared filter bar (`js/filters.js`, same as Map-UI hotel-system): a row with the
 - **From date** / **To date** (shared date picker, one date each) -> `from_date` (start of day) / `to_date` (end of day), local time zone as today.
   - Default: today / today. No future dates. Never empty.
   - To can't be before From, From can't be after To (the calendars grey out those days).
-- **Supplier** (searchable dropdown) -> `supplierId`. Empty (shows "Supplier") = all; then "Common" (0) and every supplier.
+- **Supplier** (searchable dropdown) -> `supplierId`. Empty (shows "Supplier") = all; then "Common" (0) and every permanent supplier, shown "Name - SHORT" (temporary suppliers are not listed).
 - **Operation type** (searchable dropdown) -> **new param** (e.g. `operationName`). Empty (shows "Operation type") = all; then the 13 operations from the live logs. "Search" is offered only while Include search logs is on (picking it with the switch off would always be empty); turning the switch off clears it.
 - **Portal** (searchable dropdown) -> **new param** (e.g. `portal`). Empty (shows "Portal") = all; B2B, B2C, B2C APP, API.
 - **Include search logs** (switch) -> `includeSearch`. Off by default. Off = rows of the Search operation are left out (the SearchStream trace still shows, as the live API does).
@@ -154,3 +154,7 @@ Tablet and desktop are unchanged.
 - 2026-11-20 — transaction ID and file name show copy success in place (green + tick), no toast.
 - 2026-11-20 — transaction ID and file name copy success reads "Copied ✓".
 - 2026-11-20 — viewer: minimap (code overview on the right) removed on every screen size.
+- 2026-11-22 — Supplier filter lists the shared hotel API list (same as Hotel Api List): Common + the permanent APIs; temporary suppliers are not listed.
+- 2026-11-22 — Portals, hotels, room types and meal names come from the shared reference data (js/data.js).
+- 2026-11-22 — "Portal" renamed **Platform type** (filter, chip), same word as the booking form and Markup. Viewer drawer + phone card styles moved to css/logs.css (shared with Hotel Logs).
+- 2026-11-22 — References to the API list page now say Supplier List (menu item renamed). The page itself keeps its name: it logs the supplier API calls.

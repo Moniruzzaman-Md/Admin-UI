@@ -37,7 +37,7 @@ Uses the **reusable table**. Columns: **#** | ID | MARKET | SUPPLIER | PORTAL / 
 - **Portal / Client** (one column): the portal as a small grey label (`B2B ›`), then the partner code (badge), with the client name under the code (code and name left-aligned). A portal rule without a client shows `B2B ›` All clients; a rule with no portal shows `ALL ›` All clients. A disabled partner gets a grey "Disabled" tag.
 - **Market**: every market of the rule, as "Name CUR | Name CUR". Nothing is hidden or truncated. A rule with no market shows "All markets".
   - The live list shows duplicate and empty market entries (e.g. "Maldives, Maldives", ", ,"). The list should get a clean, de-duplicated market list per rule, and saving must not store duplicates or blanks.
-- **Supplier** (was "API name"): every API of the rule, as "Name | Name", or "All suppliers" (client rules only).
+- **Supplier** (was "Supplier name"): every API of the rule, as "Name | Name", or "All suppliers" (client rules only).
 - **Markup**: the amount with 2 decimals and a thousands separator, plus its type: `5.00%` Percent, `1,000.00` Fixed.
 - **Check overlaps** (button in the toolbar): works out the overlap of every rule and **saves it on each rule**. While it runs, the button says "Checking…" and the rows are dimmed; when done, only the list reloads, same filters and same page.
   - The pills (below) show from the saved result and **stay** (also after a reload) until the next check.
@@ -57,14 +57,14 @@ Uses the **reusable table**. Columns: **#** | ID | MARKET | SUPPLIER | PORTAL / 
 
 ## Filters
 
-In this order: **ID · Portal · Client · Market · Supplier · Status**.
+In this order: **ID · Platform type · Client · Market · Supplier · Status**.
 
 - **ID** (new): a number box. Shows rules whose ID starts with what's typed (`11` → 1180, 1173, 1103…). Only digits are kept; a leading "#" is ignored.
-- Each filter shows its field name while it's not set (**Portal**, **Client**, **Market**, **Supplier**; Status shows **All statuses**); picking that first entry clears the filter. There's no "Any …" entry, so "Any portal" and "All" can't be confused.
+- Each filter shows its field name while it's not set (**Platform type**, **Client**, **Market**, **Supplier**, **Status**); picking that first entry clears the filter. There's no "Any …" entry, so "Any portal" and "All" can't be confused.
 - **Portal**: All (rules for every portal) · each portal (B2B).
-- **Client**: always shown; **disabled** until a portal is picked in the Portal filter (hover: "Pick a portal first"). All clients (the portal's rules without a client) · each client of that portal. Changing the portal back clears it and disables it again.
+- **Client**: always shown; **disabled** until a portal is picked in the Portal filter (hover: "Pick a platform type first"). All clients (the portal's rules without a client) · each client of that portal. Changing the portal back clears it and disables it again.
 - **Market**: each market as "Name (CUR)". Shows every rule that **covers** it: rules that name it **and** All-markets rules.
-- **Supplier**: each hotel API. Shows every rule that covers it: rules that name it **and** All-suppliers rules.
+- **Supplier**: each permanent hotel API (temporary suppliers are not listed), shown "Name - SHORT". Shows every rule that covers it: rules that name it **and** All-suppliers rules.
 - **Status**: All statuses (default) / Active / Inactive (no counts).
 Shared filter bar (`js/filters.js`, same as Map-UI hotel-system): a row with the main search box · **Search** · **Filters** (count of set filters + chevron) · **Reset**; the other fields sit in a collapsible **Filters** panel (closed by default) with a label over each field.
 - While the panel is closed, each set panel filter shows as a chip ("Portal: B2C ×"); × clears that field (takes effect on the next Search). The count on Filters follows the fields as you change them.
@@ -81,10 +81,10 @@ Shared filter bar (`js/filters.js`, same as Map-UI hotel-system): a row with the
   - Searchable; options "CODE · Name", so typing a code or a name both find it.
   - Only **Enabled** partners can be picked. Disabling a partner does nothing to its rules (confirmed): they keep working as stored. In the list it shows a grey "Disabled" tag. When editing that rule, the partner stays selectable as "(Disabled)".
   - Clearing the portal clears the client.
-- **APIs** — required, multi-select, nothing picked for a new rule (searchable; the panel stays open while picking; picked APIs show as removable chips; the field reads the API name for one pick, "N APIs selected" for more). At least one ("Select at least one API." — or "…, or All suppliers." when a client is set).
+- **Suppliers** — required, multi-select, nothing picked for a new rule (searchable; the panel stays open while picking; picked APIs show as removable chips; the field reads the Supplier name for one pick, "N APIs selected" for more). At least one (an empty field gets a red border only — or "…, or All suppliers." when a client is set).
   - **All suppliers** is listed only while a portal and a client are set (hint: "Pick All suppliers to cover every hotel API."). It doesn't mix with named APIs: picking All suppliers clears the named ones, picking a named API clears All suppliers.
   - If All suppliers is picked and the portal or client is then cleared, it is removed and the field shows "All suppliers needs a portal and a client. Select an API."
-- **Markets** — required, multi-select (searchable; options "Name (CUR)"; picked markets show as removable chips). Nothing picked for a new rule. **All markets** is listed only while a portal and a client are set; it doesn't mix with named markets (picking it clears them, picking a market clears it). None picked → "Select at least one market." ("…, or All markets." when a client is set). If All markets is picked and the portal or client is then cleared, it's removed and the field shows "All markets needs a portal and a client. Select a market." Editing an All-markets rule shows All markets picked.
+- **Markets** — required, multi-select (searchable; options "Name (CUR)"; picked markets show as removable chips). Nothing picked for a new rule. **All markets** is listed only while a portal and a client are set; it doesn't mix with named markets (picking it clears them, picking a market clears it). None picked → an empty field gets a red border only ("…, or All markets." when a client is set). If All markets is picked and the portal or client is then cleared, it's removed and the field shows "All markets needs a portal and a client. Select a market." Editing an All-markets rule shows All markets picked.
 - **Markup type** — Percent / Fixed, required, default Percent.
 - **Markup amount** — required. Numbers only (digits and one decimal point; other characters can't be typed). 0 or more, up to 2 decimals. 0 is allowed. `%` is shown next to it for Percent.
   - No upper limit (confirmed): a percent can be more than 100.
@@ -96,7 +96,7 @@ Shared filter bar (`js/filters.js`, same as Map-UI hotel-system): a row with the
     - Ticked + no overlaps → saves right away; toast adds "· No overlaps found".
     - Not ticked → saves without looking. An inactive rule never overlaps.
   - Rules at different levels never clash (a client rule vs a B2B all-clients rule vs an all-portals rule), and neither do an All-suppliers rule and a named-API rule. The more specific one applies (see "Which rule applies").
-- Edit pre-fills every field. Title: "Edit markup #‹ID›" (the rule's ID), no subtitle (create: "New markup"). Button: "Save changes" (create: "Create markup").
+- Edit pre-fills every field. Title: "Edit markup · #‹ID›" (the rule's ID), no subtitle (create: "New markup"). Button: "Save changes" (create: "Create markup").
 - Saving with no changes writes no history.
 - Success → drawer closes, toast "Markup created / updated" (+ " · No overlaps found" when checked).
 - Esc, Cancel, ✕ or clicking outside closes without saving.
@@ -112,7 +112,7 @@ Shared filter bar (`js/filters.js`, same as Map-UI hotel-system): a row with the
 
 ## History (drawer)
 
-Same Edit History as Hotel APIs (same layout and rules). Title: "History — #‹ID›".
+Same Edit History as Supplier List (same layout and rules). Title: "History — #‹ID›".
 
 - One card per entry, newest first, "Entry N of M". User name + email, date (DD-Mon-YYYY) + time (hh:mm AM/PM).
 - **Create** — no summary text, just the values: Portal (All / B2B), Client (code + name, or All clients), Markets (each with its currency, "Bangladesh BDT"), Suppliers (or All suppliers), Markup (amount · type), Status.
@@ -204,3 +204,10 @@ Still open (backend, doesn't change the screen): whether the pricing service can
 - 2026-11-19 — "Earliest recorded settings" removed too: no summary text on any history entry.
 - 2026-11-20 — Filters: same bar as Hotel API Logs — Search + Reset buttons, fields apply on Search; Clear filters removed.
 - 2026-11-20 — Filter bar restyled like Map-UI hotel-system: ID + Search · Filters (count) · Reset, collapsible labelled panel, chips when closed.
+- 2026-11-22 — Supplier filter and the rule's Suppliers list come from the shared hotel API list (same as Hotel Api List): permanent APIs, A–Z; temporary suppliers are not listed.
+- 2026-11-22 — Rules store API ids (shared hotel API list) instead of names; names are looked up for display, so renaming an API on Hotel Api List shows in the list, filters, edit drawer and history.
+- 2026-11-22 — Clients (Partners) and Markets come from the shared reference data (js/data.js); rules store partner and market ids. Overlap results saved under the shared storage prefix, so Reset Demo Data clears them.
+- 2026-11-22 — An empty required field shows only a red border (no "Enter …" / "… is required" message); messages stay for a filled but wrong value.
+- 2026-11-22 — Rules are saved in the browser (js/data.js storage, cleared by Reset Demo Data): create, edit and delete survive a reload, and a new rule always gets a new ID (highest + 1). Saved overlap results are data (rule IDs, supplier ids, market ids), the pill text is built when drawn, so a renamed API shows its new name; deleting a rule works out again the rules whose pills named it.
+- 2026-11-22 — Wording: "Portal" is now **Platform type** (filter, drawer, Platform type / Client column, history, delete dialog, messages); the rule's suppliers field is **Suppliers** ("Select suppliers"); empty Status filter reads "Status"; edit title "Edit markup · #‹ID›"; header button "New markup". Supplier options read "Name - SHORT" and markets "Name (CUR)", same as every dropdown. The amount box's unit space matches the API drawer. Empty API / market fields: red border only.
+- 2026-11-22 — References to the API list page now say Supplier List (menu item renamed).

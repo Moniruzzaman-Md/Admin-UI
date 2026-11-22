@@ -5,18 +5,21 @@
   const toast = msg => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2400); };
 
   /* ---------- dummy data ---------- */
-  // supplierId 0 = "Common" (our own normalised layer); the rest are suppliers
-  const APIS = [[0, 'Common'], [1, 'WhitinEarth'], [2, 'Rate Hawk'], [3, 'Dida'], [4, 'TBO Holidays'], [5, 'Hotelbeds']];
-  const API_NAME = Object.fromEntries(APIS);
+  // supplierId 0 = "Common" (our own normalised layer); the rest = the shared hotel API list (js/data.js, same as Supplier List).
+  // Supplier filter: permanent APIs only (temporary suppliers are only offered in the booking form).
+  const APIS = [[0, 'Common'], ...HotelApis.list.filter(a => !a.temporary).map(a => [a.id, HotelApis.label(a)])];
+  const API_NAME = Object.fromEntries([[0, 'Common'], ...HotelApis.list.map(a => [a.id, a.name])]);
+  const TBO = 1, DIDA = 2, RH = 3;   // hotel API ids (js/data.js seed) the dummy logs are made for
   const SEARCH_OPS = ['Search'];                           // only listed with "Include search logs" (SearchStream trace is always listed, as live)
 
   let seed = 7;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const pick = a => a[Math.floor(rnd() * a.length)];
   const digits = n => Array.from({ length: n }, () => Math.floor(rnd() * 10)).join('');
-  const PORTALS = ['B2B', 'B2B', 'B2C', 'B2C APP', 'API'];   // where the transaction came from (weighted)
-  const HOTELS = ['Harbour View Hostel', 'Lagoon Bay Resort', 'Old Town Boutique Hotel', 'Riverside Suites', 'Palm Grove Inn', 'Skyline City Hotel'];
-  const ROOMS = [['Shared Dormitory', 'RO', 'Room Only'], ['Deluxe Double', 'BB', 'Bed & Breakfast'], ['Superior Twin', 'RO', 'Room Only'], ['Family Suite', 'HB', 'Half Board']];
+  // shared lists: js/data.js RefData
+  const PORTALS = ['B2B', ...RefData.portals];   // where the transaction came from (B2B weighted double)
+  const HOTELS = RefData.hotels.slice(0, 6);
+  const ROOMS = RefData.roomTypes.map((r, i) => { const code = ['RO', 'BB', 'RO', 'HB'][i]; return [r, code, RefData.mealName(code)]; });   // [room, meal code, meal]
 
   const logs = [];
   let order = 0;
@@ -55,7 +58,7 @@
     //    with the SAME file names as the other supplier — a file is identified by supplier + file name;
     //  - all requests go out first, responses come back later in any order.
     const sid = newCall();
-    const others = [2, 3, 4].filter(x => x !== sup);
+    const others = [RH, DIDA, TBO].filter(x => x !== sup);
     const sups = ctx.bigSearch ? [sup] : rnd() < .6 ? [sup, pick(others)] : [sup];
     add('Search', sid, C, RQ);
     const partsOf = sups.map(() => ctx.bigSearch ? 40 : 3 + Math.floor(rnd() * 6));   // bigSearch: one long Search, to show paging
@@ -88,7 +91,7 @@
       const start = new Date(today); start.setDate(start.getDate() - d); start.setHours(8 + Math.floor(rnd() * 10), Math.floor(rnd() * 60), Math.floor(rnd() * 60));
       if (start > new Date()) start.setTime(Date.now() - (i + 1) * 900e3);
       const room = pick(ROOMS);
-      journey('NZH' + digits(15), pick([2, 3, 3, 4]), start, { hotel: pick(HOTELS), room, nights: 1 + Math.floor(rnd() * 4), price: +(30 + rnd() * 250).toFixed(2), rate: 19.6, portal: pick(PORTALS), bigSearch: d === 0 && i === 1 });
+      journey('NZH' + digits(15), pick([RH, DIDA, DIDA, TBO]), start, { hotel: pick(HOTELS), room, nights: 1 + Math.floor(rnd() * 4), price: +(30 + rnd() * 250).toFixed(2), rate: 19.6, portal: pick(PORTALS), bigSearch: d === 0 && i === 1 });
     }
   }
   logs.sort((a, b) => b.createdOn - a.createdOn || b.seq - a.seq);   // newest first (as the live list)
@@ -103,17 +106,17 @@
     if (l.kind === 'Trace') {
       const t0 = l.createdOn, ts = ms => new Date(+t0 - 15000 + ms).toISOString().replace('T', ' ').slice(0, 23);
       return [`${ts(0)} INFO  SearchStream started  txn=${l.id}`,
-        `${ts(12)} INFO  Dispatch  suppliers=[Dida, Rate Hawk, TBO Holidays]`,
-        `${ts(1840)} INFO  Dida            completed  hotels=42  elapsed=1840ms`,
-        `${ts(2510)} INFO  TBO Holidays    completed  hotels=17  elapsed=2510ms`,
-        `${ts(15000)} WARN  Rate Hawk       timeout    elapsed=15000ms`,
+        `${ts(12)} INFO  Dispatch  suppliers=[${[DIDA, RH, TBO].map(i => API_NAME[i]).join(', ')}]`,
+        `${ts(1840)} INFO  ${API_NAME[DIDA].padEnd(15)} completed  hotels=42  elapsed=1840ms`,
+        `${ts(2510)} INFO  ${API_NAME[TBO].padEnd(15)} completed  hotels=17  elapsed=2510ms`,
+        `${ts(15000)} WARN  ${API_NAME[RH].padEnd(15)} timeout    elapsed=15000ms`,
         `${ts(15004)} INFO  SearchStream finished  total=59`].join('\n');
     }
-    if (l.layer === 'Original' && l.supplierId === 4) {     // TBO Holidays: XML
+    if (l.layer === 'Original' && l.supplierId === TBO) {     // TBO Holidays: XML
       if (l.kind === 'Request') return `<?xml version="1.0" encoding="utf-8"?><HotelRequest xmlns="http://example.com/hotel"><Header><ClientId>demo-client</ClientId><RequestId>${l.callId}</RequestId></Header><Operation>${l.operationName}</Operation><CheckIn>${iso(ci)}</CheckIn><CheckOut>${iso(co)}</CheckOut><Currency>USD</Currency><Rooms><Room Adults="2" Children="0"/></Rooms><HotelCodes><Code>H10458</Code></HotelCodes></HotelRequest>`;
       return `<?xml version="1.0" encoding="utf-8"?><HotelResponse xmlns="http://example.com/hotel"><Status Code="200">Success</Status><RequestId>${l.callId}</RequestId><Hotels><Hotel Code="H10458"><Name>${c.hotel}</Name><Rooms><Room><Name>${c.room[0]}</Name><Board Code="${c.room[1]}">${c.room[2]}</Board><Price Currency="USD">${(c.price / 4.4).toFixed(2)}</Price><Refundable>true</Refundable></Room></Rooms></Hotel></Hotels></HotelResponse>`;
     }
-    if (l.layer === 'Original' && l.supplierId === 2 && l.operationName === 'PreBook' && l.kind === 'Response')   // Rate Hawk: HTML error page
+    if (l.layer === 'Original' && l.supplierId === RH && l.operationName === 'PreBook' && l.kind === 'Response')   // Rate Hawk: HTML error page
       return `<!DOCTYPE html>\n<html>\n<head>\n  <title>502 Bad Gateway</title>\n</head>\n<body>\n  <center><h1>502 Bad Gateway</h1></center>\n  <hr>\n  <center>nginx</center>\n  <p>Request ID: ${l.callId}</p>\n</body>\n</html>`;
     let obj;
     if (l.layer === 'Original') {
@@ -169,7 +172,7 @@
     if (fOp._searchableRefresh) fOp._searchableRefresh();
   }
   fillOps();
-  ['B2B', 'B2C', 'B2C APP', 'API'].forEach(p => fPortal.add(new Option(p, p)));
+  RefData.portals.forEach(p => fPortal.add(new Option(p, p)));
 
   const filtered = () => {
     const from = +state.from, to = +state.to + 864e5 - 1, q = state.txn.trim().toUpperCase();
@@ -248,7 +251,7 @@
       { label: 'To', isSet: () => +draft.to !== +today, text: () => fmtDay(draft.to), clear: () => { draft.to = new Date(today); toField.set(draft.to); fromField.setMax(draft.to); } },
       { label: 'Supplier', isSet: () => fApi.value !== '', text: () => optText(fApi), clear: () => { fApi.value = ''; } },
       { label: 'Operation type', isSet: () => !!fOp.value, text: () => fOp.value, clear: () => { fOp.value = ''; } },
-      { label: 'Portal', isSet: () => !!fPortal.value, text: () => fPortal.value, clear: () => { fPortal.value = ''; } },
+      { label: 'Platform type', isSet: () => !!fPortal.value, text: () => fPortal.value, clear: () => { fPortal.value = ''; } },
       { label: 'Search logs', isSet: () => fSearch.checked, text: () => 'Included', clear: () => { fSearch.checked = false; fillOps(); } },
     ],
     onSearch: applyFilters,

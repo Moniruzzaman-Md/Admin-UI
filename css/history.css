@@ -22,7 +22,7 @@
    Operation pill colours: Create = success, Edit = info, Status Change = neutral. */
 
 .history-list { display: flex; flex-direction: column; gap: 22px; }
-.history-entry-label { margin-bottom: 6px; text-align: right; font-size: 11px; font-weight: 500; color: #6b6b85; }
+.history-entry-label { margin-bottom: 6px; text-align: right; font-size: 11px; font-weight: 500; color: var(--text-3); }
 .history-card {
   padding: 10px 12px; background: #fff; border: 1px solid #e4e4f0; border-radius: 10px;
   box-shadow: 0 1px 2px rgba(16, 16, 90, .06);
@@ -36,7 +36,7 @@
 .history-user, .history-email { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .history-date, .history-time { text-align: right; white-space: nowrap; }
 .history-user, .history-date { padding-bottom: 1px; font-size: 14px; font-weight: 600; color: #1c1c33; }
-.history-email, .history-time { font-size: 12px; font-weight: 400; color: #6b6b85; }
+.history-email, .history-time { font-size: 12px; font-weight: 400; color: var(--text-3); }
 
 /* operation pill + description */
 .history-op-line {
@@ -50,9 +50,9 @@
 }
 .pill.operation-pill::before { content: none; }
 .pill.operation-pill.success { background: #178449; }
-.pill.operation-pill.info    { background: #2b3ed1; }
-.pill.operation-pill.neutral { background: #6b6b85; }
-.pill.operation-pill.danger  { background: #d63643; }
+.pill.operation-pill.info    { background: var(--brand-accent); }
+.pill.operation-pill.neutral { background: var(--text-3); }
+.pill.operation-pill.danger  { background: var(--red); }
 
 /* Create entry: the starting values as a labelled 2-column grid under the pill line */
 .history-fields {
@@ -61,13 +61,13 @@
 }
 .history-fields > div { min-width: 0; padding: 7px 10px; background: #fbfbfe; }
 .history-fields > div.wide { grid-column: 1 / -1; }
-.history-fields dt { margin: 0 0 1px; font-size: 11px; font-weight: 600; line-height: 16px; letter-spacing: .3px; text-transform: uppercase; color: #6b6b85; }
+.history-fields dt { margin: 0 0 1px; font-size: 11px; font-weight: 600; line-height: 16px; letter-spacing: .3px; text-transform: uppercase; color: var(--text-3); }
 .history-fields dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; line-height: 20px; color: #1c1c33; }
 .history-fields .hf-code { padding: 1px 7px; border-radius: 5px; background: #ececfa; color: #10108a; font-size: 12px; font-weight: 700; letter-spacing: .4px; }
 .hf-dot { display: inline-flex; align-items: center; gap: 6px; }
 .hf-dot::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.hf-dot.on { color: #137a42; }
-.hf-dot.off { color: #c42f3b; }
+.hf-dot.on { color: var(--green); }
+.hf-dot.off { color: var(--red); }
 .hf-dot.warn { color: #a8620a; }
 
 /* Edit / Status Change entry: one row per changed field - label, then old -> new */
@@ -79,12 +79,12 @@
 }
 .history-changes > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; column-gap: 16px; padding: 8px 10px; }
 .history-changes > div + div { border-top: 1px solid #e4e4f0; }
-.history-changes dt { font-size: 11px; font-weight: 600; line-height: 16px; letter-spacing: .3px; text-transform: uppercase; color: #6b6b85; }
+.history-changes dt { font-size: 11px; font-weight: 600; line-height: 16px; letter-spacing: .3px; text-transform: uppercase; color: var(--text-3); }
 .history-changes dd { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; margin: 0; font-size: 13px; line-height: 20px; }
 .history-changes .hc-old { color: #8a8aa3; font-weight: 500; text-decoration: line-through; text-decoration-color: rgba(138, 138, 163, .7); }
 .history-changes .hc-old .hf-dot, .history-changes .hc-old .hf-code { color: #8a8aa3; background: none; padding: 0; }
 .history-changes .hc-new { color: #1c1c33; font-weight: 600; }
-.history-changes .hc-arrow { flex: none; color: #2b3ed1; }
+.history-changes .hc-arrow { flex: none; color: var(--brand-accent); }
 .history-changes .hf-code { padding: 1px 7px; border-radius: 5px; background: #ececfa; color: #10108a; font-size: 12px; font-weight: 700; letter-spacing: .4px; }
 
 /* Status Change entry: old → new status pill, then what the change means */
@@ -98,12 +98,12 @@
 }
 .hs-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .hs-pill.old { background: #f1f1f6; color: #8a8aa3; text-decoration: line-through; }
-.history-status.on  .hs-pill.new { background: #e5f5ec; color: #137a42; }
-.history-status.off .hs-pill.new { background: #fdecee; color: #c42f3b; }
-.history-status .hc-arrow { flex: none; color: #2b3ed1; }
-.hs-note { flex-basis: 100%; font-size: 12px; line-height: 18px; color: #6b6b85; }
+.history-status.on  .hs-pill.new { background: #e5f5ec; color: var(--green); }
+.history-status.off .hs-pill.new { background: #fdecee; color: var(--red); }
+.history-status .hc-arrow { flex: none; color: var(--brand-accent); }
+.hs-note { flex-basis: 100%; font-size: 12px; line-height: 18px; color: var(--text-3); }
 
-.history-empty { margin: 0; padding: 28px 0; text-align: center; color: #6b6b85; }
+.history-empty { margin: 0; padding: 28px 0; text-align: center; color: var(--text-3); }
 
 /* Temp pill as a field value sits flush, not offset like after a name */
 .history-fields .tbl-tag, .history-changes .tbl-tag { margin-left: 0; }
@@ -117,7 +117,7 @@
 .hc-line { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: baseline; column-gap: 8px; }
 .hc-tag { padding: 0 6px; border-radius: 4px; font-size: 10px; line-height: 16px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
 .hc-tag.rm { background: #fdecee; color: #b3261e; }
-.hc-tag.add { background: #e6f4ec; color: #137a42; }
+.hc-tag.add { background: #e6f4ec; color: var(--green); }
 .hc-items { line-height: 20px; }
 .hc-items.rm { color: #8a8aa3; font-weight: 500; }
 .hc-items.add { color: #1c1c33; font-weight: 600; }

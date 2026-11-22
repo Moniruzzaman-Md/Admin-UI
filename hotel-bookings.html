@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hotel All Booking · Admin Redesign</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png?v=2">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
+<link rel="stylesheet" href="css/tokens.css?v=27">
+<link rel="stylesheet" href="css/shell.css?v=33">
+<link rel="stylesheet" href="css/components.css?v=51">
+<link rel="stylesheet" href="css/skeleton.css?v=27">
+<style>
+  .bk-page { display: flex; flex-direction: column; gap: 12px; }
+  /* filter area: live portal = 3 rows of fields; "New booking" ends the 3rd row */
+  .bk-filters .sk-row { flex-wrap: wrap; }
+  .bk-filters .sk-row > * { flex: 1 1 140px; }
+  .bk-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .bk-actions .sk-box { flex: 0 0 140px; }
+  .bk-actions .btn { text-decoration: none; }
+  .bk-list { min-height: 360px; }
+</style>
+</head>
+<body data-page="hotel-bookings">
+
+<main class="shell-main">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Hotel (All Booking)</h1>
+    </div>
+  </div>
+
+  <div class="bk-page">
+    <section class="sk bk-filters" data-label="Filters">
+      <div class="sk-row"><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div></div>
+      <div class="sk-row"><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div></div>
+      <div class="bk-actions">
+        <div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div>
+        <!-- the only working control on this page: opens the manual booking form -->
+        <a class="btn btn-primary" href="booking-form.html?returnUrl=hotel-bookings.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          New booking
+        </a>
+      </div>
+    </section>
+
+    <section class="sk bk-list" data-label="Booking list">
+      <div class="sk-line"></div>
+      <div class="sk-line w-75"></div>
+      <div class="sk-line"></div>
+      <div class="sk-line w-50"></div>
+      <div class="sk-line"></div>
+      <div class="sk-line w-75"></div>
+    </section>
+  </div>
+</main>
+
+<script src="js/shell.js?v=38"></script>
+</body>
+</html>

@@ -61,3 +61,5 @@ Reusable table. Columns: **#** | DATE & TIME | PORTAL | CLIENT NAME | CLIENT ID 
 - 2026-11-20 — filters: Transaction ID · From / To date · Client (name or ID) · Operation type · Portal (new); "Agent" renamed "Client" (filter, columns, viewer).
 - 2026-11-20 — Portal column moved before Client Name.
 - 2026-11-20 — Portal filter moved before Client.
+- 2026-11-22 — Clients (Partners with their Agent SL No.), portals, hotels, cities and room types come from the shared reference data (js/data.js).
+- 2026-11-22 — "Portal" renamed **Platform type** (filter, column, chip), same word as the booking form and Markup. Headers in sentence case (Date & time, Client name, IP address). A log row keeps the client's partner id; name and Agent SL No. are looked up from the shared list. Viewer drawer + phone card styles moved to css/logs.css (shared with Hotel API Logs).
