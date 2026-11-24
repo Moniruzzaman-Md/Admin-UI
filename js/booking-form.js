@@ -76,7 +76,7 @@ const blankState = () => ({
   rooms: [{ room_type: '', price: '', cancellation: emptyScope(), guests: [{ ...plainGuest(), is_lead: true }] }],
   reference_no: '',
   ps: { supplier: '', supplierCurrency: '', supplierPrice: '', portalCurrency: '', conversionRate: '', reverseRate: '', convertedPrice: '', markupType: '', markupRule: '', markupAmount: '', noOfRooms: 1, finalPrice: '', issue: '' },
-  contracting_comment: '', special_request: '',
+  contracting_comment: '', special_request: '', remarks: '',
   onePolicy: true, cancellation_all: emptyScope(),
   tz: { mode: 'Local', sign: '+', hours: '', mins: '00' },
   /* client policies calculated from the supplier ones: same steps, times moved earlier by clientHours, fee converted + marked up */
@@ -698,6 +698,7 @@ function buildPayload() {
     price_secret: { supplier: ps.supplier, supplierCurrency: ps.supplierCurrency, supplierPrice: num(ps.supplierPrice), conversionRate: num(ps.conversionRate), reverseConversionRate: num(ps.reverseRate), convertedPrice: num(ps.convertedPrice), markupType: ps.markupType || null, markupRule: num(ps.markupRule), markupAmount: num(ps.markupAmount), noOfRooms: s.rooms.length, portalCurrency: ps.portalCurrency, finalPrice: num(ps.finalPrice), sameCurrency: sameCurrency() },
     contracting_comment: s.contracting_comment ? JSON.stringify([s.contracting_comment]) : null,
     special_request: s.special_request,
+    remarks: s.remarks || null,
     cancellation_time_format: tzString() || null,
     client_policy_from_supplier: !!s.clientAuto, client_policy_hours_before: s.clientAuto ? num(s.clientHours) : null,
     cancellationPolicyResponse: policies,
