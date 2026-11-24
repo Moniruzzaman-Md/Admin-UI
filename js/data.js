@@ -114,11 +114,8 @@
     let seq = 1;
     const apis = SEED.map(r => ({
       id: seq++, name: r[0], code: r[1], ref: r[2], short: r[3], currency: r[4],
-      active: !!r[5], b2c: !!r[7], hold: !!r[9], holdType: null, holdAmount: null, history: [],
+      active: !!r[5], b2c: !!r[7], hold: !!r[9], history: [],
     }));
-    // hold amount for the APIs that allow hold booking: [type, amount]
-    const HOLD = { TBOHOL: ['percent', '20'], RATEHAWK: ['fixed', '50'], JUNIPER: ['percent', '10'], MANUAL: ['fixed', '100'] };
-    apis.forEach(a => { if (HOLD[a.code]) [a.holdType, a.holdAmount] = HOLD[a.code]; });
     // temporary suppliers (can be made permanent; one-way)
     const TEMP = ['JUNIPER', 'TRAVCO', 'BONOTEL'];
     // a temporary API has only the fields asked when adding one (js/api-drawer.js TEMP_SKIP stay empty)
@@ -141,7 +138,7 @@
        It ends at the state before the API's first current entry; HistoryLegacy.toEntries (js/history-legacy.js) turns it
        into normal Edit / Status Change entries that continue the timeline. "def" stands for the removed Default field:
        a save that only changed it shows nothing. */
-    const LEGACY_KEYS = ['name', 'code', 'ref', 'short', 'currency', 'active', 'b2c', 'hold', 'holdType', 'holdAmount', 'temporary'];
+    const LEGACY_KEYS = ['name', 'code', 'ref', 'short', 'currency', 'active', 'b2c', 'hold', 'temporary'];
     const LEGACY_BY = U;
     apis.forEach(a => {
       if (!a.legacy) return;

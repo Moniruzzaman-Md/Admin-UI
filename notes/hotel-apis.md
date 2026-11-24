@@ -12,7 +12,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 - **Default is removed** from the page entirely — no list column, no form switch, not shown in history.
 - **#** is the row's position in the whole filtered result, not within the page (first row on page 2 at 20 per page is 21). It follows the filters and is not an ID.
 - **Auto Issue is removed** from the page entirely — no list column, no form switch, not shown in history.
-- Hold Booking cell: Enabled + the hold amount (`20%` for Percent, `50 MYR` for Fixed — amount + the API's currency); Disabled otherwise.
+- Hold Booking cell: Enabled / Disabled only. Hold booking has no charge, so there is no hold amount.
 - Cell values as today: Active / Inactive, Enabled / Disabled. Supplier code and short code show as code badges. Actions: edit, history (each button names itself on hover).
 - **Temporary suppliers**: a small amber "Temp" pill after the name (hover: "Temporary supplier"; screen readers hear "Temporary"). Needs a new field on the API (e.g. `is_temporary`) in the list response.
 - Sorted newest first (highest ID first, so an API just created — incl. a temporary supplier from the booking form — is row 1). No column sorting (the reusable table has none).
@@ -39,12 +39,7 @@ Shared filter bar (same as All Booking, Hotel API Logs, Hotel Logs, Default Mark
 
 - Same fields as before: Supplier name, Supplier code, Reference code, Short code, Currency — all required.
 - The radio pairs become switches: Active, Allow B2C, Hold booking. (Default and Auto issue are no longer on the form.)
-- **Hold booking on → two more fields appear** under it (as in the portal, `hold_amount_type` + `hold_amount`); hidden while it's off:
-  - **Amount type** — Percent / Fixed. Required. Turning Hold booking on picks Percent if nothing is set.
-  - **Hold amount** — required, a number ≥ 0 with up to 2 decimals. Unit shown next to it: `%` for Percent, the API's currency for Fixed.
-  - Percent can't be more than 100 ("A percent can't be more than 100.").
-  - Turning Hold booking off clears both values on save (sent as empty).
-  - Both show in history like any other field (e.g. Hold amount 50 → 15).
+- **Hold booking is a plain on/off switch — no charge.** The old `hold_amount_type` + `hold_amount` fields are gone from the form, list and history; send them empty / stop using them.
 - New supplier defaults: Active on, everything else off. *(Assumption — confirm the current form's defaults.)*
 - Edit pre-fills every field. Title: "Edit supplier · ‹name›", no subtitle; button says "Save changes" (create: "Create supplier").
 - Validation on submit: an empty required field gets a red border only (no message); a filled but wrong value says why ("Already used by ‹supplier›", "Another supplier already has this name"). Supplier name, Supplier code, Reference code and Short code are unique (not case-sensitive).
@@ -86,14 +81,12 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
   - An old save that changed no field shown here (e.g. only a removed field) gets no entry — same rule as today.
   - A field missing from an old row (added to the log later) is not compared.
   - Records created after the switch have a Create entry and no legacy rows; records from before it have no Create entry.
-  - Old fields used: api_name, api_code, short_code, api_reference_code, currency_code, is_active, is_temporary, is_allowed_for_b2c, is_allowed_for_book_and_hold + hold_amount_type + hold_amount (one Hold booking row). Ignored: is_default, is_auto_ticket_allow, color_code (removed from the page). The old modal's blank STATUS / B2C STATUS were a display bug — the data has them.
+  - Old fields used: api_name, api_code, short_code, api_reference_code, currency_code, is_active, is_temporary, is_allowed_for_b2c, is_allowed_for_book_and_hold (Hold booking row; old hold_amount_type / hold_amount ignored — hold has no charge). Ignored: is_default, is_auto_ticket_allow, color_code (removed from the page). The old modal's blank STATUS / B2C STATUS were a display bug — the data has them.
 
 ## Open questions
 
 1. Descriptions under each switch are my reading of the field — please confirm wording (especially Hold booking).
-2. Hold amount: the portal pre-fills 0 — is 0 a valid hold amount, or should it be more than 0? Can Fixed go above the booking value? Is the Fixed amount in the API's currency?
-
-3. Temporary suppliers: should an admin also be able to mark one temporary again? Is there anything else that changes for a temporary supplier (e.g. hidden from B2C, expiry date) that the list should show?
+2. Temporary suppliers: should an admin also be able to mark one temporary again? Is there anything else that changes for a temporary supplier (e.g. hidden from B2C, expiry date) that the list should show?
 
 ## Changelog
 
@@ -143,3 +136,4 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 - 2026-11-22 — Menu item **Api List** renamed **Supplier List** (tab title "Hotel Supplier List", page title "Supplier List"). Where the page meant a supplier it now says supplier: New supplier / Create supplier, drawer title "New supplier" / "Edit supplier · ‹name›" / "New temporary supplier", Supplier name, Supplier code (list header, drawer, history, Make permanent confirm), switch descriptions, "Another supplier already has this name."
 - 2026-11-22 — Reference code must be unique too: a code another supplier has shows "Already used by ‹supplier›" (red border + message), on save and on Make permanent.
 - 2026-11-23 — Filters use the shared filter bar, as on every other list page: search box (name or code) + **Search**, **Filters** and **Reset**; Currency and Status are in the Filters panel. Nothing filters until Search (or Enter in the search box); the Filters count and chips show the set dropdowns; a chip's × clears that dropdown (applies on the next Search); Reset clears everything and reloads.
+- 2026-11-24 — Hold booking has no charge: Amount type and Hold amount removed from the drawer, list cell and history; Hold booking is just Enabled / Disabled.

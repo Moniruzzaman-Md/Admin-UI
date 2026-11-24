@@ -282,9 +282,6 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
 }
 
 /* hotel API create / edit drawer (Hotel Api List; booking form → "Other — add temporary supplier") */
-/* hold booking options (shown when Hold booking is on) */
-.hold-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 12px 14px 14px; border-top: 1px dashed var(--border); background: var(--surface-2); border-radius: 0 0 var(--radius) var(--radius); }
-.hold-opts[hidden] { display: none; }
 .drawer .field .lbl { font-size: var(--fs-sm); font-weight: 500; color: var(--text-2); }
 .drawer .field .lbl .req { color: var(--red); margin-left: 2px; }
 .seg-radio { display: flex; }

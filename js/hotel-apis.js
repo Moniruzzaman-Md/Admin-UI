@@ -11,7 +11,6 @@
   // reusable-table cells: status pill + on/off flag
   const status = on => `<span class="tbl-status ${on ? 'on' : 'off'}">${on ? 'Active' : 'Inactive'}</span>`;
   const flag = (on, sub) => `<span class="tbl-flag ${on ? 'on' : 'off'}">${on ? 'Enabled' : 'Disabled'}${on && sub ? `<span class="tbl-flag-sub">${esc(sub)}</span>` : ''}</span>`;
-  const holdLabel = a => a.hold && a.holdAmount != null ? (a.holdType === 'percent' ? `${a.holdAmount}%` : `${a.holdAmount} ${a.currency}`) : '';
   const toast = msg => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2400); };
 
   /* ---------- filters + table ---------- */
@@ -54,7 +53,7 @@
         <td class="text-center">${status(a.active)}</td>
         <td class="text-center">${a.short ? `<span class="tbl-code">${esc(a.short)}</span>` : '<span class="tbl-muted">—</span>'}</td>
         <td class="text-center">${flag(a.b2c)}</td>
-        <td class="text-center">${flag(a.hold, holdLabel(a))}</td>
+        <td class="text-center">${flag(a.hold)}</td>
         <td class="tbl-action-col"><div class="tbl-actions">
           <button class="tbl-action" type="button" data-edit="${a.id}" data-tip="Edit" aria-label="Edit ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
           <button class="tbl-action" type="button" data-hist="${a.id}" data-tip="History" aria-label="History for ${esc(a.name)}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5V8h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.5V12l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -109,19 +108,16 @@
      Create = the values the API was created with, as a labelled field grid.
      Edit = one row per changed field: old value → new value.
      Status Change (only Status changed) = "Activated" / "Deactivated", old → new status pill, and what it means.
-     Values are shown the same way as in the list (code chips, status dots, hold amount with its unit). Newest first. */
+     Values are shown the same way as in the list (code chips, status dots). Newest first. */
   const userEmail = RefData.userEmail;   // admin users: js/data.js
   const OP_CLASS = { Create: 'success', Edit: 'info', 'Status Change': 'neutral' };
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dateOnly = d => `${String(d.getDate()).padStart(2, '0')}-${MONTHS[d.getMonth()]}-${d.getFullYear()}`;
   const timeOnly = d => `${String(d.getHours() % 12 || 12).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} ${d.getHours() >= 12 ? 'PM' : 'AM'}`;
-  const SNAPSHOT = ['name', 'code', 'ref', 'short', 'currency', 'active', 'b2c', 'hold', 'holdType', 'holdAmount', 'temporary'];
+  const SNAPSHOT = ['name', 'code', 'ref', 'short', 'currency', 'active', 'b2c', 'hold', 'temporary'];
 
-  // display fields, in order; hold / hold type / hold amount show as one "Hold booking" value
+  // display fields, in order
   const dot = (cls, text) => `<span class="hf-dot ${cls}">${text}</span>`;
-  const holdText = v => v.hold
-    ? `Enabled${v.holdAmount != null ? ` · ${v.holdType === 'percent' ? `${esc(v.holdAmount)}%` : `${esc(v.holdAmount)} ${esc(v.currency)}`}` : ''}`
-    : 'Disabled';
   const SHOW = [
     ['name', 'Supplier name', v => esc(v.name), true],
     ['code', 'Supplier code', v => `<span class="hf-code">${esc(v.code)}</span>`],
@@ -131,10 +127,9 @@
     ['active', 'Status', v => v.active ? dot('on', 'Active') : dot('off', 'Inactive')],
     ['temporary', 'Type', v => v.temporary ? TEMP_TAG : 'Permanent'],
     ['b2c', 'Allow B2C', v => v.b2c ? 'Enabled' : 'Disabled'],
-    ['hold', 'Hold booking', holdText],
+    ['hold', 'Hold booking', v => v.hold ? 'Enabled' : 'Disabled'],
   ];
   const TEMP_FIELDS = ['name', 'code', 'currency', 'temporary', 'hold'];   // the temporary supplier form's fields
-  const showKey = f => (f === 'holdType' || f === 'holdAmount') ? 'hold' : f;
 
   function historyEntries(api) {
     // walk newest → oldest: "after" is the state right after an entry; undoing its changes gives "before"
@@ -147,7 +142,7 @@
       if (h.first) return { op: 'Edit', summary: '', fields: SHOW.map(([, l, f, wide]) => [l, f(after), wide]), ...h };
       const before = { ...after };
       h.changes.forEach(([f, o]) => { before[f] = o; });
-      const keys = [...new Set(h.changes.map(c => showKey(c[0])))];
+      const keys = [...new Set(h.changes.map(c => c[0]))];
       const rows = SHOW.filter(([k]) => keys.includes(k)).map(([, l, f]) => [l, f(before), f(after)]);
       const nowActive = after.active;
       after = before;

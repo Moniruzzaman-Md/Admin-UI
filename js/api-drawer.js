@@ -68,23 +68,8 @@
           <span class="switch"><input type="checkbox" name="active"><span></span></span></label>
         <label class="toggle-row"><div><div class="t">Allow B2C</div><div class="d">Make this supplier available to B2C customers.</div></div>
           <span class="switch"><input type="checkbox" name="b2c"><span></span></span></label>
-        <label class="toggle-row"><div><div class="t">Hold booking</div><div class="d">Allow bookings to be placed on hold.</div></div>
+        <label class="toggle-row"><div><div class="t">Hold booking</div><div class="d">Allow bookings to be placed on hold, free of charge.</div></div>
           <span class="switch"><input type="checkbox" name="hold"><span></span></span></label>
-        <div class="hold-opts" id="hold-opts" hidden>
-          <div class="field">
-            <span class="lbl" id="e-htype-l">Amount type<span class="req">*</span></span>
-            <div class="seg seg-radio" role="radiogroup" aria-labelledby="e-htype-l">
-              <label><input type="radio" name="holdType" value="percent">Percent</label>
-              <label><input type="radio" name="holdType" value="fixed">Fixed</label>
-            </div>
-            <span class="err"></span>
-          </div>
-          <div class="field">
-            <label for="e-hamount">Hold amount<span class="req">*</span></label>
-            <div class="input-affix"><input class="input" id="e-hamount" name="holdAmount" inputmode="decimal" placeholder="0"><span class="affix" id="e-hamount-unit">%</span></div>
-            <span class="err" data-msg></span>
-          </div>
-        </div>
       </div>
     </div>
   </form>
@@ -101,16 +86,6 @@
 
   let editing = null, temporary = false, opts = {}, lastFocus = null;
   let permStep = false;   // editing a temporary API and Make permanent was clicked: the permanent-only fields are shown
-  const holdType = () => form.querySelector('[name=holdType]:checked')?.value || '';
-  function syncHold() {
-    $('#hold-opts').hidden = !form.elements.hold.checked;
-    $('#e-hamount-unit').textContent = holdType() === 'fixed' ? (form.elements.currency.value || '') : '%';
-  }
-  form.elements.hold.addEventListener('change', () => {
-    if (form.elements.hold.checked && !holdType()) form.querySelector('[name=holdType][value=percent]').checked = true;
-    syncHold();
-  });
-  form.addEventListener('change', e => { if (e.target.name === 'holdType' || e.target.name === 'currency') syncHold(); });
   // API code and Short code: capital letters A–Z and digits 0–9 only — lower case turns upper case, anything else
   // (spaces, hyphens, symbols) is dropped as it is typed or pasted (caret kept)
   const codeOnly = v => v.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -146,9 +121,6 @@
     ['name', 'code', 'ref', 'short', 'currency'].forEach(k => form.elements[k].value = v[k]);
     form.elements.currency._searchableRefresh?.();
     ['active', 'b2c', 'hold'].forEach(k => form.elements[k].checked = v[k]);
-    form.querySelectorAll('[name=holdType]').forEach(r => r.checked = r.value === v.holdType);
-    form.elements.holdAmount.value = v.holdAmount ?? '';
-    syncHold();
     setTemporary(!editing && !!o.temporary);
     lastFocus = document.activeElement;
     drawer.classList.add('open');
@@ -197,21 +169,6 @@
       f.classList.toggle('invalid', bad);
       if (bad) ok = false;
     });
-    // hold options are required only while Hold booking is on
-    const hold = form.elements.hold.checked;
-    const typeF = form.querySelector('[name=holdType]').closest('.field');
-    const amtF = form.elements.holdAmount.closest('.field'), amtMsg = amtF.querySelector('[data-msg]');
-    let typeBad = false, amtBad = false;
-    if (hold) {
-      typeBad = !holdType();
-      const raw = val('holdAmount'), n = Number(raw);
-      if (!raw) { amtBad = true; amtMsg.textContent = ''; }
-      else if (!/^\d+(\.\d{1,2})?$/.test(raw)) { amtBad = true; amtMsg.textContent = 'Enter a number, up to 2 decimals.'; }
-      else if (holdType() === 'percent' && n > 100) { amtBad = true; amtMsg.textContent = 'A percent can’t be more than 100.'; }
-    }
-    typeF.classList.toggle('invalid', typeBad);
-    amtF.classList.toggle('invalid', amtBad);
-    if (typeBad || amtBad) ok = false;
     if (!ok) (form.querySelector('.invalid .input:not(.searchable-select-native)') || form.querySelector('.invalid input'))?.focus();
     return ok;
   }
@@ -225,8 +182,6 @@
     ['code', 'short'].forEach(k => { form.elements[k].value = codeOnly(val(k)); });
     ['name', 'code', 'ref', 'short', 'currency'].forEach(k => data[k] = val(k));
     ['active', 'b2c', 'hold'].forEach(k => data[k] = form.elements[k].checked);
-    data.holdType = data.hold ? holdType() : null;
-    data.holdAmount = data.hold ? String(Number(val('holdAmount'))) : null;
     if (editing && editing.temporary && !perm) {
       TEMP_SKIP.forEach(k => { data[k] = editing[k]; });
       ['active', 'b2c'].forEach(k => { data[k] = editing[k]; });
