@@ -422,6 +422,10 @@ function renderSummary() {
     ${ok ? `<div class="pb-calc"><span>(${money2(sc, ps.supplierPrice)} × ${fmtRate(ps.conversionRate)}) = ${money2(cc, ps.convertedPrice)}${mPart} = <b>${money2(cc, ps.finalPrice)}</b></span>${mt === 'Fixed' ? '<span class="pb-note">A fixed markup is added per room</span>' : ''}</div>`
          : `<p class="pb-empty">To calculate, add the ${missing.join(', ')}.</p>`}
     <div class="total-line"><span class="l">${esc(cl)} total price</span><span class="v">${ok ? amt(cc, ps.finalPrice) : '—'}</span></div>`;
+  /* same total in the sticky save bar */
+  const bar = document.getElementById('barTotal');
+  bar.querySelector('.l').textContent = `${cl} total price`;
+  bar.querySelector('.v').innerHTML = ok ? amt(cc, ps.finalPrice) : na;
 }
 
 function refresh() {
@@ -658,7 +662,36 @@ function validate() {
   need('f-clientHours', state.clientAuto && state.clientHours === '', 'client_policy_hours');
   errors.push(...checkPolicyDates());
   document.querySelectorAll('.lead-check').forEach(l => l.classList.toggle('need', !allGuests().some(g => g.is_lead)));
+  updateSaveBar();
   return errors;
+}
+
+/* ---------- save bar: problems left after a save attempt ---------- */
+let lastErr = null;
+/* what is shown in red, in page order: fields, "needs an adult" room notes, and the lead-guest ticks (counted once) */
+function errTargets() {
+  const els = [...document.querySelectorAll('.adm-wrap .is-invalid, .adm-wrap .room-err:not([hidden]), .adm-wrap .lead-check.need')];
+  const lead = els.find(e => e.classList.contains('lead-check'));
+  return els.filter(e => (!e.classList.contains('lead-check') || e === lead) && !els.some(o => o !== e && o.contains(e)));
+}
+function updateSaveBar() {
+  const btn = document.getElementById('errJump'), n = submitted ? errTargets().length : 0;
+  btn.hidden = !n;
+  if (n) btn.querySelector('span').innerHTML = `<span class="long">${n} ${n === 1 ? 'field needs' : 'fields need'} attention</span><span class="short">${n} to fix</span>`;   /* short one on phones */
+}
+/* next = the first problem after the last one visited (wraps to the top); otherwise the first */
+function goToError(next) {
+  const list = errTargets(); if (!list.length) return;
+  const after = next && lastErr && lastErr.isConnected ? list.find(e => lastErr.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING) : null;
+  const el = lastErr = after || list[0];
+  el.closest('.card.closed')?.classList.remove('closed');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  /* dropdowns open on focus (their list would cover the form), so they only get the highlight */
+  const dd = el.querySelector('.ss-input');
+  const ctl = el.matches('.room-err') || dd ? null : el.querySelector('input:not([disabled]):not([type=checkbox]):not([type=radio]), textarea') || el.querySelector('input:not([disabled])');
+  const ring = dd || (ctl && !el.matches('.lead-check') ? (ctl.closest('.ig') || ctl) : el);
+  if (ctl) ctl.focus({ preventScroll: true });
+  ring.classList.remove('flash-err'); void ring.offsetWidth; ring.classList.add('flash-err');
 }
 
 /* ---------- payload ---------- */
@@ -751,6 +784,7 @@ document.addEventListener('click', e => {
   const sg = e.target.closest('[data-tz-sign]'); if (sg) { state.tz.sign = sg.dataset.tzSign; refresh(); return; }
   const b = e.target.closest('[data-action]'); if (!b) return;
   const a = b.dataset.action, i = +b.dataset.i, room = state.rooms[+b.dataset.room];
+  if (a === 'next-error') { goToError(true); return; }
   if (a === 'step') {
     const inp = b.parentElement.querySelector('input'), min = Number(inp.dataset.min), max = inp.dataset.max !== undefined ? Number(inp.dataset.max) : Infinity;
     const cur = inp.value === '' ? NaN : Number(inp.value);
@@ -784,9 +818,8 @@ document.addEventListener('click', e => {
       return;
     }
     box.style.display = 'block';
-    document.getElementById('payloadErrs').textContent = errs.length ? `Not saved – ${errs.length} field(s) need attention (shown in red). The payload below is a preview only.` : '';
     document.getElementById('payloadJson').textContent = JSON.stringify(buildPayload(), null, 2);
-    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    lastErr = null; goToError(false);
     return;
   }
   refresh();
