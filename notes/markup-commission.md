@@ -214,3 +214,4 @@ Still open (backend, doesn't change the screen): whether the pricing service can
 - 2026-11-23 — On a narrow screen the filter bar is one line: search box + Search, Filters and Reset as icon buttons (count on the Filters icon; Reset always visible).
 - 2026-11-23 — Filter bar identical to the other list pages (same search box size at every screen size). **Check overlaps** moved to the page header next to New markup (like Download on All Booking); on a narrow screen both show just their icon.
 - 2026-11-25 — Temporary suppliers are now offline suppliers (own list); still not listed. Backend: `is_offline` replaces `is_temporary`.
+- 2026-11-25 — Page title renamed **Markup List** (was Default Markup (Hotel)).
