@@ -7,15 +7,20 @@ Scope: whole page redesigned (list, filters, create/edit, history). Header and s
 
 Uses the **reusable table** (same component as every list; redesigned look, portal shape). Only the columns differ:
 
-- Columns: **#** | NAME | API CODE | REF. CODE | CURRENCY | STATUS | SHORT CODE | B2C STATUS | **HOLD BOOKING** | ACTION
+- Columns: **#** | NAME | SUPPLIER CODE | REFERENCE CODE | CURRENCY | STATUS | SHORT CODE | ALLOW B2C | **HOLD BOOKING** | ACTION
+- **Contacts** action (first in Action, before Edit and History; address-book icon, tip "Contacts") opens the **Contacts drawer** (title "Contacts — ‹name›"). The button is **always active** — the list response needs no contact data or counts; the drawer loads the supplier's contacts when it opens (short skeleton while loading).
+  - Two groups, **Emails** then **Phones** (a group with none is left out), each with an icon and its title; a group with 2+ values has **Copy all** on the right (emails joined with "; " — ready for a mail To field — phones with ", "; toast "Copied N emails / phones"; the link shows "✓ Copied" for 1.5 s).
+  - Each value is its own row: the value (a phone shows its country code as a small chip, then the number), then **Send email** (opens a new email in a new tab — the mail app or webmail) / **Call** (`tel:`), then **Copy** (that value; the icon turns into a green tick, tip "Copied", toast "Copied ‹value›"; if the browser blocks it: "Couldn't copy — select the text instead").
+  - None → empty state "No contacts added".
+  - Footer: **Close** and **Edit contacts** ("Add contacts" when there are none) — closes this drawer and opens the supplier's edit drawer.
 - **Hold Booking** is the only new column (Enabled / Disabled). The field already exists in the create form but wasn't listed → the list endpoint needs to return it.
 - **Default is removed** from the page entirely — no list column, no form switch, not shown in history.
 - **#** is the row's position in the whole filtered result, not within the page (first row on page 2 at 20 per page is 21). It follows the filters and is not an ID.
 - **Auto Issue is removed** from the page entirely — no list column, no form switch, not shown in history.
 - Hold Booking cell: Enabled / Disabled only. Hold booking has no charge, so there is no hold amount.
 - Cell values as today: Active / Inactive, Enabled / Disabled. Supplier code and short code show as code badges. Actions: edit, history (each button names itself on hover).
-- **Temporary suppliers**: a small amber "Temp" pill after the name (hover: "Temporary supplier"; screen readers hear "Temporary"). Needs a new field on the API (e.g. `is_temporary`) in the list response.
-- Sorted newest first (highest ID first, so an API just created — incl. a temporary supplier from the booking form — is row 1). No column sorting (the reusable table has none).
+- API suppliers only (`is_offline = 0`); offline suppliers are on Offline Supplier List.
+- Sorted newest first (highest ID first, so a supplier just created is row 1). No column sorting (the reusable table has none).
 - No rows → the table's standard empty state ("No Data Found"); pagination stays, showing 0.
 - The list takes the screen's remaining height: rows scroll inside the table, the header row and pagination always stay in view. With few rows the table is only as tall as its rows.
 
@@ -23,7 +28,7 @@ Uses the **reusable table** (same component as every list; redesigned look, port
 
 Shared filter bar (same as All Booking, Hotel API Logs, Hotel Logs, Default Markup).
 
-- **Search box** replaces the "Select Api" dropdown. It matches Supplier name, Supplier code, reference code and short code (case-insensitive, contains).
+- **Search box** replaces the "Select Api" dropdown. It matches Supplier name, Supplier code, reference code, short code and email (case-insensitive, contains), and phone by digits (3+ digits; spaces / + / hyphens ignored).
 - **Filters** panel: **Currency** (empty = any; currency list) and **Status** (empty = any / Active / Inactive, no counts). The Filters button counts the set dropdowns; while the panel is closed each one shows as a chip, and a chip's × clears it (applies on the next Search).
 - Every dropdown on the page (filters, form currency, rows per page) has a search box to type and narrow the options; arrow keys + Enter pick, Esc closes.
 - Nothing filters until **Search** (or Enter in the search box).
@@ -37,6 +42,8 @@ Shared filter bar (same as All Booking, Hotel API Logs, Hotel Logs, Default Mark
 
 ## Create / edit (drawer)
 
+- **Contacts** section (Emails, Phones) — same as on Offline Supplier List: optional, any number, one box each, + Add email / + Add phone, × removes a box; email format, phone `+` country code with 7–15 digits, no repeats. Rules: `notes/offline-suppliers.md` › Contacts.
+
 - Same fields as before: Supplier name, Supplier code, Reference code, Short code, Currency — all required.
 - The radio pairs become switches: Active, Allow B2C, Hold booking. (Default and Auto issue are no longer on the form.)
 - **Hold booking is a plain on/off switch — no charge.** The old `hold_amount_type` + `hold_amount` fields are gone from the form, list and history; send them empty / stop using them.
@@ -48,16 +55,10 @@ Shared filter bar (same as All Booking, Hotel API Logs, Hotel Logs, Default Mark
 - Success → drawer closes, toast "‹name› created / updated".
 - Esc, Cancel, ✕ or clicking outside closes without saving.
 
-## Make permanent
+## Offline suppliers
 
-- Only for temporary suppliers, from the edit drawer: a "Temporary supplier" notice at the top with a **Make permanent** button. (No row action.)
-- Asks to confirm first ("Make ‹name› permanent?"). Cancel / Esc / clicking outside does nothing.
-- Temporary APIs are only created from the booking form and hold only what its form asks (Supplier name, Supplier code, Currency, Hold booking; Active and Allow B2C on). Editing a temporary API here shows only those fields; Reference code, Short code, Active and Allow B2C are hidden and stay as they are (empty / on). Empty values show as — in the list.
-- **Make permanent** first shows Reference code, Short code, Active and Allow B2C in the drawer, then checks it against the permanent rules: every field required (incl. Reference code and Short code), Supplier code / Short code not already used, hold rules. Missing or wrong fields are marked and nothing happens; once they pass, the confirm opens.
-- The confirm shows what is in the form: Supplier name, Supplier code, Reference code, Short code.
-- On confirm: the drawer's values are saved, the supplier is permanent right away, the drawer closes, toast "‹name› is now permanent". History: one Edit entry with the filled fields (— → value) and Type Temporary → Permanent.
-- One-way: a permanent supplier can't be made temporary from this page. *(Assumption.)*
-- New suppliers created here are permanent. Temporary suppliers are created only from the booking form (Supplier › Other — add temporary supplier).
+- Offline suppliers (formerly temporary suppliers) are **not on this page**: they have their own list, Offline Supplier List (`notes/offline-suppliers.md`). This page lists online (API) suppliers only; New supplier here always creates an online supplier.
+- An offline supplier made online there (**Make online**) moves to this page. An online supplier can't be made offline.
 
 ## History (drawer)
 
@@ -66,10 +67,10 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 - One card per entry, newest first, each labelled "Entry N of M".
 - Each card: user name + email, date (DD-Mon-YYYY) + time (hh:mm AM/PM), then an **operation** and a **description**.
 - Operations:
-  - **Create** — no summary text, just the starting values as a labelled grid: Supplier name, Supplier code, Short code, Reference code, Currency, Status, Type (Permanent / Temporary), Allow B2C (Enabled / Disabled), Hold booking (Disabled, or Enabled + amount, e.g. "Enabled · 20%" / "Enabled · 50 MYR"). A temporary supplier's Create shows only its form's fields: Supplier name, Supplier code, Currency, Type, Hold booking.
+  - **Create** — no summary text, just the starting values as a labelled grid: Supplier name, Supplier code, Short code, Reference code, Currency, Status, Allow B2C (Enabled / Disabled), Hold booking (Enabled / Disabled).
   - **Status Change** — only Status changed. No summary text: old → new status pill, then what it means: "Used for search and booking again." / "No longer used for search or booking." (If Status changes together with other fields in one save, it is an Edit row instead.)
-  - **Edit** — everything else. No summary text: one row per changed field: label, old value (struck through) → new value. One save = one entry. Hold booking, amount type and amount show as one "Hold booking" row (e.g. "Enabled · 50 MYR → Enabled · 15%"). Making a temporary supplier permanent is one Edit: the filled Reference code / Short code (— → value) and Type Temporary → Permanent.
-  - Values in every entry use the list's wording: Active / Inactive, Enabled / Disabled, Permanent / Temporary, codes as code chips.
+  - **Edit** — everything else. No summary text: one row per changed field: label, old value (struck through) → new value. One save = one entry. Hold booking, amount type and amount show as one "Hold booking" row (e.g. "Enabled · 50 MYR → Enabled · 15%").
+  - Values in every entry use the list's wording: Active / Inactive, Enabled / Disabled, codes as code chips.
 - Saving with no changes writes nothing.
 - Needs per entry: operation, the changed fields with old + new values (or the full snapshot for Create), user name, user email, timestamp.
 - Note: in the live portal, STATUS / B2C STATUS come back empty in history rows — that needs fixing for this to work.
@@ -81,12 +82,12 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
   - An old save that changed no field shown here (e.g. only a removed field) gets no entry — same rule as today.
   - A field missing from an old row (added to the log later) is not compared.
   - Records created after the switch have a Create entry and no legacy rows; records from before it have no Create entry.
-  - Old fields used: api_name, api_code, short_code, api_reference_code, currency_code, is_active, is_temporary, is_allowed_for_b2c, is_allowed_for_book_and_hold (Hold booking row; old hold_amount_type / hold_amount ignored — hold has no charge). Ignored: is_default, is_auto_ticket_allow, color_code (removed from the page). The old modal's blank STATUS / B2C STATUS were a display bug — the data has them.
+  - Old fields used: api_name, api_code, short_code, api_reference_code, currency_code, is_active, is_allowed_for_b2c, is_allowed_for_book_and_hold (Hold booking row; old hold_amount_type / hold_amount ignored — hold has no charge). Ignored: is_default, is_auto_ticket_allow, color_code (removed from the page). The old modal's blank STATUS / B2C STATUS were a display bug — the data has them.
 
 ## Open questions
 
 1. Descriptions under each switch are my reading of the field — please confirm wording (especially Hold booking).
-2. Temporary suppliers: should an admin also be able to mark one temporary again? Is there anything else that changes for a temporary supplier (e.g. hidden from B2C, expiry date) that the list should show?
+2. ~~Temporary suppliers~~ — replaced by offline suppliers on their own list (2026-11-25).
 
 ## Changelog
 
@@ -137,3 +138,14 @@ Same as the Map-UI screens' Edit History. Title: "History — ‹name›".
 - 2026-11-22 — Reference code must be unique too: a code another supplier has shows "Already used by ‹supplier›" (red border + message), on save and on Make permanent.
 - 2026-11-23 — Filters use the shared filter bar, as on every other list page: search box (name or code) + **Search**, **Filters** and **Reset**; Currency and Status are in the Filters panel. Nothing filters until Search (or Enter in the search box); the Filters count and chips show the set dropdowns; a chip's × clears that dropdown (applies on the next Search); Reset clears everything and reloads.
 - 2026-11-24 — Hold booking has no charge: Amount type and Hold amount removed from the drawer, list cell and history; Hold booking is just Enabled / Disabled.
+- 2026-11-25 — Temporary suppliers became **offline suppliers** with their own list (Offline Supplier List). This page now lists API suppliers only: the Temp pill, the Make permanent notice + confirm and the history's Type row are gone.
+- 2026-11-25 — Online suppliers get **Emails** and **Phones** too (optional, any number): Contacts section in the drawer, Email and Phone columns, search, history. Offline suppliers can be **made online** from Offline Supplier List; history shows Type Offline → Online.
+- 2026-11-25 — Email and Phone columns merged into one **Contact** column: a button with the email / phone counts that opens a Contacts drawer listing each with a Copy button.
+- 2026-11-25 — Phone in Contacts is taken as Country code (dropdown) + Number (digits), as on Offline Supplier List.
+- 2026-11-25 — Contact column removed: Contacts is now an icon button in Action (no email / phone counts; disabled when there are none).
+- 2026-11-25 — Contacts stay optional for online suppliers (offline suppliers need at least one email or phone). Make online doesn't require contacts.
+- 2026-11-25 — Contacts button always active (no disabled state, so the list needs no contact counts); the drawer loads the contacts on open and shows "No contacts added" when there are none.
+- 2026-11-25 — Menu item renamed **Supplier** ("List" dropped). Page title unchanged.
+- 2026-11-25 — Contacts drawer redesigned: group headers with Copy all, a row per value with Send email / Call + Copy, country code as a chip, empty state, footer Edit contacts / Add contacts.
+- 2026-11-25 — Contacts drawer: Send email opens in a new tab.
+- 2026-11-25 — Fix: Send email opened in the same tab in Firefox (it ignores target="_blank" on mailto links); the new tab is now opened by script.

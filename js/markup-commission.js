@@ -6,9 +6,9 @@
   const SEED_MK = { bd: 21, in: 41, id: 31, my: 11, mv: 61, np: 81, pt: 91, sg: 101, th: 111, ae: 121, us: 131 };
   const mk = keys => keys.map(k => SEED_MK[k]);
   const MK = Object.fromEntries(MARKETS.map(m => [m.id, m]));
-  // suppliers = the shared hotel API list (js/data.js, same as Supplier List), permanent APIs only — temporary suppliers are
-  // only offered in the booking form. A rule stores API ids; names are looked up for display, so a rename on Supplier List shows here.
-  const APIS = HotelApis.list.filter(a => !a.temporary).sort((a, b) => a.name.localeCompare(b.name));
+  // suppliers = the shared supplier list (js/data.js, same as Supplier List), API suppliers only — offline suppliers
+  // (Offline Supplier List) are booked manually, so they have no markup rules. A rule stores API ids; names are looked up for display, so a rename on Supplier List shows here.
+  const APIS = HotelApis.list.filter(a => !a.offline).sort((a, b) => a.name.localeCompare(b.name));
   const API_NAME = Object.fromEntries(HotelApis.list.map(a => [a.id, a.name]));
   const apiNm = id => API_NAME[id] || `Supplier #${id}`;
   // the seed below is written with the seed API names for readability: turned into their ids (js/data.js seed) here,

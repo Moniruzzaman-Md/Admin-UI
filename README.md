@@ -25,7 +25,7 @@ admin-portal/
   js/
     shell.js          injects the portal header + sidebar; sidebar lists only redesigned screens (MENU)
     datepicker.js     DateRange.init(input, {from, to, onChange, optional, future}); DateField.init(input, {date, min, max, onChange, optional, future}); A filter panel's From / To pairs = .filter-pairs › .filter-pair (components.css) — the one date-range picker (loads flatpickr from cdnjs)
-    select.js         turns every <select> into the searchable dropdown (css/select.css)
+    select.js         turns every <select> into the searchable dropdown (css/select.css); <option data-short> = shorter text once chosen, <select data-panel-width> = wider list
     tooltip.js        shared instant tooltip for any data-tooltip="…"; add data-tooltip-if-icon to show it only while the element's text label is hidden (filter buttons that turn icon-only on a narrow card) (styles in css/components.css)
     history-legacy.js turns old-system history rows (full record per save) into normal history entries: HistoryLegacy.toEntries(rows, keys)
     code-viewer.js    shared read-only file viewer on Monaco (lazy-loaded from cdnjs): CodeViewer.create(host).show(raw) — detects JSON/XML/HTML/text, pretty-prints, folding, find
@@ -38,9 +38,9 @@ admin-portal/
                       A page never keeps its own copy of data another page also shows — read it from here. Only data that
                       belongs to one page alone (its own records, enums like booking statuses) lives in the page script.
                       SHARED, SAVED prototype data (localStorage, prefix admin-redesign:) — HotelApis.list etc.; every page reads/writes the same records (Map-UI model). Reset: "Reset Demo Data" at the bottom of the sidebar (js/shell.js → AdminData.reset()).
-                      Every supplier dropdown lists HotelApis.list, labelled HotelApis.label(api) = "Name - SHORT" (Supplier List, booking form, Hotel API Logs, Default Markup); temporary suppliers only in the booking form. Markets: RefData.marketLabel = "Name (CUR)".
+                      Every supplier dropdown lists HotelApis.list, labelled HotelApis.label(api) = "Name - SHORT" (Supplier List, booking form, Hotel API Logs, Default Markup). api.offline = offline supplier (Offline Supplier List; booking form + All Booking filter too; not in Hotel API Logs / Markup; Make online = offline → false). Every supplier has emails[] + phones[] ({dial, number}; HotelApis.phoneText(p) = "+60 312345678"). Markets: RefData.marketLabel = "Name (CUR)".
                       Saved keys: hotelApis, hotelBookings (manual bookings: All Booking list + booking form), markupRules, markup-overlap-v2 — all through AdminData, so Reset clears everything.
-    api-drawer.js     shared hotel API create / edit drawer: ApiDrawer.open({api, temporary, name, onSaved, onMakePermanent}) — Supplier List + booking form
+    api-drawer.js     shared supplier create / edit drawer: ApiDrawer.open({api, offline, quick, name, onSaved, onMakeOnline}) — Supplier List, Offline Supplier List + booking form
     <screen>.js       page prototype logic (+ page-only dummy data)
   notes/<screen>.md   dev notes (behaviour only) + changelog
   notes/<screen>-backend.md   optional backend guide for a screen (schema, queries, API) — e.g. markup-commission-backend.md
@@ -87,6 +87,7 @@ Use dummy data only in published pages - no real customer names, booking refs, e
 | Screen | Sections redesigned | Status | Last change |
 |---|---|---|---|
 | [Supplier List](hotel-apis.html) | Whole page (list, filters, create/edit, history) | Draft | 2026-11-17 |
+| [Offline Supplier List](offline-suppliers.html) | Whole page (list, filters, create/edit, history) | Draft | 2026-11-25 |
 | [Default Markup (Hotel)](markup-commission.html) | Whole page (list, filters, create/edit, delete, history) | Draft | 2026-11-18 |
 | [Hotel Logs](hotel-logs.html) | Whole page (filters, list, log viewer) | Draft | 2026-11-20 |
 | [Hotel Api Logs](hotel-api-logs.html) | Whole page (filters, list, log viewer) | Draft | 2026-11-20 |

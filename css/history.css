@@ -105,7 +105,7 @@
 
 .history-empty { margin: 0; padding: 28px 0; text-align: center; color: var(--text-3); }
 
-/* Temp pill as a field value sits flush, not offset like after a name */
+/* a tag as a field value sits flush, not offset like after a name */
 .history-fields .tbl-tag, .history-changes .tbl-tag { margin-left: 0; }
 /* long values (lists of markets, suppliers…) wrap instead of being cut off */
 .history-fields dd.wrap, .history-changes dd.wrap { white-space: normal; }

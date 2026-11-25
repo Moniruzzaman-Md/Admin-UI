@@ -281,7 +281,7 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
   .filter-group + .filter-group > .filters-section-label { padding-top: 0; margin-top: 0; border-top: 0; }
 }
 
-/* hotel API create / edit drawer (Hotel Api List; booking form → "Other — add temporary supplier") */
+/* supplier create / edit drawer (Supplier List, Offline Supplier List; booking form → "Other — add offline supplier") */
 .drawer .field .lbl { font-size: var(--fs-sm); font-weight: 500; color: var(--text-2); }
 .drawer .field .lbl .req { color: var(--red); margin-left: 2px; }
 .seg-radio { display: flex; }
@@ -293,12 +293,80 @@ select.input { appearance: none; padding-right: 32px; cursor: pointer;
 .input-affix { position: relative; }
 .input-affix .input { width: 100%; padding-right: 52px; }
 .input-affix .affix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: var(--fs-sm); font-weight: 500; color: var(--text-3); pointer-events: none; }
-/* temporary supplier: notice in the edit drawer */
-.temp-note { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; padding: 12px 14px; border: 1px solid #f2d9a6; border-radius: var(--radius); background: #fff8e8; color: #8a5300; }
-.temp-note svg { flex: none; }
-.temp-note div { flex: 1; display: flex; flex-direction: column; font-size: var(--fs-sm); line-height: 1.4; }
-.temp-note strong { font-weight: 600; color: #6e4200; }
-.temp-note .btn { flex: none; }
+/* offline supplier: notice in the edit drawer (Make online) */
+.type-note { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; padding: 12px 14px; border: 1px solid #c8dcf6; border-radius: var(--radius); background: #f2f7fe; color: #1d5fb8; }
+.type-note[hidden] { display: none; }
+.type-note svg { flex: none; }
+.type-note div { flex: 1; display: flex; flex-direction: column; font-size: var(--fs-sm); line-height: 1.4; }
+.type-note strong { font-weight: 600; color: #164a8f; }
+.type-note .btn { flex: none; }
+/* contacts drawer (Supplier List, Offline Supplier List): groups of emails / phones, each with Send / Call + Copy */
+.drawer.drawer-narrow { width: min(440px, 100vw); }
+.contact-group + .contact-group { margin-top: 22px; }
+.contact-group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.contact-group-head h3 { flex: 1; margin: 0; font-size: var(--fs-sm); font-weight: 600; color: var(--text); text-transform: uppercase; letter-spacing: .04em; }
+.contact-ico { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--brand-soft); color: var(--brand-accent); }
+.contact-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.contact-row { display: flex; align-items: center; gap: 2px; min-height: 44px; padding: 4px 6px 4px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); transition: border-color .15s, background .15s; }
+.contact-row:hover { border-color: #c9cfe0; background: var(--brand-softer); }
+.contact-val { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: var(--fs-md); font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
+.contact-dial { display: inline-block; margin-right: 8px; padding: 1px 6px; border-radius: 4px; background: #eef0f6; color: var(--text-2); font-size: var(--fs-sm); font-weight: 600; }
+.contact-row .icon-btn { flex: none; color: var(--text-3); }
+.contact-row .icon-btn:hover { color: var(--brand-accent); }
+.contact-copy.copied, .contact-copy.copied:hover { color: var(--green); background: var(--green-bg); }
+.btn-link { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px; border: 0; border-radius: var(--radius-sm); background: none; font: 500 var(--fs-sm) var(--font); color: var(--brand-accent); cursor: pointer; }
+.btn-link:hover { background: var(--brand-soft); }
+.btn-link.copied { color: var(--green); }
+.contact-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 40px 0 20px; color: var(--text-3); }
+.contact-empty p { margin: 0; font-size: var(--fs-md); }
+.contact-empty-ico { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #eef0f6; }
+.contact-empty-ico svg { width: 24px; height: 24px; }
+.contact-loading { display: flex; flex-direction: column; gap: 8px; }
+.contact-loading span { height: 44px; border-radius: var(--radius); background: linear-gradient(90deg, #f1f2f7 25%, #e7e9f1 50%, #f1f2f7 75%); background-size: 200% 100%; animation: contact-shimmer 1.2s linear infinite; }
+@keyframes contact-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+#contact-foot[hidden] { display: none; }
+/* offline supplier: notice in the edit drawer (Make online) */
+.type-note { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; padding: 12px 14px; border: 1px solid #c8dcf6; border-radius: var(--radius); background: #f2f7fe; color: #1d5fb8; }
+.type-note[hidden] { display: none; }
+.type-note svg { flex: none; }
+.type-note div { flex: 1; display: flex; flex-direction: column; font-size: var(--fs-sm); line-height: 1.4; }
+.type-note strong { font-weight: 600; color: #164a8f; }
+.type-note .btn { flex: none; }
+/* contacts drawer (Supplier List, Offline Supplier List): each email / phone with a Copy button */
+.drawer.drawer-narrow { width: min(420px, 100vw); }
+.contact-group + .contact-group { margin-top: 24px; }
+.contact-group h3 { font-size: var(--fs-sm); font-weight: 600; color: var(--text); margin: 0 0 10px; text-transform: uppercase; letter-spacing: .04em; }
+.contact-group ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: var(--radius); }
+.contact-row { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; }
+.contact-row + .contact-row { border-top: 1px solid var(--border); }
+.contact-ico { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-accent); }
+.contact-val { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: var(--fs-md); color: var(--text); text-decoration: none; }
+.contact-val:hover { color: var(--brand-accent); text-decoration: underline; }
+.contact-copy { flex: none; }
+.contact-loading { display: flex; flex-direction: column; gap: 10px; }
+.contact-loading span { height: 44px; border-radius: var(--radius); background: linear-gradient(90deg, #f1f2f7 25%, #e7e9f1 50%, #f1f2f7 75%); background-size: 200% 100%; animation: contact-shimmer 1.2s linear infinite; }
+@keyframes contact-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.contact-copy.copied, .contact-copy.copied:hover { color: var(--green); background: #e5f5ec; }
+/* supplier Emails / Phones — one input per value, × removes a row, "Add email" adds one */
+.multi-rows { display: flex; flex-direction: column; gap: 8px; }
+.multi-row { display: flex; flex-direction: column; gap: 4px; }
+.multi-input { display: flex; align-items: center; gap: 6px; }
+.multi-input .input { flex: 1; min-width: 0; }
+.multi-input .multi-rm { flex: none; width: 32px; height: 32px; color: var(--text-3); }
+.multi-input .multi-rm:hover { color: var(--red); }
+.multi-rm[hidden] { display: none; }
+.field.multi-field.invalid .multi-row:not(.invalid) .input { border-color: var(--border-strong); }   /* only the wrong row is red, not the whole list */
+.field.multi-field.invalid .multi-row:not(.invalid) .input:focus { border-color: var(--brand-accent); }
+.field.multi-field .multi-row.invalid .input { border-color: var(--red); }
+.field.multi-field .multi-row.none-invalid .multi-val:not(:focus) { border-color: var(--red); }   /* offline, no email or phone */
+.section-hint { margin: -6px 0 12px; font-size: var(--fs-xs); color: var(--text-3); }
+.section-hint[hidden] { display: none; }
+.multi-field + .multi-field { margin-top: 16px; }
+.multi-input .searchable-select { flex: none; width: 112px; }
+.multi-input .searchable-select-trigger { padding: 0 10px; }
+.field.multi-field .multi-row.dial-invalid .searchable-select-trigger.input { border-color: var(--red); }
+.btn-add-row { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-top: 2px; padding: 4px 2px; border: 0; background: none; font: 500 var(--fs-sm) var(--font); color: var(--brand-accent); cursor: pointer; }
+.btn-add-row:hover { text-decoration: underline; }
 /* code viewer right-click menu (js/code-viewer.js): Copy / Copy value */
 .cv-menu { position: fixed; z-index: 1200; min-width: 180px; max-width: 320px; padding: 4px; background: #fff; border: 1px solid #e4e4f0; border-radius: 6px; box-shadow: 0 4px 16px rgba(16, 16, 90, .12); }
 .cv-menu button { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; padding: 7px 10px; border: 0; border-radius: 4px; background: none; font: 500 var(--fs-sm) var(--font); color: var(--text); text-align: left; cursor: pointer; }

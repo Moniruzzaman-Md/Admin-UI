@@ -49,8 +49,8 @@
   fill('#f-view', STATUSES);
   let view = '';   // status view (header switcher): '' = all
   fill('#f-platform', RefData.portals.map(p => [p, p]));
-  // every supplier dropdown lists the shared list; temporary suppliers only appear in the booking form's dropdown
-  fill('#f-supplier', HotelApis.list.filter(a => !a.temporary).map(a => [a.id, HotelApis.label(a)]));
+  // every supplier: API and offline (manual bookings are made with both)
+  fill('#f-supplier', HotelApis.list.map(a => [a.id, HotelApis.label(a)]));
   // Client lists the chosen platform's clients (B2B = Partners, disabled ones too: their old bookings stay findable);
   // no platform = locked. The prototype has a client list for B2B only.
   const CLIENTS = { B2B: RefData.partners.map(p => [p.id, p.name]) };
@@ -118,7 +118,7 @@
     const s = b.state, ps = s.ps, sup = supplier(s.supplier_id), cl = client(s.customer_id);
     const [stLabel, stCls] = STATUS[s.status] || [s.status || '—', 'off'];
     const [payIco, payCls] = PAY[b.payment] || PAY.Unpaid;
-    // supplier code = the supplier's short code (temporary suppliers have none yet → their supplier code)
+    // supplier code = the supplier's short code (offline suppliers have none → their supplier code)
     const code = sup ? sup.short || sup.code : '';
     return `<tr${b.id === marked ? ' class="is-last-opened"' : ''}>
       <td><span class="bk-id">${esc(b.txn)}</span><span class="tbl-tag neutral">Manual</span></td>

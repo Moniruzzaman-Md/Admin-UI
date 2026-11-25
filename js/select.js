@@ -4,6 +4,7 @@
    - <select data-no-search> opts out.
    - <option data-n="7"> shows a count on the right of that option.
    - After changing option text, call select._searchableRefresh().
+   - <option data-short="…">: the field shows that once the option is chosen; <select data-panel-width="240">: list at least that wide.
    - <select multiple>: options toggle (the panel stays open), the trigger shows "N selected" and the
      chosen options show as removable chips under it. Set option.selected from page code, then call
      select._searchableRefresh(). "change" fires on every toggle. data-unit="market" → "3 markets". */
@@ -73,7 +74,7 @@
         return;
       }
       const o = select.options[select.selectedIndex];
-      label.textContent = o ? o.textContent : '';
+      label.textContent = o ? (o.value && o.dataset.short) || o.textContent : '';   // data-short: shorter text once chosen (e.g. "+60" for "+60 Malaysia")
       // grey when nothing is chosen: a "Select …" option, or an empty option marked data-placeholder (e.g. a filter named after its field)
       trigger.classList.toggle('placeholder', !o || (!o.value && (/^select/i.test(o.textContent) || 'placeholder' in o.dataset)));
     }
@@ -101,7 +102,7 @@
     function position() {
       const r = trigger.getBoundingClientRect();
       panel.style.left = r.left + 'px';
-      panel.style.width = r.width + 'px';
+      panel.style.width = Math.max(r.width, +(select.dataset.panelWidth || 0)) + 'px';   // data-panel-width: a wider list than the field
       panel.style.top = r.bottom + 4 + 'px';
       const h = panel.offsetHeight;
       if (innerHeight - r.bottom < h + 8 && r.top > h + 8) panel.style.top = r.top - h - 4 + 'px';

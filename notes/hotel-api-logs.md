@@ -15,7 +15,7 @@ Shared filter bar (`js/filters.js`, same as Map-UI hotel-system): a row with the
 - **From date** / **To date** (shared date picker, one date each) -> `from_date` (start of day) / `to_date` (end of day), local time zone as today.
   - Default: today / today. No future dates. Never empty.
   - To can't be before From, From can't be after To (the calendars grey out those days).
-- **Supplier** (searchable dropdown) -> `supplierId`. Empty (shows "Supplier") = all; then "Common" (0) and every permanent supplier, shown "Name - SHORT" (temporary suppliers are not listed).
+- **Supplier** (searchable dropdown) -> `supplierId`. Empty (shows "Supplier") = all; then "Common" (0) and every API supplier, shown "Name - SHORT" (offline suppliers have no API, so they are not listed).
 - **Operation type** (searchable dropdown) -> **new param** (e.g. `operationName`). Empty (shows "Operation type") = all; then the 13 operations from the live logs. "Search" is offered only while Include search logs is on (picking it with the switch off would always be empty); turning the switch off clears it.
 - **Portal** (searchable dropdown) -> **new param** (e.g. `portal`). Empty (shows "Portal") = all; B2B, B2C, B2C APP, API.
 - **Include search logs** (switch) -> `includeSearch`. Off by default. Off = rows of the Search operation are left out (the SearchStream trace still shows, as the live API does).
@@ -160,3 +160,4 @@ Tablet and desktop are unchanged.
 - 2026-11-22 — References to the API list page now say Supplier List (menu item renamed). The page itself keeps its name: it logs the supplier API calls.
 - 2026-11-22 — Viewer: right-click a JSON property (key, colon or value; also the Menu key / Shift+F10) → **Copy value of “‹key›”**: a string is copied without its quotes, a number / true / false / null as written, an object or array as indented JSON; array items say **Copy value**. The copied value lights up briefly. **Copy** (Ctrl+C) is listed too when text is selected. Esc closes the menu only (the drawer stays open). Only for JSON files; nothing opens on XML / HTML / text without a selection.
 - 2026-11-23: On a narrow screen the filter bar is one line: search box + Search, Filters and Reset as icon buttons (count on the Filters icon; Reset always visible).
+- 2026-11-25 — Temporary suppliers are now offline suppliers (own list); still not listed in the Supplier filter.

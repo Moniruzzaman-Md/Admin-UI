@@ -2,12 +2,12 @@
    manual-booking-form/output/manual-booking-form.html; 2026-11-22 aligned with the live portal form
    (supplier currency from the supplier, Market, meal list, status list, required contact, B2B only). */
 /* ---------- dummy data ---------- */
-/* Supplier / API = the shared hotel API list (js/data.js, same list as Supplier List), active suppliers only
+/* Supplier / API = the shared supplier list (js/data.js: Supplier List + Offline Supplier List), active suppliers only
    ("Inactive suppliers are not used for search or booking"); the booking's own supplier stays listed even if inactive */
 const SUPPLIERS = [];
 function loadSuppliers() {
   SUPPLIERS.splice(0, SUPPLIERS.length, ...HotelApis.list.filter(x => x.active || x.id === state.supplier_id).map(x => ({
-    id: x.id, label: HotelApis.label(x), name: x.name, type: x.temporary ? 'temp' : 'api', currency: x.currency,
+    id: x.id, label: HotelApis.label(x), name: x.name, type: x.offline ? 'offline' : 'api', currency: x.currency,
   })));
 }
 /* Supplier Currency = the supplier's currency (every API has exactly one) */
@@ -94,16 +94,16 @@ const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').
 
 /* ---------- searchable select ---------- */
 const selects = {};
-/* opts.groups: [[type, title]] to group items ('*' = all items); opts.addTemp + opts.onAdd(typed): "Other" footer that opens the page's create UI */
+/* opts.groups: [[type, title]] to group items ('*' = all items); opts.addOther + opts.onAdd(typed): "Other" footer that opens the page's create UI */
 function initSelect(id, items, path, onPick, placeholder, opts = {}) {
   const root = document.getElementById(id);
-  root.innerHTML = `<input class="ss-input" type="text" placeholder="${placeholder}" autocomplete="off">${opts.groups ? '<span class="ss-tag" hidden></span>' : ''}<button type="button" class="ss-clear" title="Clear">×</button><div class="ss-pop"><ul class="ss-list"></ul>${opts.addTemp ? '<div class="ss-foot"></div>' : ''}</div>`;
+  root.innerHTML = `<input class="ss-input" type="text" placeholder="${placeholder}" autocomplete="off">${opts.groups ? '<span class="ss-tag" hidden></span>' : ''}<button type="button" class="ss-clear" title="Clear">×</button><div class="ss-pop"><ul class="ss-list"></ul>${opts.addOther ? '<div class="ss-foot"></div>' : ''}</div>`;
   const input = root.querySelector('.ss-input'), list = root.querySelector('ul'), foot = root.querySelector('.ss-foot'), tag = root.querySelector('.ss-tag');
   input.readOnly = !!opts.noSearch;
   root.classList.toggle('no-clear', !!opts.noClear);
   const itemOf = v => items.find(i => i.id === v);
   const labelOf = v => { const it = itemOf(v); return it ? (opts.showId ? `${it.label} (ID: ${it.id})` : opts.showCode ? `${it.label} (${it.code})` : it.label) : ''; };
-  const li = i => `<li data-id="${i.id}" class="${i.id === get(path) ? 'sel' : ''}"><span>${esc(i.label)}</span>${opts.showId ? `<span class="ss-id">ID: ${i.id}</span>` : ''}${opts.showCode ? `<span class="ss-id">${i.code}</span>` : ''}${i.type === 'temp' ? '<span class="pill-temp">Temp</span>' : ''}</li>`;
+  const li = i => `<li data-id="${i.id}" class="${i.id === get(path) ? 'sel' : ''}"><span>${esc(i.label)}</span>${opts.showId ? `<span class="ss-id">ID: ${i.id}</span>` : ''}${opts.showCode ? `<span class="ss-id">${i.code}</span>` : ''}${i.type === 'offline' ? '<span class="pill-offline">Offline</span>' : ''}</li>`;
   const draw = q => {
     q = (q || '').trim().toLowerCase();
     const f = items.filter(i => i.label.toLowerCase().includes(q) || (opts.showId && String(i.id).includes(q.replace(/^id[:\s]*/, ''))) || (opts.showCode && (opts.codePrefix ? i.code.toLowerCase().startsWith(q) : i.code.toLowerCase() === q)));
@@ -113,9 +113,9 @@ function initSelect(id, items, path, onPick, placeholder, opts = {}) {
     list.innerHTML = html || `<li class="none">${opts.emptyText || `No ${opts.noun || 'items'} found`}${q ? ` for “${esc(q)}”` : ''}</li>`;
     if (foot) drawFoot();
   };
-  /* "Other — add temporary …" footer: opens the page's create UI (opts.onAdd) with what was typed */
+  /* "Other — add offline …" footer: opens the page's create UI (opts.onAdd) with what was typed */
   const drawFoot = () => {
-    foot.innerHTML = `<button type="button" class="ss-other" data-ss="open"><span class="plus">+</span><span><b>Other — add temporary ${opts.noun || 'item'}</b><small>Not in the list? Add it here.</small></span></button>`;
+    foot.innerHTML = `<button type="button" class="ss-other" data-ss="open"><span class="plus">+</span><span><b>Other — add offline ${opts.noun || 'item'}</b><small>Not in the list? Add it here.</small></span></button>`;
   };
   const show = () => { if (root.classList.contains('fixed')) return; root.classList.add('open'); draw(''); if (!opts.noSearch) input.select(); };
   const hide = () => { root.classList.remove('open'); input.value = labelOf(get(path)); };
@@ -145,7 +145,7 @@ function initSelect(id, items, path, onPick, placeholder, opts = {}) {
   selects[id] = { root, input, sync: () => {
     if (document.activeElement !== input) input.value = labelOf(get(path));
     root.classList.toggle('has', get(path) != null && get(path) !== '');
-    if (tag) { const it = itemOf(get(path)); tag.hidden = !(it && it.type === 'temp'); tag.textContent = 'Temp'; root.classList.toggle('has-tag', !tag.hidden); }
+    if (tag) { const it = itemOf(get(path)); tag.hidden = !(it && it.type === 'offline'); tag.textContent = 'Offline'; root.classList.toggle('has-tag', !tag.hidden); }
   } };
 }
 
@@ -709,7 +709,7 @@ function buildPayload() {
     .filter(e => e.hotelCancellationPolicies.length);
   return {
     ...(!edit && (sup => ({
-      supplier_type: sup ? (sup.type === 'api' ? 'API' : 'TEMPORARY') : null,
+      supplier_type: sup ? (sup.type === 'api' ? 'API' : 'OFFLINE') : null,
       supplier_id: sup ? sup.id : null,
     }))(SUPPLIERS.find(x => x.id === s.supplier_id))),
     ...(!edit && { platform_type: s.platform || null, customer_id: s.customer_id, supplier_currency: ps.supplierCurrency, customer_currency: ps.portalCurrency, market_id: s.market_id }),
@@ -853,7 +853,7 @@ initSelect('ss-supplier', SUPPLIERS, 'supplier_id', it => {
   /* supplier currency follows the supplier */
   state.supplier_currency = supCurrencyOf(it); syncFrom('supplier_currency');
   if (!it) state.status = '';
-}, 'Search or select supplier', { groups: [['*', 'Suppliers']], addTemp: true, noun: 'supplier', onAdd: name => openApiDrawer(name) });
+}, 'Search or select supplier', { groups: [['*', 'Suppliers']], addOther: true, noun: 'supplier', onAdd: name => openApiDrawer(name) });
 initSelect('ss-country', COUNTRIES, 'country_name', () => {
   state.country_name = state.country_name || '';
   if (!(CITIES[state.country_name] || []).includes(state.city)) state.city = '';
@@ -880,23 +880,24 @@ initSelect('ss-market', MARKET_ITEMS, 'market_id', null, 'Select market', { noun
 initSelect('ss-meal', MEALS, 'meal', () => { state.meal = state.meal || ''; }, 'Select meal', { noun: 'meals', showCode: true, codePrefix: true, emptyText: 'No meals found' });
 initSelect('ss-tzm', TZ_MINUTES, 'tz.mins', () => { state.tz.mins = state.tz.mins || '00'; }, ':00', { noSearch: true, noClear: true });
 initSelect('ss-dial', DIAL_CODES, 'contact_dial', () => { state.contact_dial = state.contact_dial || ''; }, 'Code', { noun: 'country code' });
-/* ---------- "Other — add temporary supplier" → the shared hotel API drawer (js/api-drawer.js) ----------
-   Same drawer as Supplier List. The supplier is saved to the shared list (so it shows on Supplier List) and selected here. */
+/* ---------- "Other — add offline supplier" → the shared supplier drawer (js/api-drawer.js) ----------
+   Same drawer as Offline Supplier List (minus Active: always Active here). The supplier is saved to the shared list
+   (so it shows on Offline Supplier List) and selected here. */
 const toast = msg => { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); };
 function openApiDrawer(name) {
   ApiDrawer.open({
-    temporary: true, name,
+    offline: true, quick: true, name,
     onSaved: api => {
       loadSuppliers();
       const it = SUPPLIERS.find(x => x.id === api.id);
       state.supplier_id = api.id; state.ps.supplier = api.name;
       state.supplier_currency = supCurrencyOf(it); syncFrom('supplier_currency');
       refresh();
-      toast(`${api.name} added to Supplier List`);
+      toast(`${api.name} added to Offline Supplier List`);
     },
   });
 }
-/* the list changed in another tab (e.g. Supplier List) */
+/* the list changed in another tab (e.g. Offline Supplier List) */
 HotelApis.onChange(() => { loadSuppliers(); refresh(); });
 
 /* Contracting Comment: rich text; stored as HTML ('' when empty) */

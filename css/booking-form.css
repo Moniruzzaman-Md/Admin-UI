@@ -156,8 +156,8 @@
 .adm-wrap .ss-list li:not(.grp) + li.grp { margin-top: 4px; border-top: 1px solid var(--line-soft); border-radius: 0; }
 .adm-wrap .ss-id { flex: none; font-size: 11.5px; font-weight: 500; color: var(--muted); background: var(--head); border-radius: 6px; padding: 2px 8px; font-variant-numeric: tabular-nums; }
 .adm-wrap .ss-list li.sel .ss-id { color: var(--navy); background: #fff; }
-.adm-wrap .pill-temp { flex: none; font-size: 11px; font-weight: 600; color: #8a5300; background: #fff1d6; box-shadow: inset 0 0 0 1px #f2d9a6; border-radius: 999px; padding: 0 8px; }
-.adm-wrap .ss-tag { position: absolute; right: 54px; top: 9px; font-size: 11px; font-weight: 600; color: #8a5300; background: #fff1d6; box-shadow: inset 0 0 0 1px #f2d9a6; border-radius: 999px; padding: 1px 8px; pointer-events: none; }
+.adm-wrap .pill-offline { flex: none; font-size: 11px; font-weight: 600; color: #1d5fb8; background: #e8f1fd; box-shadow: inset 0 0 0 1px #c8dcf6; border-radius: 999px; padding: 0 8px; }
+.adm-wrap .ss-tag { position: absolute; right: 54px; top: 9px; font-size: 11px; font-weight: 600; color: #1d5fb8; background: #e8f1fd; box-shadow: inset 0 0 0 1px #c8dcf6; border-radius: 999px; padding: 1px 8px; pointer-events: none; }
 .adm-wrap .ss.has-tag .ss-input { padding-right: 110px; }
 .adm-wrap .ss-input[readonly] { caret-color: transparent; user-select: none; }
 .adm-wrap .ss.no-clear .ss-clear { display: none !important; }
@@ -169,7 +169,7 @@
 .adm-wrap .ss.derived .ss-input { background: var(--surface-2); color: var(--text); pointer-events: none; }
 .adm-wrap .ss.derived::after, .adm-wrap .ss.derived .ss-clear { display: none !important; }
 
-/* "Other" footer: add temporary supplier */
+/* "Other" footer: add offline supplier */
 .adm-wrap .ss-foot { border-top: 1px solid var(--line-soft); background: #fafafa; padding: 6px; }
 .adm-wrap .ss-other { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 6px; font: inherit; cursor: pointer; }
 .adm-wrap .ss-other:hover { background: var(--navy-soft); }

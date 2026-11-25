@@ -64,7 +64,7 @@ In this order: **ID · Platform type · Client · Market · Supplier · Status**
 - **Portal**: All (rules for every portal) · each portal (B2B).
 - **Client**: always shown; **disabled** until a portal is picked in the Portal filter (hover: "Pick a platform type first"). All clients (the portal's rules without a client) · each client of that portal. Changing the portal back clears it and disables it again.
 - **Market**: each market as "Name (CUR)". Shows every rule that **covers** it: rules that name it **and** All-markets rules.
-- **Supplier**: each permanent hotel API (temporary suppliers are not listed), shown "Name - SHORT". Shows every rule that covers it: rules that name it **and** All-suppliers rules.
+- **Supplier**: each API supplier (offline suppliers are not listed), shown "Name - SHORT". Shows every rule that covers it: rules that name it **and** All-suppliers rules.
 - **Status**: All statuses (default) / Active / Inactive (no counts).
 Shared filter bar (`js/filters.js`, same as Map-UI hotel-system): a row with the main search box · **Search** · **Filters** (count of set filters + chevron) · **Reset**; the other fields sit in a collapsible **Filters** panel (closed by default) with a label over each field.
 - While the panel is closed, each set panel filter shows as a chip ("Portal: B2C ×"); × clears that field (takes effect on the next Search). The count on Filters follows the fields as you change them.
@@ -213,3 +213,4 @@ Still open (backend, doesn't change the screen): whether the pricing service can
 - 2026-11-22 — References to the API list page now say Supplier List (menu item renamed).
 - 2026-11-23 — On a narrow screen the filter bar is one line: search box + Search, Filters and Reset as icon buttons (count on the Filters icon; Reset always visible).
 - 2026-11-23 — Filter bar identical to the other list pages (same search box size at every screen size). **Check overlaps** moved to the page header next to New markup (like Download on All Booking); on a narrow screen both show just their icon.
+- 2026-11-25 — Temporary suppliers are now offline suppliers (own list); still not listed. Backend: `is_offline` replaces `is_temporary`.

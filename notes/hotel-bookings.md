@@ -22,7 +22,7 @@ Scope: the **booking list** and its **filters** are redesigned.
   - Booking date: date + time (`booking_date`)
   - Deadline date: date + time, — when there is none (`deadline_date` / `cancellation_deadline_date`)
   - Check-in / Check-out: date (`check_in`, `check_out`)
-  - Supplier code: the supplier's short code (`api_name`); a temporary supplier has no short code yet, so its supplier code is shown. Hover = supplier name.
+  - Supplier code: the supplier's short code (`api_name`); an offline supplier has no short code, so its supplier code is shown. Hover = supplier name.
   - Supplier ref. (`reference_no`)
   - Cost: supplier price in the supplier currency (`total_price_buying` + `original_currency`)
   - Payment: client total in the client currency (`total_price_selling` + `currency`) + payment status icon (`payment_layer.status`: Fully Paid / Refunded / Unpaid; hover = status)
@@ -43,7 +43,7 @@ Shared filter bar (same as Hotel API Logs / Markup). Nothing filters until **Sea
   - Booking type: Online / Offline (`booking_type`). Every booking in the prototype is Offline, so Online shows no data.
   - Panel sections, in order: Client (Platform type, Client) · Supplier (Supplier, Supplier reference) · Booking (Booking type, Hotel name, Hotel country, Guest name, Staff, Has HCN, Has special request) · Dates.
   - Client depends on Platform type: no platform = Client can't be picked ("Select platform first"); a platform = that platform's clients. Changing the platform empties Client if the chosen client isn't on the new platform's list. B2B clients = partners (disabled partners included, so their old bookings can still be found). Assumption: the prototype has a client list for B2B only; other platforms show "No clients for this platform".
-  - Supplier (shared supplier list, temporary suppliers excluded), Hotel country (countries that have hotels).
+  - Supplier (every supplier: API and offline), Hotel country (countries that have hotels).
   - Staff: the admin user who created or last saved the booking (assumption: live's Staff list was empty, so its source isn't confirmed).
   - Has HCN: Yes = HCN filled. Has special request: Yes = special request filled.
 - **Dates** (live: Date Filters drawer; last section of the panel): 4 From / To pairs, as live, each end its own field: Booking date, Status date, Check-in date, Deadline date. Either end may be empty: From only = on or after, To only = on or before, both = between (inclusive). To can't be before From. Booking and status dates can't be in the future; check-in and deadline can. A × in a filled date field clears it. Status date = the booking's last save (the prototype keeps no status history). Chip: "from 01-Jan-2027", "until 31-Oct-2026" or "01-Jan-2027 – 31-Jan-2027".
@@ -69,3 +69,4 @@ Shared filter bar (same as Hotel API Logs / Markup). Nothing filters until **Sea
 - 2026-11-22: Filter fields resize with the page: as many columns as fit, stretched to the full width; From / To stay side by side until only one column fits.
 - 2026-11-22: Date pairs always split evenly: 4 per row on wide screens, 2 per row on mid-size, 1 per row below that (never 3 + 1).
 - 2026-11-23: On a narrow screen the filter bar is one line: search box + Search, Filters and Reset as icon buttons (count on the Filters icon; Reset always visible).
+- 2026-11-25: Supplier filter now also lists offline suppliers (formerly temporary, which were excluded): manual bookings are made with them.

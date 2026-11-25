@@ -6,8 +6,8 @@
 
   /* ---------- dummy data ---------- */
   // supplierId 0 = "Common" (our own normalised layer); the rest = the shared hotel API list (js/data.js, same as Supplier List).
-  // Supplier filter: permanent APIs only (temporary suppliers are only offered in the booking form).
-  const APIS = [[0, 'Common'], ...HotelApis.list.filter(a => !a.temporary).map(a => [a.id, HotelApis.label(a)])];
+  // Supplier filter: API suppliers only (offline suppliers have no API, so no API logs).
+  const APIS = [[0, 'Common'], ...HotelApis.list.filter(a => !a.offline).map(a => [a.id, HotelApis.label(a)])];
   const API_NAME = Object.fromEntries([[0, 'Common'], ...HotelApis.list.map(a => [a.id, a.name])]);
   const TBO = 1, DIDA = 2, RH = 3;   // hotel API ids (js/data.js seed) the dummy logs are made for
   const SEARCH_OPS = ['Search'];                           // only listed with "Include search logs" (SearchStream trace is always listed, as live)

@@ -14,7 +14,8 @@
   // When a new screen is redesigned, add its group (if new) and its entry.
   const MENU = [
     { label: 'Hotel Management', icon: 'users', items: [
-      { label: 'Supplier List', icon: 'list-alt', page: 'hotel-apis', href: 'hotel-apis.html' },
+      { label: 'Supplier', icon: 'list-alt', page: 'hotel-apis', href: 'hotel-apis.html' },
+      { label: 'Offline Supplier', icon: 'address-card', page: 'offline-suppliers', href: 'offline-suppliers.html' },
       { label: 'Markup', icon: 'sliders-h', page: 'markup-commission', href: 'markup-commission.html' },
     ] },
     { label: 'Booking Management (Hotel)', icon: 'tags', items: [

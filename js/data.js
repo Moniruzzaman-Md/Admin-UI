@@ -3,10 +3,11 @@
    Dummy data only. Needs js/history-legacy.js (the seed's old-system history) loaded before this file.
 
    RefData              read-only master lists: currencies, portals, users, partners, markets, countries, meals, hotels, roomTypes
-   HotelApis.list       the hotel API list (Supplier List page; booking form › Supplier)
+   HotelApis.list       every supplier: API suppliers (Supplier List) + offline suppliers (offline: true, Offline Supplier
+                        List); booking form › Supplier lists both
    HotelApis.label(api)  a supplier as dropdowns list it ("Name - SHORT")
    HotelApis.CURRENCIES currencies an API can have
-   HotelApis.save()     write the list after any change (create, edit, make permanent)
+   HotelApis.save()     write the list after any change (create, edit)
    HotelApis.nextId()   id for a new API
    Bookings.list        manual hotel bookings (All Booking list; the booking form creates + edits them). API bookings
                         come from the suppliers, so the prototype can't show them: only manual bookings are listed.
@@ -116,29 +117,46 @@
       id: seq++, name: r[0], code: r[1], ref: r[2], short: r[3], currency: r[4],
       active: !!r[5], b2c: !!r[7], hold: !!r[9], history: [],
     }));
-    // temporary suppliers (can be made permanent; one-way)
-    const TEMP = ['JUNIPER', 'TRAVCO', 'BONOTEL'];
-    // a temporary API has only the fields asked when adding one (js/api-drawer.js TEMP_SKIP stay empty)
-    apis.forEach(a => { a.temporary = TEMP.includes(a.code); if (a.temporary) Object.assign(a, { ref: '', short: '', active: true, b2c: true }); });
+    // offline suppliers (no API: booked by email / phone; own list, Offline Supplier List). They have only the fields
+    // their form asks (js/api-drawer.js OFFLINE_SKIP stay empty) + their contacts
+    const P = (dial, number) => ({ dial, number });   // a phone: country code + number
+    const OFFLINE = {
+      JUNIPER: [['reservations@juniper-dmc.example', 'ops@juniper-dmc.example'], [P('+971', '43123456')]],
+      TRAVCO: [['bookings@travco.example'], [P('+44', '2079460123'), P('+44', '2079460456')]],
+      BONOTEL: [['res@bonotel.example'], []],
+    };
+    // contacts of some online suppliers (optional for every supplier)
+    const CONTACTS = {
+      HBEDS: [['support@hotelbeds.example'], [P('+65', '62351800')]],
+      DIDA: [['ops@dida.example', 'finance@dida.example'], []],
+      RATEHAWK: [[], [P('+44', '2038082200')]],
+    };
+    apis.forEach(a => {
+      a.offline = a.code in OFFLINE;
+      if (a.code in CONTACTS) [a.emails, a.phones] = CONTACTS[a.code];
+      if (a.offline) [a.emails, a.phones] = OFFLINE[a.code];
+      a.emails = a.emails || []; a.phones = a.phones || [];
+      if (a.offline) Object.assign(a, { ref: '', short: '', b2c: true });
+    });
 
     // dummy history: a created entry + a couple of edits (changes: [field, old, new])
     const U = RefData.users.map(u => u.name), editors = [U[0], U[1], U[0]];
     apis.forEach((a, i) => {
       const d = new Date(2026, 9, 2 + i, 10, 15);
       // APIs created before the new history have old-system rows instead of a Create entry (added below)
-      // (temporary suppliers are newer: created from the booking form, so a Create entry and no old-system rows)
-      a.legacy = !a.temporary && i % 4 !== 3;
+      // (offline suppliers are newer: a Create entry and no old-system rows)
+      a.legacy = !a.offline && i % 4 !== 3;
       if (!a.legacy) a.history.push({ by: 'Super Admin', at: d, created: true });
-      // a temporary supplier only has its form's fields, so its edits never touch Active / Allow B2C
-      if (i % 3 !== 2) a.history.unshift({ by: editors[i % 3], at: new Date(2026, 10, 3 + i, 14, 4), changes: [['currency', a.currency === 'USD' ? 'EUR' : 'USD', a.currency]].concat(a.temporary ? [] : [['b2c', !a.b2c, a.b2c]]) });
-      if (i % 2 === 0 && !a.temporary) a.history.unshift({ by: 'Super Admin', at: new Date(2026, 10, 12, 14, 38), changes: [['active', !a.active, a.active]] });
+      // an offline supplier has no Allow B2C, so its edits never touch it
+      if (i % 3 !== 2) a.history.unshift({ by: editors[i % 3], at: new Date(2026, 10, 3 + i, 14, 4), changes: [['currency', a.currency === 'USD' ? 'EUR' : 'USD', a.currency]].concat(a.offline ? [] : [['b2c', !a.b2c, a.b2c]]) });
+      if (i % 2 === 0 && !a.offline) a.history.unshift({ by: 'Super Admin', at: new Date(2026, 10, 12, 14, 38), changes: [['active', !a.active, a.active]] });
     });
 
     /* dummy legacy history (old system): one row per save = the full record AFTER that save, newest first, no create row.
        It ends at the state before the API's first current entry; HistoryLegacy.toEntries (js/history-legacy.js) turns it
        into normal Edit / Status Change entries that continue the timeline. "def" stands for the removed Default field:
        a save that only changed it shows nothing. */
-    const LEGACY_KEYS = ['name', 'code', 'ref', 'short', 'currency', 'active', 'b2c', 'hold', 'temporary'];
+    const LEGACY_KEYS = ['name', 'code', 'ref', 'short', 'currency', 'active', 'b2c', 'hold'];
     const LEGACY_BY = U;
     apis.forEach(a => {
       if (!a.legacy) return;
@@ -155,7 +173,6 @@
       let s = { ...v };
       for (let k = 0; k < n; k++) {
         const values = { ...s };
-        if (k === n - 1) delete values.temporary; // older old-system rows don't have it
         rows.push({ by: LEGACY_BY[(a.id + k) % 3], at: new Date(2026, 8 - k, 26 - (a.id + k * 3) % 20, 9 + k, 10 + a.id * 3, 52 - k * 7), values });
         s = { ...s }; steps[(a.id + k) % steps.length](s);
       }
@@ -163,20 +180,38 @@
     });
     return { CURRENCIES, apis };
   }
+  // saved before temporary suppliers became offline suppliers: temporary → offline, contacts added, "Type" history rows dropped
+  // a phone saved as one string ("+60 3 1234 5678") → { dial, number }: the longest known country code it starts with
+  const DIALS = RefData.countries.map(c => c.dial).sort((x, y) => y.length - x.length);
+  const splitPhone = p => {
+    if (typeof p !== 'string') return p;
+    const digits = '+' + p.replace(/\D/g, ''), dial = DIALS.find(d => digits.startsWith(d)) || '';
+    return { dial, number: digits.slice(dial ? dial.length : 1) };
+  };
+  const migrate = list => list && list.map(a => {
+    if ('temporary' in a) { a.offline = a.temporary; delete a.temporary; }
+    a.emails = a.emails || []; a.phones = (a.phones || []).map(splitPhone);
+    a.history.forEach(h => (h.changes || []).forEach(c => { if (c[0] === 'phones') { c[1] = (c[1] || []).map(splitPhone); c[2] = (c[2] || []).map(splitPhone); } }));
+    a.history.forEach(h => { if (h.changes) h.changes = h.changes.filter(c => c[0] !== 'temporary'); });
+    a.history = a.history.filter(h => !h.changes || h.changes.length);
+    return a;
+  });
   const seeded = seedHotelApis();
-  const apis = load('hotelApis') || seeded.apis;
+  const apis = migrate(load('hotelApis')) || seeded.apis;
   window.HotelApis = {
     CURRENCIES: seeded.CURRENCIES,
     list: apis,
-    // a supplier as every dropdown lists it: "Name - SHORT" (name only while it has no short code)
+    // a supplier as every dropdown lists it: "Name - SHORT" (name only when it has no short code: offline suppliers)
     label: a => a.short ? `${a.name} - ${a.short}` : a.name,
+    // a phone as every page shows it: "+60 312345678"
+    phoneText: p => `${p.dial} ${p.number}`.trim(),
     save: () => save('hotelApis', apis),
     nextId: () => apis.reduce((m, x) => Math.max(m, x.id), 0) + 1,
     // another tab changed the list: replace ours in place (same array, so pages keep their reference)
     onChange(fn) {
       window.addEventListener('storage', e => {
         if (e.key !== PREFIX + 'hotelApis') return;
-        const fresh = load('hotelApis') || seedHotelApis().apis;
+        const fresh = migrate(load('hotelApis')) || seedHotelApis().apis;
         apis.splice(0, apis.length, ...fresh); fn();
       });
     },
