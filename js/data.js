@@ -236,14 +236,19 @@
         booking_date: '2026-10-12T11:30', cancellation_deadline_date: '2027-02-16T11:59', check_in: '2027-02-20', check_out: '2027-02-23',
         star_rating: 4, status: 'CONFIRMED', lead_pax_name: 'Jane Sample',
         guest_email: 'jane.sample@example.com', contact_dial: '+44', contact_mobile: '7700900123', meal: 'Room Only',
-        rooms: [room('Superior Twin Room', 138, 556.8, 55.68, [
-          guest('Ms', 'Jane', 'Sample', 'United Kingdom', { is_lead: true }),
-          guest('Mr', 'Tom', 'Sample', 'United Kingdom', { type: 'Child', child_age: 8 }),
-        ])],
+        rooms: [
+          room('Superior Twin Room', 138, 556.8, 55.68, [
+            guest('Ms', 'Jane', 'Sample', 'United Kingdom', { is_lead: true }),
+            guest('Mr', 'Tom', 'Sample', 'United Kingdom', { type: 'Child', child_age: 8 }),
+          ]),
+          room('Superior Twin Room', 138, 556.8, 55.68, [guest('Mr', 'David', 'Brown', 'United Kingdom'), guest('Mrs', 'Sarah', 'Brown', 'United Kingdom')]),
+          room('Superior Twin Room', 138, 556.8, 55.68, [guest('Ms', 'Emma', 'Clarke', 'United Kingdom')]),
+        ],
         reference_no: 'TBO-5521907',
-        ps: { supplier: 'TBO Holidays', supplierCurrency: 'USD', supplierPrice: 138, portalCurrency: 'MYR', conversionRate: 4.034783, reverseRate: 0.247844, convertedPrice: 556.8, markupType: 'Percent', markupRule: 10, markupAmount: 55.68, noOfRooms: 1, finalPrice: 612.48, issue: '' },
+        ps: { supplier: 'TBO Holidays', supplierCurrency: 'USD', supplierPrice: 414, portalCurrency: 'MYR', conversionRate: 4.034783, reverseRate: 0.247844, convertedPrice: 1670.4, markupType: 'Percent', markupRule: 10, markupAmount: 167.04, noOfRooms: 3, finalPrice: 1837.44, issue: '' },
         contracting_comment: '<p><strong>Breakfast not included.</strong></p><ul><li>Early check-in subject to availability.</li><li>Late check-out on request.</li></ul>', special_request: 'High floor, quiet room.',
-        cancellation_all: pol('2027-02-16T11:59:58', 612.48, '2027-02-18T00:00:00', 138),
+        remarks: 'Paid by bank transfer (ref BT-2291).\nConfirm late check-out with the hotel 2 days before arrival.',
+        cancellation_all: pol('2027-02-16T11:59:58', 1837.44, '2027-02-18T00:00:00', 414),
       } },
       { id: 2, txn: 'NZH100000000012388', createdAt: '2026-11-18T15:05:00', createdBy: 'Rahim Uddin', payment: 'Unpaid', state: { ...base,
         supplier_id: 2, supplier_currency: 'MYR', platform: 'B2B', customer_id: 1021, customer_currency: 'BDT', market_id: 21,
@@ -292,6 +297,17 @@
     ];
   }
   const bookings = load('hotelBookings') || seedBookings();
+  /* 2026-11-25: the edit sample (NZH100000000012345) now has 3 rooms — update a saved copy that still has the old 1-room
+     seed and was never edited (an edited one is the user's, left alone) */
+  (() => {
+    const fresh = seedBookings()[0], i = bookings.findIndex(b => b.txn === fresh.txn && !b.updatedAt && b.state.rooms.length === 1);
+    if (i >= 0) { bookings[i] = fresh; save('hotelBookings', bookings); }
+  })();
+  /* 2026-11-26: the edit sample has a back-office remark — add it to a saved copy without one (remarks can't be typed on an edit) */
+  (() => {
+    const b = bookings.find(x => x.txn === 'NZH100000000012345');
+    if (b && !String(b.state.remarks || '').trim()) { b.state.remarks = seedBookings()[0].state.remarks; save('hotelBookings', bookings); }
+  })();
   window.Bookings = {
     list: bookings,
     get: id => bookings.find(b => b.id === Number(id)) || null,

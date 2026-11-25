@@ -12,6 +12,9 @@
 .modal[data-tone="success"] { --tone: var(--green); --tone-bg: #e6f4ec; --tone-ring: rgba(15, 138, 85, .07); }
 .modal::backdrop { background: rgba(13, 13, 60, .42); backdrop-filter: blur(2px); }
 .modal[open] { animation: modal-in .2s cubic-bezier(.2, .8, .3, 1); }
+/* always fits the window: header and buttons stay put, the body scrolls when the content is tall */
+.modal[open] { display: flex; flex-direction: column; max-height: calc(100dvh - 32px); }
+.modal-head, .modal-foot, .modal::before { flex: none; }
 @keyframes modal-in { from { opacity: 0; transform: translateY(10px) scale(.97); } }
 @media (prefers-reduced-motion: reduce) { .modal[open] { animation: none; } }
 
@@ -19,11 +22,11 @@
 .modal-x:hover { background: var(--surface-2); color: var(--text); }
 .modal-x:focus-visible { outline: 2px solid var(--brand-accent); outline-offset: 1px; }
 
-.modal-head { display: flex; align-items: center; gap: 14px; padding: 22px 56px 0 24px; }
+.modal-head { display: flex; align-items: center; gap: 14px; padding: 22px 56px 6px 24px; }   /* bottom room for the icon's halo, so scrolled content never runs under it */
 .modal-icon { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--tone-bg); color: var(--tone); box-shadow: 0 0 0 6px var(--tone-ring); }
 .modal-head h2 { margin: 0; font-size: 17px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; }
 
-.modal-body { padding: 18px 24px 22px; }
+.modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 12px 24px 22px; }
 .modal-body > p { margin: 0; font-size: var(--fs-md); line-height: 1.6; color: var(--text-2); }
 .modal-body > [hidden] { display: none; }
 
@@ -31,6 +34,7 @@
 .modal-details { display: grid; grid-template-columns: max-content minmax(0, 1fr); margin: 16px 0 0; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); overflow: hidden; }
 .modal-details > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 20px; padding: 10px 14px; }
 .modal-details > div + div { border-top: 1px solid var(--border); }
+.modal-details.more { margin-top: 10px; }
 .modal-details dt { font-size: 11px; line-height: 20px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--text-3); }
 .modal-details dd { margin: 0; font-size: 13px; line-height: 20px; font-weight: 600; color: var(--text); }
 
@@ -44,3 +48,11 @@
 .modal-foot [hidden] { display: none; }
 
 .modal-details .hf-code { padding: 1px 7px; border-radius: 5px; background: #ececfa; color: #10108a; font-size: 12px; font-weight: 700; letter-spacing: .4px; }
+
+/* phones: label above value, so long labels ("All room client price sum") don't squeeze the amounts */
+@media (max-width: 480px) {
+  .modal-details { grid-template-columns: minmax(0, 1fr); }
+  .modal-details > div { row-gap: 1px; padding: 8px 12px; }
+  .modal-head { padding-left: 18px; }
+  .modal-body { padding-left: 18px; padding-right: 18px; }
+}

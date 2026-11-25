@@ -4,11 +4,15 @@
      tone:    'danger' | 'warning' | 'info' | 'success'   (icon + colour; default 'info')
      title:   'Delete markup #1061?'
      message: 'Plain text, or HTML when html: true'
-     details: [['Label', 'value html'], …]               (optional: a short label / value list of what it's about)
+     details: [['Label', 'value html'], …]               (optional: a short label / value list of what it's about;
+                                                          a null entry starts a second table under the first)
      note:    'This can't be undone.'                     (optional: a highlighted line, e.g. consequences)
      noteTone: 'danger'                                   (optional: colour the note line on its own; default = the modal's tone)
+     noteIcon: 'info'                                     (optional: the note's icon, one of the tone names; default 'warning')
      confirm: 'Delete'                                    (main button; omit for an info-only modal with one "OK")
      cancel:  'Cancel'                                    (default 'Cancel'; null = no cancel button)
+     width:   640 | '40rem'                               (optional: a wider / narrower modal; a number is px. Default 460px.
+                                                          Never wider than the window minus 16px each side)
    }) → Promise<boolean>  — true when the main button was pressed.
 
    Closes on ✕, Cancel, Esc or a click on the backdrop (→ false). Esc closes only the modal, not a drawer behind it.
@@ -42,6 +46,8 @@
     const tone = ICONS[o.tone] ? o.tone : 'info';
     const q = s => dlg.querySelector(s);
     dlg.dataset.tone = tone;
+    const w = typeof o.width === 'number' ? `${o.width}px` : o.width;
+    dlg.style.width = w ? `min(${w}, calc(100vw - 32px))` : '';   // '' = the default width from modal.css
     q('.modal-icon').innerHTML = svg(ICONS[tone]);
     q('#modal-title').textContent = o.title || '';
     const msg = q('#modal-message');
@@ -49,11 +55,16 @@
     if (o.html) msg.innerHTML = o.message || ''; else msg.textContent = o.message || '';
     const dl = q('.modal-details');
     dl.hidden = !o.details?.length;
-    dl.innerHTML = (o.details || []).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('');
+    dlg.querySelectorAll('.modal-details.more').forEach(x => x.remove());
+    const groups = [[]];
+    (o.details || []).forEach(d => d ? groups.at(-1).push(d) : groups.push([]));
+    const rows = g => g.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('');
+    dl.innerHTML = rows(groups[0]);
+    groups.slice(1).reverse().forEach(g => dl.insertAdjacentHTML('afterend', `<dl class="modal-details more">${rows(g)}</dl>`));
     const note = q('.modal-note');
     note.hidden = !o.note;
     note.dataset.tone = o.noteTone || '';
-    note.innerHTML = o.note ? `${svg(ICONS.warning, 14)}<span>${esc(o.note)}</span>` : '';
+    note.innerHTML = o.note ? `${svg(ICONS[o.noteIcon] || ICONS.warning, 14)}<span>${esc(o.note)}</span>` : '';
     const ok = q('.modal-ok'), cancel = q('.modal-cancel');
     const infoOnly = !o.confirm;
     ok.textContent = o.confirm || 'OK';

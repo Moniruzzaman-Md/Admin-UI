@@ -9,17 +9,23 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
 <link rel="stylesheet" href="css/tokens.css?v=27">
 <link rel="stylesheet" href="css/shell.css?v=33">
-<link rel="stylesheet" href="css/components.css?v=89">
+<link rel="stylesheet" href="css/components.css?v=90">
 <link rel="stylesheet" href="css/select.css?v=27">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
 <link rel="stylesheet" href="css/datepicker.css?v=8">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
-<link rel="stylesheet" href="css/modal.css?v=7">
-<link rel="stylesheet" href="css/booking-form.css?v=25">
+<link rel="stylesheet" href="css/modal.css?v=11">
+<link rel="stylesheet" href="css/booking-form.css?v=115">
 <style>
   /* prototype-only switch between the Add form and the edit sample (not part of the design) */
   .proto-btn { align-self: center; font-size: 12px; font-weight: 500; color: var(--text-2); border: 1px dashed var(--border-strong); border-radius: 6px; padding: 3px 10px; text-decoration: none; white-space: nowrap; }
   .proto-btn:hover { color: var(--brand); border-color: var(--brand); }
+  .proto-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .proto-seg { display: inline-flex; align-items: center; gap: 2px; padding: 2px; font-size: 12px; color: var(--text-3); border: 1px dashed var(--border-strong); border-radius: 6px; }
+  .proto-seg[hidden] { display: none; }
+  .proto-seg > span { padding: 0 6px; }
+  .proto-seg button { border: 0; background: none; padding: 2px 8px; border-radius: 4px; font: inherit; color: var(--text-2); cursor: pointer; }
+  .proto-seg button.on { background: var(--navy-soft, #eef0fb); color: var(--brand); font-weight: 600; }
 </style>
 </head>
 <body data-page="hotel-bookings">
@@ -33,12 +39,18 @@
       </button>
       <h1 class="page-title" id="pageTitle">Add New Booking</h1>
     </div>
-    <a class="proto-btn" id="protoMode" href="booking-form.html?mode=edit">Open edit sample</a>
+    <div class="proto-bar">
+      <!-- prototype only: preview an edit with / without a remark (not saved) -->
+      <span class="proto-seg" id="protoRemarks" hidden><span>Remarks:</span><button type="button" data-proto-rm="with" class="on">With remark</button><button type="button" data-proto-rm="none">No remark</button></span>
+      <a class="proto-btn" data-proto-note="dev" href="booking-form-notes.html?doc=dev" target="_blank" rel="noopener">How it works</a>
+      <a class="proto-btn" data-proto-note="ai" href="booking-form-notes.html?doc=ai" target="_blank" rel="noopener">AI note</a>
+      <a class="proto-btn" id="protoMode" href="booking-form.html?mode=edit">Open edit sample</a>
+    </div>
   </div>
 
   <!-- ============ Booking Source & Pricing ============ -->
   <div class="card" id="sourceCard">
-    <div class="card-header" data-toggle><span>Booking source &amp; pricing</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+    <div class="card-header" data-toggle><span>Booking source &amp; pricing</span><span class="room-sum card-sum sum-fit"></span><button type="button" class="room-errs" data-card-errs hidden></button><button type="button" class="arrow" aria-label="Collapse or expand this section"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></button></div>
     <div class="card-body"><div class="src-grid">
       <section class="src-pane">
         <div class="pane-title"><span class="dot"></span>Supplier</div>
@@ -66,49 +78,56 @@
           <div class="field" id="f-market"><label class="lbl req">Market</label><div class="ss" id="ss-market"></div><div class="fb">Market is required.</div></div>
         </div>
         <div class="row c2 mt">
-          <div class="field"><label class="lbl">Markup type</label><div class="ss" id="ss-markup"></div></div>
-          <div class="field" id="f-markupRule"><label class="lbl">Markup amount</label><div class="ig"><input type="text" inputmode="decimal" placeholder="0.00" data-money data-bind="ps.markupRule" data-min="0"><span class="suf" data-adorn-markup></span></div><div class="fb">Required when a markup type is selected.</div></div>
+          <div class="field" id="f-markupType"><label class="lbl">Markup type</label><div class="ss" id="ss-markup"></div></div>
+          <div class="field" id="f-markupRule"><div class="lbl-row"><label class="lbl">Markup<span class="lbl-more"> amount</span></label><label class="lead-check full-chk"><input type="checkbox" data-bind="ps.auto"> Auto calculate</label></div><div class="ig"><input type="text" inputmode="decimal" placeholder="0.00" data-money data-bind="ps.markupRule" data-min="0"><span class="suf" data-adorn-markup></span></div><div class="fb">Required when a markup type is selected.</div></div>
         </div>
       </section>
     </div></div>
   </div>
 
-  <div class="grid two">
-    <!-- LEFT COLUMN -->
-    <div class="col">
-      <div class="card">
-        <div class="card-header" data-toggle><span>Hotel details<span class="hint" id="txnHint"></span></span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
-        <div class="card-body"><div class="row c2">
+  <!-- ============ Auto calculate markup (shown while "Auto calculate" is ticked): worked out from the quoted client price ============ -->
+  <div class="card auto-mk" id="autoMk" hidden>
+    <div class="card-header" data-toggle><span>Auto calculate markup</span><span class="room-sum card-sum"></span><button type="button" class="room-errs" data-card-errs hidden></button><button type="button" class="sec-need" id="autoNeed" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span></span></button><button type="button" class="arrow" aria-label="Collapse or expand this section"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></button></div>
+    <div class="card-body">
+          <div class="pol-lock" id="autoLock"><div class="row c3">
+            <div class="field" id="f-autoClient"><label class="lbl req">Total client price</label><div class="ig"><span class="pre" data-adorn="ps.portalCurrency"></span><input type="text" inputmode="decimal" placeholder="0.00" data-money data-bind="ps.autoClient" data-min="0"></div><div class="fb" id="autoClientMsg"></div></div>
+            <div class="field" id="f-autoSupplier"><label class="lbl req">Total supplier price</label><div class="ig"><span class="pre" data-adorn="ps.supplierCurrency"></span><input type="text" inputmode="decimal" placeholder="0.00" data-money data-bind="ps.autoSupplier" data-min="0"></div><div class="fb">Must be more than 0.</div></div>
+            <div class="field" id="f-autoRooms"><label class="lbl req">No. of rooms</label><div class="ig stepper"><button type="button" data-action="step" data-d="-1" aria-label="Decrease">−</button><input type="text" inputmode="numeric" placeholder="Enter rooms" data-int data-bind="ps.autoRooms" data-min="1" data-max="9"><button type="button" data-action="step" data-d="1" aria-label="Increase">+</button></div></div>
+          </div></div>
+    </div>
+  </div>
+
+  <!-- Hotel details, Contact details, Contracting comment: full-width rows, so a collapsed section never leaves a gap -->
+      <div class="card" id="hotelCard">
+        <div class="card-header" data-toggle><span>Hotel details<span class="hint" id="txnHint"></span></span><span class="room-sum card-sum sum-fit"></span><button type="button" class="room-errs" data-card-errs hidden></button><button type="button" class="arrow" aria-label="Collapse or expand this section"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></button></div>
+        <div class="card-body"><div class="row c2 c4">
           <div class="field"><label class="lbl">Hotel name</label><input type="text" placeholder="Enter hotel name" data-bind="hotel_name" data-required><div class="fb">Hotel name is required.</div></div>
-          <div class="field"><label class="lbl">Address</label><input type="text" placeholder="Enter address" data-bind="address"></div>
-          <div class="field"><label class="lbl">Country</label><div class="ss" id="ss-country"></div></div>
-          <div class="field"><label class="lbl">City</label><div class="ss" id="ss-city" data-need-path="country_name"></div></div>
+          <div class="field"><label class="lbl">Address</label><input type="text" placeholder="Enter address" data-bind="address" data-required><div class="fb">Address is required.</div></div>
+          <div class="field" id="f-country"><label class="lbl req">Country</label><div class="ss" id="ss-country"></div></div>
+          <div class="field" id="f-city"><label class="lbl req">City</label><div class="ss" id="ss-city" data-need-path="country_name"></div></div>
           <div class="field"><label class="lbl">Telephone</label><input type="text" placeholder="Enter telephone" data-bind="hotel_phone_number"></div>
           <div class="field"><label class="lbl">HCN</label><input type="text" placeholder="Enter HCN" data-bind="hcn"></div>
-          <div class="field" id="f-bookdate"><label class="lbl">Booking date</label><div class="dp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><input type="text" data-date="datetime" data-bind="booking_date" placeholder="Select date &amp; time"><button type="button" class="dp-clear" data-action="dp-clear" aria-label="Clear">×</button></div><div class="fb">Booking date can't be in the future.</div></div>
+          <div class="field" id="f-bookdate"><label class="lbl">Booking date</label><div class="dp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><input type="text" data-date="datetime" data-bind="booking_date" data-required placeholder="Select date &amp; time"><button type="button" class="dp-clear" data-action="dp-clear" aria-label="Clear">×</button></div><div class="fb">Booking date can't be in the future.</div></div>
           <div class="field dt"><label class="lbl">Deadline date &amp; time <span class="hint">· from client policy</span></label><div class="ro" id="deadlineRo" title="Earliest From of a client policy with a fee"></div></div>
           <div class="field"><label class="lbl">Check-in date</label><div class="dp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><input type="text" data-date="date" data-bind="check_in" data-required placeholder="Select date"><button type="button" class="dp-clear" data-action="dp-clear" aria-label="Clear">×</button></div><div class="fb">Check-in date is required.</div></div>
           <div class="field" id="f-checkout"><label class="lbl">Check-out date <span class="hint" id="nightsHint"></span></label><div class="dp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><input type="text" data-date="date" data-bind="check_out" data-required placeholder="Select date"><button type="button" class="dp-clear" data-action="dp-clear" aria-label="Clear">×</button></div><div class="fb" id="checkoutMsg">Check-out date is required.</div></div>
+          <div class="field"><label class="lbl">Booking status</label><div class="ss" id="ss-status"></div></div>
           <div class="field"><label class="lbl">Category <span class="hint">(star rating)</span></label>
             <div class="stars">
               <input type="hidden" data-bind="star_rating">
               <div class="stars-btns"><button type="button" class="star" data-action="star" data-v="1" aria-label="1 star"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button><button type="button" class="star" data-action="star" data-v="2" aria-label="2 stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button><button type="button" class="star" data-action="star" data-v="3" aria-label="3 stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button><button type="button" class="star" data-action="star" data-v="4" aria-label="4 stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button><button type="button" class="star" data-action="star" data-v="5" aria-label="5 stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg></button></div>
               <button type="button" class="stars-clear" data-action="star" data-v="" id="starClear" aria-label="Clear rating" data-tooltip="Clear rating">×</button>
             </div></div>
-          <div class="field"><label class="lbl">Booking status</label><div class="ss" id="ss-status"></div></div>
         </div></div>
       </div>
-    </div>
 
-    <!-- RIGHT COLUMN -->
-    <div class="col">
-      <div class="card">
-        <div class="card-header" data-toggle><span>Contact details</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
-        <div class="card-body">
+      <div class="card" id="contactCard">
+        <div class="card-header" data-toggle><span>Contact details</span><span class="room-sum card-sum sum-fit"></span><button type="button" class="room-errs" data-card-errs hidden></button><button type="button" class="arrow" aria-label="Collapse or expand this section"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></button></div>
+        <div class="card-body contact-row">
           <div class="row">
             <div class="field"><label class="lbl">Email</label><input type="text" placeholder="name@example.com" data-bind="guest_email" data-email data-required><div class="fb">Enter a valid email.</div></div>
           </div>
-          <div class="row phone-row mt">
+          <div class="row phone-row">
             <div class="field" id="f-dial"><label class="lbl req">Country code</label><div class="ss" id="ss-dial"></div><div class="fb">Select a country code.</div></div>
             <div class="field" id="f-mobile"><label class="lbl req">Mobile number</label><input type="text" inputmode="numeric" maxlength="15" placeholder="Enter mobile number" data-int data-bind="contact_mobile"><div class="fb">Enter 6–15 digits.</div></div>
           </div>
@@ -116,18 +135,16 @@
       </div>
 
       <div class="card">
-        <div class="card-header" data-toggle><span>Contracting comment &amp; special requests</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
-        <div class="card-body"><div class="row">
+        <div class="card-header" data-toggle><span>Contracting comment &amp; special requests</span><button type="button" class="arrow" aria-label="Collapse or expand this section"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></button></div>
+        <div class="card-body"><div class="row c2 cc-row">
           <div class="field"><label class="lbl">Contracting comment</label><div class="rte"><div id="ccEditor"></div></div></div>
           <div class="field"><label class="lbl">Special requests</label><textarea rows="3" placeholder="Enter special requests" data-bind="special_request"></textarea></div>
         </div></div>
       </div>
-    </div>
-  </div>
 
   <!-- ============ Rooms & Guests ============ -->
-  <div class="card">
-    <div class="card-header" data-toggle><span>Rooms &amp; guests</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+  <div class="card" id="roomsCard">
+    <div class="card-header" data-toggle><span>Rooms &amp; guests</span><span class="room-sum card-sum"></span><button type="button" class="room-errs" data-card-errs hidden></button><div class="auto-bar" id="autoBar" hidden><span class="room-count" id="autoBarMsg"></span><button type="button" class="btn btn-secondary btn-recalc" data-action="recalc" data-tooltip="Split the total supplier price equally across the rooms again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.3L3 16M3 21v-5h5"/></svg>Recalculate</button></div><button type="button" class="arrow" aria-label="Collapse or expand this section"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></button></div>
     <div class="card-body">
       <div class="field" style="margin-bottom:16px"><label class="lbl">Meal</label><div class="ss" id="ss-meal"></div></div>
       <div id="rooms"></div>
@@ -136,9 +153,10 @@
   </div>
 
   <!-- ============ Cancellation Policies ============ -->
-  <div class="card">
-    <div class="card-header" data-toggle><span>Cancellation policies</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+  <div class="card" id="polCard">
+    <div class="card-header" data-toggle><span>Cancellation policies</span><span class="room-sum card-sum"></span><button type="button" class="room-errs" data-card-errs hidden></button><button type="button" class="sec-need" id="polNeed" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span></span></button><button type="button" class="arrow" aria-label="Collapse or expand this section"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></button></div>
     <div class="card-body">
+      <div class="pol-lock" id="polLock">
       <div class="tz-row" id="f-tz">
         <span class="tz-lbl">Time format</span>
         <label class="tz-opt"><input type="radio" name="tzmode" value="Local" data-tz="mode"> Local</label>
@@ -151,11 +169,9 @@
         </span>
         <div class="fb" id="tzMsg"></div>
       </div>
-      <button type="button" class="sec-need" id="polNeed" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span></span></button>
-      <div class="pol-lock" id="polLock">
       <div class="calc-row" id="f-clientHours">
         <label class="switch-label"><span class="switch"><input type="checkbox" data-bind="clientAuto"><span></span></span>Auto calculate client policy</label>
-        <span class="calc-hours" id="clientHoursWrap"><span class="calc-hint">Offset:</span><span class="ig tz-h"><input type="text" inputmode="numeric" maxlength="3" placeholder="0" data-int data-max="720" data-bind="clientHours" aria-label="Offset hours"><span class="suf">h</span></span></span>
+        <span class="calc-hours" id="clientHoursWrap"><span class="calc-hint">Offset:</span><span class="ig tz-h"><input type="text" inputmode="numeric" maxlength="3" placeholder="0" data-int data-max="720" data-bind="clientHours" aria-label="Offset hours"><span class="suf">h</span></span><span class="calc-hint calc-after">before the supplier</span></span>
         <label class="switch-label calc-one"><span class="switch"><input type="checkbox" data-bind="onePolicy"><span></span></span>One policy for all rooms</label>
       </div>
       <div id="policies"></div>
@@ -165,14 +181,14 @@
 
   <!-- ============ Price Summary ============ -->
   <div class="card" id="sumCard">
-    <div class="card-header" data-toggle><span>Price summary</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
+    <div class="card-header" data-toggle><span>Price summary</span><span class="room-sum card-sum"></span><button type="button" class="room-errs" data-card-errs hidden></button><button type="button" class="arrow" aria-label="Collapse or expand this section"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></button></div>
     <div class="card-body" id="sumBody"></div>
   </div>
 
   <!-- ============ Remarks ============ -->
-  <div class="card">
-    <div class="card-header" data-toggle><span>Remarks (Back office only)</span><span class="arrow"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></span></div>
-    <div class="card-body"><div class="field"><textarea rows="3" placeholder="Enter remarks" aria-label="Remarks (Back office only)" data-bind="remarks"></textarea></div></div>
+  <div class="card" id="remarksCard">
+    <div class="card-header" data-toggle><span>Remarks (Back office only)</span><span class="room-sum card-sum sum-fit"></span><button type="button" class="room-errs" data-card-errs hidden></button><button type="button" class="arrow" aria-label="Collapse or expand this section"><svg viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg></button></div>
+    <div class="card-body"><div class="field"><textarea rows="3" placeholder="Enter remarks" aria-label="Remarks (Back office only)" data-bind="remarks"></textarea><div class="ro remarks-ro" id="remarksRo" title="Added when the booking was created; can't be changed" hidden></div></div></div>
   </div>
 
   <div class="footer">
@@ -198,11 +214,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
 <script src="js/shell.js?v=40"></script>
 <script src="js/select.js?v=29"></script>
-<script src="js/tooltip.js?v=4"></script>
+<script src="js/tooltip.js?v=5"></script>
 <script src="js/history-legacy.js?v=4"></script>
-<script src="js/data.js?v=18"></script>
+<script src="js/data.js?v=20"></script>
 <script src="js/api-drawer.js?v=26"></script>
-<script src="js/modal.js?v=3"></script>
-<script src="js/booking-form.js?v=43"></script>
+<script src="js/modal.js?v=5"></script>
+<script src="js/booking-form.js?v=133"></script>
 </body>
 </html>

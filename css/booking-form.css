@@ -45,14 +45,21 @@
 /* date-and-time values need ~260px: in a two-column row narrower than that, they take the full row */
 .adm-wrap .row.c2 { container-type: inline-size; }
 @container (max-width: 560px) { .adm-wrap .row.c2 > .field:has(input[data-date^="datetime"]), .adm-wrap .row.c2 > .field.dt { grid-column: 1 / -1; } }
+/* a policy's fee row follows its From | To: when they stack, the fee takes the full row too (not half of it) */
+@container (max-width: 560px) { .adm-wrap .pol .row.c2 > .field { grid-column: 1 / -1; } }
 
 /* ---------- Admin card ---------- */
 .adm-wrap .card { margin-top: 16px; }
-.adm-wrap .card-header { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text); font-size: var(--fs-lg); font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; user-select: none; }
+.adm-wrap .card-header { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text); font-size: var(--fs-lg); font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 12px; user-select: none; }
 .adm-wrap .card-header .hint { font-weight: 500; color: var(--text-3); }
+/* the booking ID beside "Hotel details": same size and weight as the other values on the page */
+.adm-wrap #txnHint { font-size: 13px; font-weight: 600; color: var(--brand-accent); font-variant-numeric: tabular-nums; }
 .adm-wrap .card.closed .card-header { border-bottom: 0; }
-.adm-wrap .arrow { width: 24px; height: 24px; border: 1px solid var(--border-strong); border-radius: 50%; color: var(--text-3); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.adm-wrap .arrow svg { width: 12px; height: 12px; transform: rotate(180deg); transition: transform .3s ease; }
+.adm-wrap .arrow { width: 32px; height: 32px; margin: -4px -4px -4px 0; padding: 0; border: 1px solid var(--border-strong); border-radius: 50%; background: #fff; color: var(--text-3); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.adm-wrap .arrow:hover { border-color: var(--navy); background: var(--navy-soft); color: var(--navy); }
+.adm-wrap .arrow:focus-visible { outline: 2px solid var(--brand-accent); outline-offset: 2px; }
+/* bigger click target, same header height (negative margin) */
+.adm-wrap .arrow svg { width: 14px; height: 14px; transform: rotate(180deg); transition: transform .3s ease; }
 .adm-wrap .card.closed .arrow svg { transform: rotate(0deg); }
 .adm-wrap .card.closed .card-body { display: none; }
 .adm-wrap .card-body { padding: 16px; }
@@ -276,6 +283,7 @@
 .adm-wrap .pb-table .na { color: var(--border-strong); }
 .adm-wrap .pb-calc { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 3px 16px; margin: 10px 2px 0; font-size: 9px; color: var(--text-3); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
 .adm-wrap .pb-calc b { font-weight: 500; color: var(--text-2); }
+.adm-wrap .pb-calc-line.is-link b { color: inherit; }
 .adm-wrap .pb-note { font-style: italic; margin-left: auto; }
 .adm-wrap .pb-note::before { content: "* "; }
 .adm-wrap .pb-empty { margin: 10px 2px 0; font-size: 12px; color: var(--muted); }
@@ -405,3 +413,297 @@
 
 /* small phones: tighter policy boxes so date + time fit */
 @container bf (max-width: 400px) { .adm-wrap .box-body { padding-left: 10px; padding-right: 10px; } .adm-wrap .pol { padding-left: 8px; padding-right: 8px; } }
+
+/* ---------- Auto calculate markup (from the quoted client price) ---------- */
+.adm-wrap .lbl-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.adm-wrap .lbl-row label.lbl { margin: 0; }
+.adm-wrap .card.auto-mk[hidden] { display: none; }   /* own card under Booking source & pricing, shown while Auto calculate is ticked */
+.adm-wrap .auto-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 14px; }
+.adm-wrap .auto-bar[hidden], .adm-wrap .auto-bar-msg[hidden] { display: none; }
+.adm-wrap .auto-bar-msg { flex: 1; min-width: 220px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #f3d9a6; border-radius: 8px; background: var(--amber-bg); color: var(--amber); font-size: 12.5px; font-weight: 500; }
+.adm-wrap .auto-bar-msg svg { width: 15px; height: 15px; flex: none; }
+.adm-wrap .auto-bar.is-invalid .auto-bar-msg { border-color: #f5c2c7; background: var(--red-bg); color: var(--red); }
+.adm-wrap .btn-recalc { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+.adm-wrap .btn-recalc svg { width: 14px; height: 14px; }
+/* a room price changed by hand while it no longer adds up to the total supplier price */
+.adm-wrap .field.auto-edited .ig { border-color: var(--amber); }
+.adm-wrap .lbl-row .lead-check { margin: -6px 0; }   /* full-size pill (like Lead guest) without making the label row taller */
+.adm-wrap .full-chk.is-ro { flex: none; cursor: default; opacity: .85; } .adm-wrap .full-chk.is-ro input { cursor: default; }
+/* prerequisite message in a section header (right side, before the collapse arrow) */
+.adm-wrap .card-header .sec-need { width: auto; min-width: 0; margin: -2px 0 -2px auto; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.adm-wrap .card-header .sec-need span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.adm-wrap .card-header .sec-need svg { width: 13px; height: 13px; }
+.adm-wrap .lbl-row label.lbl { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.adm-wrap .lbl-row .lead-check { flex: none; white-space: nowrap; }
+/* narrow field: "Markup amount" → "Markup" so the Auto calculate pill fits on the same line */
+#f-markupRule { container-type: inline-size; }
+@container (max-width: 236px) { .adm-wrap #f-markupRule .lbl-more { display: none; } }
+.adm-wrap .is-invalid > .ro, .adm-wrap .is-invalid > .ro.money.cust { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+/* Auto calculate markup: rooms counter + Recalculate in the Rooms & guests header */
+.adm-wrap .card-header .auto-bar { flex-wrap: nowrap; gap: 8px; margin: -4px 0 -4px auto; }
+.adm-wrap .room-count { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 12.5px; font-weight: 500; color: var(--text-2); background: var(--surface-2); white-space: nowrap; font-variant-numeric: tabular-nums; cursor: default; }
+.adm-wrap .room-count.ok { border-color: #bfe5d1; background: var(--green-bg); color: var(--green); }
+.adm-wrap .room-count.warn { border-color: #f5c2c7; background: var(--red-bg); color: var(--red); }   /* over- or under-filled */
+.adm-wrap .auto-bar.is-invalid .room-count { border-color: #f5c2c7; background: var(--red-bg); color: var(--red); }
+.adm-wrap .card-header .btn-recalc { height: 30px; padding: 0 12px; margin: 0; font-size: 12.5px; font-weight: 500; }
+.adm-wrap .btn-add.is-invalid { border-color: var(--red); background: var(--red-bg); color: var(--red); }   /* no cancellation policy yet */
+.adm-wrap .room-count.go { cursor: pointer; }   /* under-filled: click goes to + Add room */
+.modal-details .muted { font-weight: 400; color: var(--text-3); }
+/* the calculation line above a room's client price opens the full calculation (modal) */
+.adm-wrap :is(.calc-mini, .pb-fine-inline, .pb-calc-line).is-link { cursor: pointer; color: var(--brand-accent); font-weight: 500; text-decoration: underline dotted; text-underline-offset: 2px; border-radius: 4px; }
+/* a small info icon in front: reads as "tap to see the calculation" */
+.adm-wrap :is(.calc-mini, .pb-fine-inline, .pb-calc-line).is-link::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 4px; vertical-align: -2px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5.5M12 7.5v.5'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5.5M12 7.5v.5'/%3E%3C/svg%3E") center / contain no-repeat; }
+.adm-wrap :is(.calc-mini, .pb-fine-inline, .pb-calc-line).is-link:hover { text-decoration-style: solid; color: var(--brand); }
+.adm-wrap :is(.calc-mini, .pb-fine-inline, .pb-calc-line).is-link:focus-visible { outline: 2px solid var(--brand-accent); outline-offset: 1px; }
+
+/* rooms: accordion. Closed = header only, with a one-line summary (room type · guests · price) and a "n to fix" pill */
+.adm-wrap .room > .box-head { justify-content: flex-start; min-height: 45px; }
+.adm-wrap .room > .box-head .box-title { flex: none; }
+.adm-wrap .room > .box-head .spacer { flex: 1; }
+.adm-wrap .room .room-arrow { width: 28px; height: 28px; margin: 0; }
+.adm-wrap .room .room-arrow svg { width: 12px; height: 12px; }
+.adm-wrap .room.closed .room-arrow svg { transform: rotate(0deg); }
+.adm-wrap .room.closed > .box-body { display: none; }
+.adm-wrap .room.closed > .box-head { border-bottom: 0; border-radius: 8px; }
+.adm-wrap .room-sum { display: none; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; }
+.adm-wrap .room.closed .room-sum { display: block; }
+/* each part: a muted label and a strong value, split by a thin divider */
+.adm-wrap .room-sum > span { display: inline; }
+.adm-wrap .room-sum > span + span { margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--line); }
+.adm-wrap .room-sum i { font-style: normal; color: var(--text-3); font-size: 12px; }
+.adm-wrap .room-sum b { font-weight: 600; color: var(--ink); }
+.adm-wrap .room-sum b + i { margin-left: 6px; }
+.adm-wrap .room-sum i + b { margin-left: 5px; }
+.adm-wrap .room-sum b.none { font-weight: 400; color: var(--text-3); font-style: italic; }
+.adm-wrap .room-errs { flex: none; display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border: 1px solid #f5c2c7; border-radius: 999px; background: var(--red-bg); color: var(--red); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.adm-wrap .room-errs[hidden], .adm-wrap .room:not(.closed) .room-errs { display: none; }
+.adm-wrap .room-errs:hover { border-color: var(--red); }
+.adm-wrap .room-errs:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+@container bf (max-width: 560px) { .adm-wrap .room-sum > span:not(:first-child) { display: none; } }
+.adm-wrap .room .box-head .box-title { margin-right: 6px; }
+
+/* Booking source & pricing collapsed: the same summary line + "n fields required" as a closed room */
+.adm-wrap .card-header:has(.card-sum) { justify-content: flex-start; }
+.adm-wrap .card-header:has(.card-sum) > span:first-child { flex: none; }
+.adm-wrap .card-header:has(.card-sum) .arrow { margin-left: auto; }
+.adm-wrap .card-header:has(.card-sum) .sec-need { margin-left: auto; }
+.adm-wrap .card-header:has(.card-sum) .sec-need:not([hidden]) + .arrow { margin-left: 0; }
+.adm-wrap .card.closed > .card-header .card-sum { display: block; font-weight: 400; }
+.adm-wrap .card:not(.closed) > .card-header .room-errs { display: none; }
+.adm-wrap .room-sum b + i { margin-left: 6px; }
+
+/* Hotel / Contact summary: one line, never wraps — the first part (hotel name / email) gives way first (…), the rest stay whole */
+.adm-wrap .card.closed > .card-header .sum-fit { display: flex; align-items: baseline; min-width: 0; overflow: hidden; white-space: nowrap; }
+.adm-wrap .card-header .sum-fit > span { flex: none; display: flex; align-items: baseline; min-width: 0; }
+.adm-wrap .card-header .sum-fit > span:nth-child(1) { flex: 0 1 auto; min-width: 48px; }
+.adm-wrap .card-header .sum-fit b { overflow: hidden; text-overflow: ellipsis; }
+.adm-wrap .card-header:has(.card-sum) > .card-sum { flex: 0 1 auto; }
+
+/* full-width Hotel details: 4 fields a row on a wide screen */
+@container bf (min-width: 1100px) { .adm-wrap .row.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* full-width Contact details: email | country code + mobile on one row */
+.adm-wrap .contact-row { display: grid; grid-template-columns: 1fr; gap: 14px 16px; }
+@container bf (min-width: 856px) { .adm-wrap .contact-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+/* Contracting comment | Special requests side by side: both boxes as tall as the taller one
+   (the editor grows with its text; dragging the textarea taller stretches the editor too) */
+.adm-wrap .cc-row > .field { display: flex; flex-direction: column; }
+.adm-wrap .cc-row > .field > .rte, .adm-wrap .cc-row > .field > textarea { flex: 1 1 auto; }
+.adm-wrap .cc-row .rte { display: flex; flex-direction: column; }
+.adm-wrap .cc-row .rte .ql-container { flex: 1 1 auto; display: flex; flex-direction: column; }
+.adm-wrap .cc-row .rte .ql-editor { flex: 1 1 auto; }
+
+/* Remarks on an edit: read-only, kept as written (line breaks), not a fixed height */
+.adm-wrap .remarks-ro { height: auto; min-height: 42px; padding: 10px 12px; white-space: pre-wrap; line-height: 1.5; font-weight: 400; }
+.adm-wrap .remarks-ro.is-empty { color: var(--text-3); font-style: italic; }
+/* Rooms & guests header: summary + pill, then "Rooms filled" / Recalculate at the right */
+.adm-wrap #roomsCard > .card-header .auto-bar { margin-left: auto; }
+.adm-wrap #roomsCard > .card-header .auto-bar:not([hidden]) + .arrow { margin-left: 0; }
+
+/* ---------- narrow screens (phone): section headers ----------
+   Title, "n fields required" and the arrow keep the first line; a collapsed section's summary moves to its own line
+   (still one line, cut with "…"); Rooms & guests' "Rooms filled" + Recalculate go under the title. */
+.adm-wrap .card-header > span:first-child { min-width: 0; }
+.adm-wrap .card-header > span:first-child .hint { overflow-wrap: anywhere; }
+/* up to 900px: a collapsed section's summary gets its own line under the title (the full width) */
+@container bf (max-width: 900px) {
+  .adm-wrap .card-header:has(.card-sum) { flex-wrap: wrap; row-gap: 6px; }
+  .adm-wrap .card-header:has(.card-sum) > span:first-child { flex: 1 1 0; }
+  .adm-wrap .card-header:has(.card-sum) .arrow { margin-left: 0; }
+  .adm-wrap .card-header:has(.card-sum) > .card-sum { order: 10; flex: 1 0 100%; }
+  .adm-wrap #roomsCard > .card-header .auto-bar { order: 11; flex: 1 0 100%; margin-left: 0; justify-content: flex-start; }
+  .adm-wrap #roomsCard > .card-header .auto-bar:not([hidden]) + .arrow { margin-left: 0; }
+  .adm-wrap .card-header .room-errs { order: 1; }
+  .adm-wrap .card-header .sec-need { margin-left: 0 !important; max-width: 100%; }
+  .adm-wrap .card-header .arrow { order: 2; }
+}
+/* phones: one item is all a line holds — the first (supplier / hotel name / email …), whole when it fits */
+@container bf (max-width: 560px) {
+  .adm-wrap .card-header .sum-fit > span:not(:first-child) { display: none !important; }
+  .adm-wrap .card-header .sum-fit > span:first-child { flex: 0 1 auto; }
+}
+/* narrow screens: a closed room's summary on its own line; Remove becomes icon-only (its text stays for screen readers) */
+@container bf (max-width: 560px) {
+  .adm-wrap .room > .box-head { flex-wrap: wrap; row-gap: 4px; }
+  .adm-wrap .room > .box-head .room-sum { order: 10; flex: 1 0 100%; }
+  .adm-wrap .room > .box-head .btn-rm { font-size: 0; gap: 0; padding: 6px; }
+  .adm-wrap .room > .box-head .btn-rm svg { width: 15px; height: 15px; margin: 0; }
+}
+/* Booking source summary: the supplier and client names give way (…) so Rate and Markup always show */
+.adm-wrap #sourceCard .sum-fit > span:nth-child(1), .adm-wrap #sourceCard .sum-fit > span:nth-child(4) { flex: 0 1 auto; min-width: 110px; }
+/* less room: Platform goes first, then Supplier ref — Supplier, Client, Rate and Markup always show */
+@container bf (max-width: 1240px) { .adm-wrap #sourceCard .sum-fit > span:nth-child(3) { display: none; } }
+@container bf (max-width: 1060px) { .adm-wrap #sourceCard .sum-fit > span:nth-child(2) { display: none; } }
+@container bf (max-width: 700px) { .adm-wrap #sourceCard .sum-fit > span:nth-child(4) { display: none; } }   /* small tablets: Supplier, Rate, Markup */
+/* Price summary: Converted goes first, then Supplier, so Client total always shows */
+@container bf (max-width: 1060px) { .adm-wrap #sumCard .card-sum > span:nth-child(3) { display: none; } }
+@container bf (max-width: 760px) { .adm-wrap #sumCard .card-sum > span:nth-child(2) { display: none; } }
+/* closed room: the room type gives way (…) first; then Supplier price, then the guests are dropped (fitRoomSums in JS), so Client price always shows */
+.adm-wrap .room.closed .room-sum { display: flex; align-items: baseline; }
+.adm-wrap .room-sum > span { flex: none; }
+.adm-wrap .room-sum > span:first-child { flex: 0 1 auto; min-width: 60px; overflow: hidden; text-overflow: ellipsis; }
+/* Cancellation policies: the client count goes so "Free cancellation until" always shows */
+@container bf (max-width: 640px) { .adm-wrap #polCard .card-sum > span:nth-child(3) { display: none; } }
+/* header text can be selected and copied (e.g. the booking ID, a hotel name in a summary); only the arrow toggles a section */
+.adm-wrap .card-header > span:first-child, .adm-wrap .card-header .hint, .adm-wrap .card-header .card-sum, .adm-wrap .room > .box-head .box-title, .adm-wrap .room > .box-head .room-sum { user-select: text; -webkit-user-select: text; }
+.adm-wrap #txnHint:not(:empty)::before { content: ": "; color: var(--text); font-size: 16px; }
+
+/* ---------- section headers: the live portal's colour (#1A1AB9, white text) ----------
+   Everything inside a section header is set for the dark background: summary labels / values, dividers, the booking ID,
+   the arrow (white outline, as live). Pills ("n fields required", "Rooms filled", "Select … first") keep their own light fill. */
+.adm-wrap .card > .card-header { --hd: #1a1ab9; background: var(--hd); color: #fff; border-bottom: 0; border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0; }
+.adm-wrap .card.closed > .card-header { border-radius: calc(var(--radius-lg) - 1px); }
+.adm-wrap .card > .card-header .hint { color: rgba(255, 255, 255, .72); }
+.adm-wrap .card > .card-header #txnHint { color: #ffd666; }                 /* the booking ID: distinct on the blue */
+.adm-wrap .card > .card-header #txnHint:not(:empty)::before { color: #fff; }
+.adm-wrap .card > .card-header .card-sum { color: #fff; }
+.adm-wrap .card > .card-header .card-sum i { color: rgba(255, 255, 255, .7); }
+.adm-wrap .card > .card-header .card-sum b { color: #fff; }
+.adm-wrap .card > .card-header .card-sum b.none { color: rgba(255, 255, 255, .6); }
+.adm-wrap .card > .card-header .card-sum > span + span { border-left-color: rgba(255, 255, 255, .28); }
+.adm-wrap .card > .card-header .arrow { background: transparent; border-color: rgba(255, 255, 255, .85); color: #fff; }
+.adm-wrap .card > .card-header .arrow:hover { background: rgba(255, 255, 255, .16); border-color: #fff; color: #fff; }
+.adm-wrap .card > .card-header .arrow:focus-visible { outline-color: #fff; }
+.adm-wrap .card > .card-header .room-errs { border-color: #fff; }
+.adm-wrap .card > .card-header ::selection { background: rgba(255, 255, 255, .35); color: #fff; }
+.adm-wrap .card > .card-header .btn-recalc { background: #fff; border-color: #fff; color: var(--brand); }
+.adm-wrap .card > .card-header .btn-recalc:disabled { background: rgba(255, 255, 255, .55); border-color: transparent; color: var(--brand); opacity: 1; }
+/* phones: "Rooms filled" and Recalculate share the full width in two equal halves, tap-sized, nothing cut off */
+@container bf (max-width: 560px) {
+  .adm-wrap #roomsCard > .card-header .auto-bar:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 2px 0 0; }
+  .adm-wrap #roomsCard > .card-header .room-count, .adm-wrap #roomsCard > .card-header .btn-recalc { width: 100%; min-width: 0; height: 36px; justify-content: center; border-radius: 8px; padding: 0 8px; white-space: nowrap; }
+}
+
+/* Hotel details summary: "(status) on booking date" sits right after the title.
+   Phones (one item a line): the hotel name, not the status */
+/* when space runs short: the city gives way most, then the status, then the hotel name (kept at 120 px at least) */
+.adm-wrap #hotelCard .sum-fit > span:nth-child(1) { flex: 0 2 auto; min-width: 90px; }
+.adm-wrap #hotelCard .sum-fit > span:nth-child(2) { flex: 0 1 auto; min-width: min(120px, max-content); }
+.adm-wrap #hotelCard .sum-fit > span:nth-child(4) { flex: 0 4 auto; min-width: 60px; }
+/* the category item ("4★"): never cut; not shown when the hotel has no category */
+.adm-wrap #hotelCard .sum-fit > span:nth-child(3) { flex: none; }
+.adm-wrap #hotelCard .sum-fit > span:nth-child(3):has(> b.none) { display: none; }
+@container bf (max-width: 560px) {
+  .adm-wrap #hotelCard > .card-header .sum-fit > span:nth-child(1) { display: none !important; }
+  .adm-wrap #hotelCard > .card-header .sum-fit > span:nth-child(2) { display: flex !important; flex: 0 1 auto; }
+}
+/* less room: the city goes first (the hotel name already says where), then HCN; status, hotel and dates always stay */
+@container bf (max-width: 1240px) { .adm-wrap #hotelCard .sum-fit > span:nth-child(4) { display: none; } }
+@container bf (max-width: 760px) { .adm-wrap #hotelCard .sum-fit > span:nth-child(6) { display: none; } }
+/* summary on the title's line (901–1060 px): no room for HCN either */
+@container bf (min-width: 901px) and (max-width: 1060px) { .adm-wrap #hotelCard .sum-fit > span:nth-child(6) { display: none; } }
+/* small tablets (≤640 px): hotel name and dates only */
+@container bf (max-width: 640px) { .adm-wrap #hotelCard .sum-fit > span:nth-child(1) { display: none; } }
+/* Hotel details summary: the category as the form's star icon, "(4★)" */
+.adm-wrap .card-header .sum-stars { display: inline-flex; align-items: center; gap: 1px; }
+.adm-wrap .card-header .sum-stars svg { width: 12px; height: 12px; color: #f5b301; flex: none; margin-top: -1px; }
+
+/* duplicate guest name: the first name is red too (one problem, counted on the last name) */
+.adm-wrap .field.dup-name input { border-color: var(--red); }
+.adm-wrap .field.dup-msg > .fb { display: none !important; }
+/* duplicate name message in the guest header, after "Guest 2" */
+.adm-wrap .guest-dup { color: var(--red); font-weight: 500; }
+.adm-wrap .guest-dup:not([hidden])::before { content: ": "; }
+.adm-wrap .guest-head > .guest-dup { margin-left: -8px; }   /* "Guest 2: …" — no flex gap before the colon */
+/* phones: the message gets its own line under "Guest 2 · Lead guest · Remove" */
+@container bf (max-width: 560px) {
+  .adm-wrap .guest-head:has(> .guest-dup:not([hidden])) { flex-wrap: wrap; row-gap: 4px; }
+  .adm-wrap .guest-head > .guest-dup { order: 10; flex: 1 0 100%; margin-left: 0; }
+  .adm-wrap .guest-head > .guest-dup::before { content: none !important; }
+}
+.adm-wrap .field.dup-name input:focus { box-shadow: var(--red-ring); }
+
+/* ===================== Phones (form ≤ 560 px wide) ===================== */
+@container bf (max-width: 560px) {
+  /* 16 px text in fields: phones (iOS) zoom the page when a smaller field is tapped */
+  .adm-wrap input:not([type=checkbox]):not([type=radio]), .adm-wrap textarea, .adm-wrap .ss-input { font-size: 16px; }
+  /* clear (×) buttons: a bigger target */
+  .adm-wrap .ss-clear, .adm-wrap .dp-clear, .adm-wrap .stars-clear { width: 28px; height: 28px; }
+  .adm-wrap .ss-clear { top: 5px; right: 26px; }
+  .adm-wrap .dp-clear { top: 5px; right: 5px; }
+
+  /* room: Room no. is already in the header ("Room: 1") */
+  .adm-wrap .room-top > .field:nth-child(2) { display: none; }
+  /* calculation lines (room client price, client policy fee) wrap under their label instead of being cut */
+  .adm-wrap label.lbl-calc { flex-wrap: wrap; row-gap: 2px; }
+  .adm-wrap label.lbl-calc .calc-mini { order: 5; flex: 1 0 100%; text-align: left; white-space: normal; overflow: visible; line-height: 1.4; }
+  /* guest header never wraps its words */
+  .adm-wrap .guest-head > span:first-child, .adm-wrap .guest-head .lead-check { white-space: nowrap; }
+  /* save bar: total on top, Cancel | Save side by side */
+  .adm-wrap .footer > .btn-secondary { grid-column: 1; grid-row: 2; }
+  .adm-wrap .footer > .btn-primary { grid-column: 2; grid-row: 2; }
+  /* no problems to show: the total takes the whole top row, label left, amount right */
+  .adm-wrap .err-jump[hidden] + .bar-total { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: baseline; }
+
+  /* guests: Title | Type · First name · Last name · Gender (| Age for a child) · Nationality — long values get a full row */
+  .adm-wrap .guest-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-flow: row dense; gap: 10px; }
+  .adm-wrap .guest-grid > .field:has([data-bind$=".first_name"]), .adm-wrap .guest-grid > .field:has([data-bind$=".last_name"]),
+  .adm-wrap .guest-grid > .field[id$="-nat"], .adm-wrap .guest-grid:not(.has-age) > .field:has([id$="-gender"]) { grid-column: 1 / -1; }
+
+  /* price summary: each room as a small card instead of a wide table */
+  .adm-wrap .sum-sub { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .adm-wrap .pb-wrap { border: 0; overflow: visible; }
+  .adm-wrap .pb-table, .adm-wrap .pb-table tbody, .adm-wrap .pb-table tfoot, .adm-wrap .pb-table tr, .adm-wrap .pb-table td { display: block; min-width: 0 !important; }
+  .adm-wrap .pb-table thead { display: none; }
+  .adm-wrap .pb-table tr { display: grid; grid-template-columns: auto minmax(0, 1fr); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; padding: 8px 12px; }
+  .adm-wrap .pb-table td { border: 0 !important; padding: 3px 0 !important; text-align: right; background: none !important; }
+  .adm-wrap .pb-table td:first-child { font-weight: 700; text-align: left; }
+  .adm-wrap .pb-table td.l { text-align: right; color: var(--text-2); }
+  .adm-wrap .pb-table td[data-l] { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 0; }
+  .adm-wrap .pb-table td[data-l] > .ccy, .adm-wrap .pb-table td[data-l] > .na { margin-left: auto; }
+  .adm-wrap .pb-table td[data-l] > .ccy { margin-right: 4px; }
+  .adm-wrap .pb-table td[data-l="Guests"] { justify-content: space-between; }
+  .adm-wrap .pb-table td[data-l]::before { content: attr(data-l); font-weight: 400; font-size: 12.5px; color: var(--text-2); }
+  .adm-wrap .pb-table tfoot tr { background: var(--surface-2); }
+  .adm-wrap .pb-table tfoot td.l { display: none; }
+
+  /* a locked section's "Select supplier first" goes under the title, so the title keeps one line */
+  .adm-wrap .card-header:has(> .sec-need:not([hidden])) { flex-wrap: wrap; row-gap: 6px; }
+  .adm-wrap .card-header > span:first-child:has(~ .sec-need:not([hidden])) { flex: 1 1 0; }
+  .adm-wrap .card-header > .sec-need:not([hidden]) { order: 9; flex: 0 1 auto; margin-left: 0 !important; }
+  .adm-wrap .card-header:has(> .sec-need:not([hidden])) > .arrow { order: 2; margin-left: auto; }
+  .adm-wrap .card-header:has(> .sec-need:not([hidden]))::after { content: ""; order: 3; flex: 1 0 100%; height: 0; }
+}
+/* Hotel details at ≤640 px starts with the hotel name (status hidden): no divider before it */
+@container bf (max-width: 640px) { .adm-wrap #hotelCard .sum-fit > span:nth-child(2) { margin-left: 0; padding-left: 0; border-left: 0; } }
+/* very small phones: the guest's Remove is the icon only (its text stays for screen readers) */
+@container bf (max-width: 400px) {
+  .adm-wrap .guest-head .btn-rm { font-size: 0; gap: 0; padding: 6px; }
+  .adm-wrap .guest-head .btn-rm svg { width: 15px; height: 15px; margin: 0; }
+}
+
+/* ---------- Cancellation policies: settings rows on small screens (≤640 px) ---------- */
+/* "Offset … before the supplier" is small-screen text only */
+.adm-wrap .calc-hint.calc-after { display: none; }
+@container bf (max-width: 640px) {
+  .adm-wrap .calc-hint.calc-after { display: inline; }
+  /* client policy box: "Auto calculate client policy · Offset 36 h before the supplier", then (under a line) "One policy for all rooms" */
+  .adm-wrap .calc-row .calc-one { flex: 1 0 100%; margin-left: 0; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+  /* time format: UTC's sign · hours · minutes · preview on their own row */
+  .adm-wrap .tz-utc:not([hidden]) { display: flex; flex: 1 0 100%; flex-wrap: wrap; }
+  .adm-wrap .tz-utc .tz-prev { margin-left: auto; }
+  /* the offset on its own line, lined up under the switch's text */
+  .adm-wrap .calc-row .calc-hours { flex: 1 0 100%; flex-wrap: wrap; padding-left: 50px; row-gap: 4px; }
+}

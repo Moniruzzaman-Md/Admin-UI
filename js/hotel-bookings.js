@@ -202,9 +202,11 @@
   const saved = Bookings.get(qs.get('saved'));
   if (saved) {
     marked = saved.id;
-    // a booking made on an earlier day isn't in today's list: widen Booking date back to its day so the saved row shows
+    // a booking made on an earlier day isn't in today's list: widen Booking date back to its day so the saved row shows;
+    // one without a booking date (saved before it was required) matches no date range: clear the Booking date filter
     const bd = day(saved.state.booking_date);
-    if (bd && bd < today) { pickers.booking.set([bd, new Date(today)]); applied = structuredClone(draft); bar.update(); }
+    if (!bd) { pickers.booking.set([null, null]); applied = structuredClone(draft); bar.update(); }
+    else if (bd < today) { pickers.booking.set([bd, new Date(today)]); applied = structuredClone(draft); bar.update(); }
     // its page, so the marked row is in view
     state.page = Math.floor(rows().findIndex(b => b.id === saved.id) / state.size) + 1;
     setTimeout(() => toast(qs.get('how') === 'edit' ? `Booking ${saved.txn} updated` : `Booking ${saved.txn} created`), 300);

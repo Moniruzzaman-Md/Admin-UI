@@ -19,6 +19,7 @@
   function fill(text) {
     const key = text.match(/^(.+?)\s+\(([^()\s]{1,12}(?:\s?\/\s?[^()\s]{1,12})?)\)$/);   // "Label (↑)" · "Label (Ctrl+F)"
     tip.classList.toggle('is-long', !/\s/.test(text) && text.length > 32);
+    tip.classList.toggle('is-multi', text.includes('\n'));   // several lines (e.g. a calculation): wider box
     tip.innerHTML = key ? `<span>${esc(key[1])}</span><kbd>${esc(key[2])}</kbd>` : esc(text);
   }
   // is any of the element's label text actually on screen? (hidden span / font-size 0 → width 0)

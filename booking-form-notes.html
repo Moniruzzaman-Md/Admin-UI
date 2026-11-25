@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Booking Form Notes · Admin Redesign</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png?v=2">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png?v=2">
+<link rel="stylesheet" href="css/tokens.css?v=27">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<style>
+  /* Shows the booking form's two notes as pages: ?doc=dev → notes/booking-form.md ("how it works"),
+     ?doc=ai → notes/booking-form-auto-markup.ai.md. The .md files stay the source: edit them, this page follows.
+     Same look as markup-commission-backend.html. */
+  body { margin: 0; background: #f5f6fa; color: #1c1c33; font-family: var(--font); font-size: 15px; line-height: 1.6; }
+  .guide-bar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 10px 24px; background: #0100a6; color: #fff; }
+  .guide-bar a { display: inline-flex; align-items: center; gap: 6px; color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 5px 10px; border-radius: 6px; white-space: nowrap; }
+  .guide-bar a:hover, .guide-bar a:focus-visible { background: rgba(255, 255, 255, .14); outline: none; }
+  .guide-bar a[aria-current="page"] { background: #fff; color: #0100a6; }
+  .guide-bar .sp { flex: 1; }
+  .doc { max-width: 960px; margin: 24px auto 64px; padding: 32px 40px; background: #fff; border: 1px solid #e4e4f0; border-radius: 12px; overflow-wrap: anywhere; }
+  .doc h1 { margin: 0 0 6px; font-size: 26px; line-height: 1.3; }
+  .doc h2 { margin: 32px 0 10px; font-size: 20px; }
+  .doc h3 { margin: 26px 0 8px; font-size: 16px; }
+  .doc p, .doc li { color: #33334d; }
+  .doc a { color: var(--brand-accent); }
+  .doc hr { border: 0; border-top: 1px solid #ececf4; margin: 24px 0; }
+  .doc code { padding: 1px 5px; border-radius: 4px; background: #f1f1f6; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; }
+  .doc pre { margin: 12px 0 16px; padding: 14px 16px; overflow-x: auto; border: 1px solid #e4e4f0; border-radius: 8px; background: #fbfbfe; line-height: 1.5; }
+  .doc pre code { padding: 0; background: none; font-size: 12.5px; }
+  .doc .tbl { overflow-x: auto; margin: 12px 0 16px; }
+  .doc table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .doc th, .doc td { padding: 8px 10px; border: 1px solid #e4e4f0; text-align: left; vertical-align: top; min-width: 120px; }
+  .doc th { background: #f5f6fb; font-weight: 600; }
+  .doc blockquote { margin: 12px 0; padding: 8px 14px; border-left: 3px solid #f2d9a6; background: #fff8ea; color: #6b4a00; border-radius: 0 6px 6px 0; }
+  .doc blockquote p { margin: 4px 0; color: inherit; }
+  .doc .loading, .doc .failed { color: var(--text-3); }
+  @media (max-width: 720px) { .doc { margin: 0; padding: 20px 16px; border: 0; border-radius: 0; } .guide-bar { padding: 10px 16px; } }
+</style>
+</head>
+<body>
+<div class="guide-bar">
+  <a href="booking-form.html?mode=edit" id="back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Back to the form</a>
+  <span class="sp"></span>
+  <a href="?doc=dev" data-doc="dev">How it works</a>
+  <a href="?doc=ai" data-doc="ai">AI note</a>
+  <a id="dl" href="notes/booking-form.md" download>Download .md</a>
+</div>
+<article class="doc" id="doc"><p class="loading">Loading the note…</p></article>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+(async () => {
+  const DOCS = { dev: { file: 'notes/booking-form.md', title: 'How it works' }, ai: { file: 'notes/booking-form-auto-markup.ai.md', title: 'AI note' } };
+  const qs = new URLSearchParams(location.search), key = DOCS[qs.get('doc')] ? qs.get('doc') : 'dev', d = DOCS[key];
+  document.title = `${d.title} · Booking Form · Admin Redesign`;
+  document.querySelectorAll('[data-doc]').forEach(a => { if (a.dataset.doc === key) a.setAttribute('aria-current', 'page'); });
+  // the download is the note shown on this page (the .md file itself), and says which one
+  const dl = document.getElementById('dl');
+  dl.href = d.file; dl.textContent = `Download ${d.title} (.md)`; dl.title = d.file.split('/').pop();
+  // back to the form it was opened from (same mode / booking), otherwise the edit sample
+  const from = qs.get('from');
+  if (from && /^booking-form\.html(\?[\w=&-]*)?$/.test(from)) document.getElementById('back').href = from;
+  document.querySelectorAll('[data-doc]').forEach(a => { a.href = `?doc=${a.dataset.doc}${from ? `&from=${encodeURIComponent(from)}` : ''}`; });
+  const doc = document.getElementById('doc');
+  try {
+    const res = await fetch(`${d.file}?v=${Date.now()}`);
+    if (!res.ok) throw new Error(res.status);
+    doc.innerHTML = marked.parse(await res.text());
+    // wide tables scroll inside their own box on small screens
+    doc.querySelectorAll('table').forEach(t => { const w = document.createElement('div'); w.className = 'tbl'; t.before(w); w.append(t); });
+    doc.querySelectorAll('h2, h3').forEach(h => { h.id = h.textContent.trim().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s/g, '-'); });
+    if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+    // links inside a note are relative to notes/
+    doc.querySelectorAll('a[href]').forEach(a => { const h = a.getAttribute('href'); if (!/^([a-z]+:|#|\/)/i.test(h)) a.setAttribute('href', 'notes/' + h); });
+    doc.querySelectorAll('pre code').forEach(el => { try { hljs.highlightElement(el); } catch (e) {} });
+  } catch (e) {
+    doc.innerHTML = `<p class="failed">The note couldn’t be loaded (it needs the local server). Open <a href="${d.file}">${d.file}</a> directly.</p>`;
+  }
+})();
+</script>
+</body>
+</html>
